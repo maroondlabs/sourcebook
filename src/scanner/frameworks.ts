@@ -276,5 +276,155 @@ export async function detectFrameworks(
     });
   }
 
+  // --- Python ---
+  const hasPyproject = fs.existsSync(path.join(dir, "pyproject.toml"));
+  const hasRequirements = fs.existsSync(path.join(dir, "requirements.txt"));
+  const hasSetupPy = fs.existsSync(path.join(dir, "setup.py"));
+
+  if (hasPyproject || hasRequirements || hasSetupPy) {
+    const findings: Finding[] = [];
+    let pyDeps = "";
+
+    if (hasPyproject) {
+      try {
+        pyDeps = fs.readFileSync(path.join(dir, "pyproject.toml"), "utf-8");
+      } catch {}
+    } else if (hasRequirements) {
+      try {
+        pyDeps = fs.readFileSync(path.join(dir, "requirements.txt"), "utf-8");
+      } catch {}
+    }
+
+    const pyDepsLower = pyDeps.toLowerCase();
+
+    // Django
+    if (pyDepsLower.includes("django")) {
+      const hasManagePy = files.includes("manage.py");
+      const settingsFile = files.find((f) => f.endsWith("settings.py") || f.includes("settings/"));
+      findings.push({
+        category: "Django",
+        description: `Django project${settingsFile ? ` (settings: ${settingsFile})` : ""}. Use \`python manage.py\` for management commands.`,
+        confidence: "high",
+        discoverable: false,
+      });
+      if (files.some((f) => f.endsWith("models.py"))) {
+        findings.push({
+          category: "Django",
+          description: "After modifying models, run `python manage.py makemigrations && python manage.py migrate`.",
+          rationale: "Agents forget to create migrations after model changes, causing runtime errors.",
+          confidence: "high",
+          discoverable: false,
+        });
+      }
+      detected.push({ name: "Django", findings });
+    }
+
+    // FastAPI
+    else if (pyDepsLower.includes("fastapi")) {
+      findings.push({
+        category: "FastAPI",
+        description: "FastAPI project. Use Pydantic models for request/response schemas, not raw dicts.",
+        confidence: "high",
+        discoverable: false,
+      });
+      if (pyDepsLower.includes("sqlalchemy") || pyDepsLower.includes("sqlmodel")) {
+        findings.push({
+          category: "FastAPI",
+          description: "Uses SQLAlchemy/SQLModel for ORM. Database sessions must be properly closed (use dependency injection).",
+          confidence: "high",
+          discoverable: false,
+        });
+      }
+      detected.push({ name: "FastAPI", findings });
+    }
+
+    // Flask
+    else if (pyDepsLower.includes("flask")) {
+      detected.push({ name: "Flask", findings: [] });
+    }
+
+    // Generic Python
+    else {
+      detected.push({ name: "Python", findings: [] });
+    }
+
+    // pytest detection
+    if (pyDepsLower.includes("pytest")) {
+      findings.push({
+        category: "Testing",
+        description: "Uses pytest. Test files should be named `test_*.py` or `*_test.py`.",
+        confidence: "high",
+        discoverable: false,
+      });
+    }
+
+    // Virtual environment detection
+    const hasVenv = files.some((f) => f.startsWith(".venv/") || f.startsWith("venv/"));
+    if (hasVenv) {
+      findings.push({
+        category: "Python environment",
+        description: "Virtual environment detected. Activate with `source .venv/bin/activate` before running commands.",
+        confidence: "medium",
+        discoverable: false,
+      });
+    }
+  }
+
+  // --- Go ---
+  const hasGoMod = fs.existsSync(path.join(dir, "go.mod"));
+  if (hasGoMod) {
+    const findings: Finding[] = [];
+
+    try {
+      const goMod = fs.readFileSync(path.join(dir, "go.mod"), "utf-8");
+      const moduleMatch = goMod.match(/^module\s+(.+)$/m);
+      if (moduleMatch) {
+        findings.push({
+          category: "Go module",
+          description: `Module path: ${moduleMatch[1]}. Use this as the import prefix for all internal packages.`,
+          confidence: "high",
+          discoverable: false,
+        });
+      }
+
+      // Detect web frameworks
+      if (goMod.includes("github.com/gin-gonic/gin")) {
+        detected.push({ name: "Go + Gin", findings });
+      } else if (goMod.includes("github.com/labstack/echo")) {
+        detected.push({ name: "Go + Echo", findings });
+      } else if (goMod.includes("github.com/gofiber/fiber")) {
+        detected.push({ name: "Go + Fiber", findings });
+      } else {
+        detected.push({ name: "Go", findings });
+      }
+    } catch {
+      detected.push({ name: "Go", findings: [] });
+    }
+
+    // cmd/ vs pkg/ layout
+    const hasCmdDir = files.some((f) => f.startsWith("cmd/"));
+    const hasPkgDir = files.some((f) => f.startsWith("pkg/"));
+    const hasInternalDir = files.some((f) => f.startsWith("internal/"));
+
+    if (hasCmdDir) {
+      findings.push({
+        category: "Go layout",
+        description: `Standard Go project layout: ${hasCmdDir ? "cmd/" : ""}${hasPkgDir ? " pkg/" : ""}${hasInternalDir ? " internal/" : ""}. Entry points are in cmd/ subdirectories.`,
+        confidence: "high",
+        discoverable: false,
+      });
+    }
+
+    if (hasInternalDir) {
+      findings.push({
+        category: "Go visibility",
+        description: "internal/ packages cannot be imported by external modules. Keep private code here.",
+        rationale: "Go enforces this at the compiler level. Agents may try to import internal packages from external code.",
+        confidence: "high",
+        discoverable: false,
+      });
+    }
+  }
+
   return detected;
 }

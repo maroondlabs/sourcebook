@@ -58,5 +58,30 @@ export async function detectBuildCommands(dir: string): Promise<BuildCommands> {
     }
   }
 
+  // Check for go.mod
+  const goModPath = path.join(dir, "go.mod");
+  if (fs.existsSync(goModPath)) {
+    if (!commands.build) commands.build = "go build ./...";
+    if (!commands.test) commands.test = "go test ./...";
+    // Check for cmd/ entry points
+    const cmdDir = path.join(dir, "cmd");
+    if (fs.existsSync(cmdDir)) {
+      try {
+        const entries = fs.readdirSync(cmdDir);
+        if (entries.length === 1) {
+          commands.dev = `go run ./cmd/${entries[0]}`;
+        }
+      } catch {}
+    } else {
+      if (!commands.dev) commands.dev = "go run .";
+    }
+  }
+
+  // Check for requirements.txt / pyproject.toml Python commands
+  const hasRequirements = fs.existsSync(path.join(dir, "requirements.txt"));
+  if (hasRequirements && !commands.test) {
+    commands.test = "pytest";
+  }
+
   return commands;
 }

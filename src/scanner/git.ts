@@ -31,6 +31,9 @@ export async function analyzeGitHistory(dir: string): Promise<GitAnalysis> {
   // 1. Reverted commits -- "don't do this" signals
   findings.push(...detectRevertedPatterns(dir, revertedPatterns));
 
+  // 1b. Anti-patterns from reverts and deleted approaches
+  findings.push(...detectAntiPatterns(dir));
+
   // 2. Recently active areas
   findings.push(...detectActiveAreas(dir, activeAreas));
 
@@ -108,6 +111,89 @@ function detectRevertedPatterns(
         confidence: "high",
         discoverable: false,
       });
+    }
+  }
+
+  return findings;
+}
+
+/**
+ * Detect anti-patterns from reverted commits and deleted files.
+ * Reverts contain the original commit message — extract the approach that failed.
+ * Deleted files may indicate abandoned approaches.
+ */
+function detectAntiPatterns(dir: string): Finding[] {
+  const findings: Finding[] = [];
+
+  // Extract detailed info from reverted commits
+  const revertLog = git(
+    dir,
+    'log --grep="^Revert" --format="%s" --since="1 year ago" -20'
+  );
+
+  if (revertLog.trim()) {
+    const antiPatterns: string[] = [];
+    for (const line of revertLog.trim().split("\n").filter(Boolean)) {
+      const match = line.match(/^Revert "(.+)"/);
+      if (match) {
+        antiPatterns.push(match[1]);
+      }
+    }
+
+    if (antiPatterns.length > 0) {
+      for (const pattern of antiPatterns.slice(0, 5)) {
+        findings.push({
+          category: "Anti-patterns",
+          description: `Tried and reverted: "${pattern}". This approach was explicitly rejected.`,
+          rationale:
+            "This commit was made and then reverted. The approach failed for a reason. Do not re-attempt without understanding why it was rolled back.",
+          confidence: "high",
+          discoverable: false,
+        });
+      }
+    }
+  }
+
+  // Detect files deleted in bulk (abandoned features/approaches)
+  const deletedLog = git(
+    dir,
+    'log --diff-filter=D --name-only --pretty=format:"COMMIT %s" --since="6 months ago" -50'
+  );
+
+  if (deletedLog.trim()) {
+    const deletionBatches: { message: string; files: string[] }[] = [];
+    let currentMessage = "";
+    let currentFiles: string[] = [];
+
+    for (const line of deletedLog.split("\n")) {
+      const commitMatch = line.match(/^"?COMMIT (.+)"?$/);
+      if (commitMatch) {
+        if (currentFiles.length >= 3) {
+          deletionBatches.push({ message: currentMessage, files: currentFiles });
+        }
+        currentMessage = commitMatch[1];
+        currentFiles = [];
+      } else if (line.trim() && !line.includes("node_modules")) {
+        currentFiles.push(line.trim());
+      }
+    }
+    if (currentFiles.length >= 3) {
+      deletionBatches.push({ message: currentMessage, files: currentFiles });
+    }
+
+    // Only report significant deletions (3+ files in one commit = abandoned feature)
+    for (const batch of deletionBatches.slice(0, 3)) {
+      if (batch.files.length >= 3) {
+        const fileList = batch.files.slice(0, 3).map((f) => path.basename(f)).join(", ");
+        findings.push({
+          category: "Anti-patterns",
+          description: `Abandoned: "${batch.message}" (${batch.files.length} files deleted including ${fileList})`,
+          rationale:
+            "A batch of files was deleted in a single commit, suggesting an abandoned approach or feature removal.",
+          confidence: "medium",
+          discoverable: false,
+        });
+      }
     }
   }
 

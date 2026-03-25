@@ -1,0 +1,53 @@
+name: 'sourcebook'
+description: 'Generate AI context files (CLAUDE.md, .cursorrules, copilot-instructions.md) from your codebase conventions'
+author: 'maroond'
+
+inputs:
+  format:
+    description: 'Output formats: claude, cursor, copilot, all'
+    required: false
+    default: 'claude'
+  budget:
+    description: 'Max token budget for generated context'
+    required: false
+    default: '4000'
+  commit:
+    description: 'Auto-commit changes if files updated'
+    required: false
+    default: 'true'
+  commit-message:
+    description: 'Commit message for auto-commit'
+    required: false
+    default: 'chore: update sourcebook context files'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Run sourcebook
+      shell: bash
+      run: npx sourcebook@latest init --format ${{ inputs.format }} --budget ${{ inputs.budget }}
+
+    - name: Check for changes
+      id: changes
+      shell: bash
+      run: |
+        if git diff --quiet && git diff --cached --quiet; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit changes
+      if: steps.changes.outputs.changed == 'true' && inputs.commit == 'true'
+      shell: bash
+      run: |
+        git config user.name "sourcebook[bot]"
+        git config user.email "sourcebook[bot]@users.noreply.github.com"
+        git add CLAUDE.md .cursorrules .cursor/ .github/copilot-instructions.md 2>/dev/null || true
+        git commit -m "${{ inputs.commit-message }}" || true
+        git push

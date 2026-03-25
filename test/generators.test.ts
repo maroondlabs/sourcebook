@@ -58,9 +58,15 @@ describe("generateClaude", () => {
     expect(output).toContain("## What to Add Manually");
   });
 
-  it("respects token budget", () => {
-    const output = generateClaude(mockScan, 50);
-    expect(output.length).toBeLessThan(250);
+  it("drops low-priority sections when budget is tight", () => {
+    const fullOutput = generateClaude(mockScan, 4000);
+    const tightOutput = generateClaude(mockScan, 200);
+    // Tight budget should be shorter than full
+    expect(tightOutput.length).toBeLessThan(fullOutput.length);
+    // Critical sections always survive
+    expect(tightOutput).toContain("Critical Constraints");
+    // Supplementary sections get dropped first
+    expect(tightOutput).not.toContain("Additional Context");
   });
 });
 

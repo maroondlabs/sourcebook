@@ -20,6 +20,8 @@ const IGNORE_PATTERNS = [
   "**/ios/**",
   "**/*.lock",
   "**/package-lock.json",
+  "**/.claude/worktrees/**",
+  "**/.claude/**",
 ];
 
 export async function scanProject(dir: string): Promise<ProjectScan> {

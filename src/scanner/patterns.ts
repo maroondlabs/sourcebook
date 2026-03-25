@@ -13,13 +13,15 @@ export async function detectPatterns(
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
-  // Only analyze source files
+  // Analyze source files (JS/TS + Python + Go)
   const sourceFiles = files.filter(
     (f) =>
       f.endsWith(".ts") ||
       f.endsWith(".tsx") ||
       f.endsWith(".js") ||
-      f.endsWith(".jsx")
+      f.endsWith(".jsx") ||
+      f.endsWith(".py") ||
+      f.endsWith(".go")
   );
 
   // Sample files for pattern detection (don't read everything)
@@ -49,6 +51,12 @@ export async function detectPatterns(
 
   // --- Export patterns ---
   findings.push(...detectExportPatterns(fileContents));
+
+  // --- Python conventions ---
+  findings.push(...detectPythonConventions(files, fileContents));
+
+  // --- Go conventions ---
+  findings.push(...detectGoConventions(files, fileContents));
 
   // Filter out discoverable findings
   return findings.filter((f) => !f.discoverable);
@@ -223,6 +231,96 @@ function detectErrorHandling(contents: Map<string, string>): Finding[] {
       category: "Error handling",
       description:
         "Project uses custom error classes. Throw specific error types instead of generic Error.",
+      confidence: "medium",
+      discoverable: false,
+    });
+  }
+
+  return findings;
+}
+
+function detectPythonConventions(
+  files: string[],
+  contents: Map<string, string>
+): Finding[] {
+  const findings: Finding[] = [];
+  const pyFiles = [...contents.entries()].filter(([f]) => f.endsWith(".py"));
+  if (pyFiles.length < 3) return findings;
+
+  // Detect __init__.py barrel pattern
+  const initFiles = files.filter((f) => f.endsWith("__init__.py"));
+  const nonEmptyInits = initFiles.filter((f) => {
+    const content = contents.get(f);
+    return content && content.trim().length > 10;
+  });
+  if (nonEmptyInits.length >= 3) {
+    findings.push({
+      category: "Python conventions",
+      description: "Uses __init__.py as barrel exports. Import from the package, not from internal modules.",
+      evidence: `${nonEmptyInits.length} non-empty __init__.py files`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // Detect type hint usage
+  let typeHintCount = 0;
+  let noHintCount = 0;
+  for (const [, content] of pyFiles) {
+    const funcDefs = content.match(/def\s+\w+\s*\([^)]*\)/g) || [];
+    for (const def of funcDefs) {
+      if (def.includes(":") && def.includes("->")) typeHintCount++;
+      else noHintCount++;
+    }
+  }
+  if (typeHintCount + noHintCount > 10 && typeHintCount > noHintCount * 2) {
+    findings.push({
+      category: "Python conventions",
+      description: "Project uses type hints extensively. Add type annotations to all new functions.",
+      evidence: `${typeHintCount} typed vs ${noHintCount} untyped function signatures`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  return findings;
+}
+
+function detectGoConventions(
+  files: string[],
+  contents: Map<string, string>
+): Finding[] {
+  const findings: Finding[] = [];
+  const goFiles = [...contents.entries()].filter(([f]) => f.endsWith(".go"));
+  if (goFiles.length < 3) return findings;
+
+  // Detect error handling style
+  let errNilCount = 0;
+  let errWrapCount = 0;
+  for (const [, content] of goFiles) {
+    errNilCount += (content.match(/if\s+err\s*!=\s*nil/g) || []).length;
+    errWrapCount += (content.match(/fmt\.Errorf\(.*%w/g) || []).length;
+  }
+
+  if (errWrapCount > 5 && errWrapCount > errNilCount * 0.3) {
+    findings.push({
+      category: "Go conventions",
+      description: "Project wraps errors with fmt.Errorf(%w). Use error wrapping, not bare returns.",
+      evidence: `${errWrapCount} wrapped errors found`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // Detect interface-first design
+  let interfaceCount = 0;
+  for (const [, content] of goFiles) {
+    interfaceCount += (content.match(/type\s+\w+\s+interface\s*\{/g) || []).length;
+  }
+  if (interfaceCount >= 5) {
+    findings.push({
+      category: "Go conventions",
+      description: `Project uses interface-first design (${interfaceCount} interfaces). Define interfaces at the consumer, not the producer.`,
       confidence: "medium",
       discoverable: false,
     });
