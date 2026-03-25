@@ -8,6 +8,10 @@ npx sourcebook init
 
 One command. Analyzes your codebase. Outputs a `CLAUDE.md` tuned for how your project actually works.
 
+<p align="center">
+  <img src="demo.svg" alt="sourcebook demo" width="820" />
+</p>
+
 ## Why
 
 AI coding agents spend most of their context window just orienting — reading files to build a mental model before doing real work. Developers manually write context files (`CLAUDE.md`, `.cursorrules`, `copilot-instructions.md`), but most are generic and go stale fast.
