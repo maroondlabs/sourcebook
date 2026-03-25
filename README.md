@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.png" alt="sourcebook" width="120" />
+</p>
+
 # sourcebook
 
 Generate AI context files from your codebase's actual conventions. Not what agents already know — what they keep missing.
