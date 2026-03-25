@@ -14,6 +14,10 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="canonical" href="https://sourcebook.run"/>
+<meta name="robots" content="index, follow"/>
+<meta name="theme-color" content="#000000"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>"/>
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -35,6 +39,71 @@
         ::-webkit-scrollbar-thumb {
             background: #000000;
         }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes terminalType {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .animate-fade-up {
+            animation: fadeUp 0.6s ease-out both;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out both;
+        }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+        .delay-600 { animation-delay: 0.6s; }
+
+        /* Terminal cursor blink */
+        .terminal-cursor::after {
+            content: '█';
+            animation: blink 1s step-end infinite;
+            color: #00FF41;
+        }
+
+        /* Copy button feedback */
+        .copy-btn {
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .copy-btn:hover {
+            background-color: #00FF41;
+            color: #000000;
+        }
+        .copy-btn.copied {
+            background-color: #00FF41;
+            color: #000000;
+        }
+
+        /* Scroll-triggered animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
     </style>
 <script>
       tailwind.config = {
@@ -121,23 +190,23 @@
 <main>
 
 <!-- Hero -->
-<section class="px-6 py-12 md:py-32 flex flex-col md:grid md:grid-cols-[1fr_minmax(0,480px)] gap-12 md:gap-16 items-start max-w-7xl mx-auto">
+<section class="px-6 py-12 md:py-32 flex flex-col md:grid md:grid-cols-[1.2fr_1fr] gap-8 md:gap-12 items-start max-w-7xl mx-auto overflow-hidden">
 <div class="space-y-8 min-w-0">
-<h1 class="font-headline font-bold text-5xl md:text-7xl tracking-tighter leading-[0.85] text-black">
+<h1 class="font-headline font-bold text-6xl md:text-9xl tracking-tighter leading-[0.85] text-black animate-fade-up">
                     sourcebook
                 </h1>
-<p class="font-body text-xl md:text-2xl text-black max-w-md border-l-4 border-black pl-6">
+<p class="font-body text-xl md:text-2xl text-black max-w-md border-l-4 border-black pl-6 animate-fade-up delay-200">
                     Your codebase has conventions your AI agents keep missing.
                 </p>
-<div class="pt-4">
-<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white px-8 py-4 font-label font-bold text-lg hover:bg-[#00FF41] hover:text-black transition-colors duration-100 inline-flex items-center gap-3">
+<div class="pt-4 animate-fade-up delay-300">
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white px-8 py-4 font-label font-bold text-lg hover:bg-[#00FF41] hover:text-black transition-colors duration-100 inline-flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transform">
                         INITIALIZE_ENVIRONMENT
                         <span class="material-symbols-outlined">arrow_forward</span>
 </a>
 </div>
 </div>
 <!-- Terminal Card -->
-<div class="bg-[#0D0D0D] p-6 font-mono-tech text-sm leading-relaxed w-full order-2 md:order-none">
+<div class="bg-[#0D0D0D] p-6 font-mono-tech text-sm leading-relaxed w-full order-2 md:order-none animate-fade-in delay-400">
 <div class="flex gap-2 mb-6">
 <div class="w-3 h-3 bg-[#5F5E5E]"></div>
 <div class="w-3 h-3 bg-[#5F5E5E]"></div>
@@ -165,13 +234,13 @@
 <div class="text-white mt-4 border-t border-[#1A1A1A] pt-4">
 <span class="bg-[#00FF41] text-black px-1 mr-2">DONE</span> Wrote CLAUDE.md, .cursorrules, copilot-instructions.md
 </div>
-<div class="text-[#5F5E5E] mt-1">3.1s — only non-discoverable information.</div>
+<div class="text-[#5F5E5E] mt-1 terminal-cursor">3.1s — only non-discoverable information. </div>
 </div>
 </div>
 </section>
 
 <!-- Features Grid -->
-<section id="features" class="bg-[#F3F3F3] py-20 px-6">
+<section id="features" class="bg-[#F3F3F3] py-20 px-6 reveal">
 <div class="max-w-7xl mx-auto">
 <div class="grid md:grid-cols-3 gap-1">
 <div class="bg-white p-8 border border-[#C6C6C6] border-opacity-20 hover:bg-[#00FF41] group transition-colors duration-100">
@@ -209,7 +278,7 @@
 </section>
 
 <!-- Comparison -->
-<section class="py-24 px-6 max-w-7xl mx-auto">
+<section class="py-24 px-6 max-w-7xl mx-auto reveal">
 <h2 class="font-headline font-bold text-4xl mb-16 tracking-tight">ANALYSIS_COMPARISON</h2>
 <div class="grid md:grid-cols-2 gap-12">
 <div class="space-y-6 opacity-40">
@@ -254,7 +323,7 @@
 </section>
 
 <!-- Research -->
-<section class="bg-[#F3F3F3] py-20 px-6">
+<section class="bg-[#F3F3F3] py-20 px-6 reveal">
 <div class="max-w-7xl mx-auto">
 <h2 class="font-headline font-bold text-4xl mb-12 tracking-tight">RESEARCH_FOUNDATION</h2>
 <div class="grid md:grid-cols-2 gap-8">
@@ -286,8 +355,9 @@
 <section class="border-y-2 border-black py-20 text-center">
 <h2 class="font-headline font-extrabold text-5xl md:text-7xl tracking-tighter mb-8">READY_TO_INDEX?</h2>
 <div class="flex flex-col md:flex-row justify-center gap-4 px-6">
-<div class="bg-black text-[#00FF41] px-6 py-4 font-mono-tech text-xl flex items-center justify-center">
-                    npx sourcebook init
+<div class="bg-black text-[#00FF41] px-6 py-4 font-mono-tech text-xl flex items-center justify-center gap-4 copy-btn" onclick="copyCommand(this)" title="Click to copy">
+                    <span>npx sourcebook init</span>
+                    <span class="material-symbols-outlined text-sm opacity-50">content_copy</span>
                 </div>
 <a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black px-8 py-4 font-label font-bold text-lg hover:bg-black hover:text-white transition-all duration-100 uppercase inline-flex items-center justify-center">
                     VIEW_SOURCE
@@ -313,4 +383,48 @@
 </div>
 </footer>
 
+<script>
+// Scroll-triggered reveal animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Copy to clipboard
+function copyCommand(el) {
+  navigator.clipboard.writeText('npx sourcebook init').then(() => {
+    el.classList.add('copied');
+    const icon = el.querySelector('.material-symbols-outlined');
+    icon.textContent = 'check';
+    icon.style.opacity = '1';
+    setTimeout(() => {
+      el.classList.remove('copied');
+      icon.textContent = 'content_copy';
+      icon.style.opacity = '0.5';
+    }, 2000);
+  });
+}
+
+// Structured data for SEO
+const ld = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "sourcebook",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS, Linux, Windows",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "url": "https://sourcebook.run",
+  "description": "Generate AI context files from your codebase's actual conventions. Import graph PageRank, git forensics, convention detection.",
+  "author": { "@type": "Organization", "name": "maroond", "url": "https://maroond.ai" }
+};
+const script = document.createElement('script');
+script.type = 'application/ld+json';
+script.textContent = JSON.stringify(ld);
+document.head.appendChild(script);
+</script>
 </body></html>
