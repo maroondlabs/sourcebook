@@ -2,6 +2,8 @@ import path from "node:path";
 import chalk from "chalk";
 import { scanProject } from "../scanner/index.js";
 import { generateClaude } from "../generators/claude.js";
+import { generateCursor, generateCursorLegacy } from "../generators/cursor.js";
+import { generateCopilot } from "../generators/copilot.js";
 import { writeOutput } from "../utils/output.js";
 
 interface InitOptions {
@@ -76,7 +78,40 @@ export async function init(options: InitOptions) {
         console.log(chalk.green("✓") + " Wrote CLAUDE.md");
         break;
       }
-      // TODO: cursor, copilot, agents, json formats
+      case "cursor": {
+        const cursorContent = generateCursor(scan, budget);
+        await writeOutput(targetDir, ".cursor/rules/sourcebook.mdc", cursorContent);
+        console.log(chalk.green("✓") + " Wrote .cursor/rules/sourcebook.mdc");
+        // Also write legacy .cursorrules for older Cursor versions
+        const legacyContent = generateCursorLegacy(scan, budget);
+        await writeOutput(targetDir, ".cursorrules", legacyContent);
+        console.log(chalk.green("✓") + " Wrote .cursorrules (legacy)");
+        break;
+      }
+      case "copilot": {
+        const copilotContent = generateCopilot(scan, budget);
+        await writeOutput(targetDir, ".github/copilot-instructions.md", copilotContent);
+        console.log(chalk.green("✓") + " Wrote .github/copilot-instructions.md");
+        break;
+      }
+      case "all": {
+        const claudeAll = generateClaude(scan, budget);
+        await writeOutput(targetDir, "CLAUDE.md", claudeAll);
+        console.log(chalk.green("✓") + " Wrote CLAUDE.md");
+
+        const cursorAll = generateCursor(scan, budget);
+        await writeOutput(targetDir, ".cursor/rules/sourcebook.mdc", cursorAll);
+        console.log(chalk.green("✓") + " Wrote .cursor/rules/sourcebook.mdc");
+
+        const legacyAll = generateCursorLegacy(scan, budget);
+        await writeOutput(targetDir, ".cursorrules", legacyAll);
+        console.log(chalk.green("✓") + " Wrote .cursorrules (legacy)");
+
+        const copilotAll = generateCopilot(scan, budget);
+        await writeOutput(targetDir, ".github/copilot-instructions.md", copilotAll);
+        console.log(chalk.green("✓") + " Wrote .github/copilot-instructions.md");
+        break;
+      }
       default:
         console.log(chalk.yellow(`⚠ Format "${format}" not yet supported`));
     }

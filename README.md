@@ -32,6 +32,9 @@ npx sourcebook init
 
 # Specify output format
 npx sourcebook init --format claude    # CLAUDE.md (default)
+npx sourcebook init --format cursor    # .cursor/rules/sourcebook.mdc + .cursorrules
+npx sourcebook init --format copilot   # .github/copilot-instructions.md
+npx sourcebook init --format all       # All of the above
 ```
 
 ## Example Output
@@ -82,8 +85,8 @@ Output is formatted for **context-rot resistance** — critical constraints go a
 
 ## Roadmap
 
-- [ ] `.cursorrules` output format
-- [ ] `copilot-instructions.md` output format
+- [x] `.cursor/rules/sourcebook.mdc` + legacy `.cursorrules` output format
+- [x] `.github/copilot-instructions.md` output format
 - [ ] `sourcebook update` — re-analyze while preserving manual edits
 - [ ] `--budget <tokens>` — PageRank-based prioritization within a token limit
 - [ ] Framework knowledge packs (community-contributed)
