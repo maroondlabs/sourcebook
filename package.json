@@ -26,6 +26,19 @@
   ],
   "author": "maroond",
   "license": "MIT",
+  "homepage": "https://sourcebook.run",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maroondlabs/sourcebook.git"
+  },
+  "bugs": {
+    "url": "https://github.com/maroondlabs/sourcebook/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "commander": "^13.0.0",
     "glob": "^11.0.0",

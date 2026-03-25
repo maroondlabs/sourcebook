@@ -1,0 +1,12 @@
+src/
+test/
+site/
+.github/
+demo.svg
+demo.tape
+demo.gif
+HN_DRAFT.md
+PROJECT.md
+CONTRIBUTING.md
+tsconfig.json
+.vercel/
