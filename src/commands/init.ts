@@ -4,6 +4,7 @@ import { scanProject } from "../scanner/index.js";
 import { generateClaude } from "../generators/claude.js";
 import { generateCursor, generateCursorLegacy } from "../generators/cursor.js";
 import { generateCopilot } from "../generators/copilot.js";
+import { generateAgents } from "../generators/agents.js";
 import { writeOutput } from "../utils/output.js";
 
 interface InitOptions {
@@ -94,6 +95,12 @@ export async function init(options: InitOptions) {
         console.log(chalk.green("✓") + " Wrote .github/copilot-instructions.md");
         break;
       }
+      case "agents": {
+        const agentsContent = generateAgents(scan, budget);
+        await writeOutput(targetDir, "AGENTS.md", agentsContent);
+        console.log(chalk.green("✓") + " Wrote AGENTS.md");
+        break;
+      }
       case "all": {
         const claudeAll = generateClaude(scan, budget);
         await writeOutput(targetDir, "CLAUDE.md", claudeAll);
@@ -110,6 +117,10 @@ export async function init(options: InitOptions) {
         const copilotAll = generateCopilot(scan, budget);
         await writeOutput(targetDir, ".github/copilot-instructions.md", copilotAll);
         console.log(chalk.green("✓") + " Wrote .github/copilot-instructions.md");
+
+        const agentsAll = generateAgents(scan, budget);
+        await writeOutput(targetDir, "AGENTS.md", agentsAll);
+        console.log(chalk.green("✓") + " Wrote AGENTS.md");
         break;
       }
       default:
