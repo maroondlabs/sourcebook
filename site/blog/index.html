@@ -5,58 +5,102 @@
 <title>Blog — sourcebook</title>
 <meta name="description" content="Research, techniques, and insights on AI coding agent context — from the team behind sourcebook."/>
 <link rel="canonical" href="https://sourcebook.run/blog"/>
+<link rel="icon" type="image/png" href="../logo.png"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "electric-green": "#00FF41",
+                    "terminal-black": "#0D0D0D",
+                },
+                fontFamily: {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
 <style>
-    body { font-family: 'Inter', sans-serif; background: #fff; color: #000; }
-    .font-mono-tech { font-family: 'Space Grotesk', monospace; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 </style>
 </head>
-<body class="bg-white text-black selection:bg-[#00FF41] selection:text-black">
+<body class="antialiased">
 
 <!-- Nav -->
-<nav class="bg-white flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 border-b border-[#eee]">
+<nav class="fixed top-0 w-full z-50 bg-white flex justify-between items-center px-6 py-4">
 <a href="/" class="flex items-center gap-3">
 <img src="../logo.png" alt="sourcebook" class="h-8 w-8"/>
-<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black">SOURCEBOOK</span>
+<span class="text-xl font-bold tracking-tighter text-black uppercase font-headline">SOURCEBOOK</span>
 </a>
-<div class="flex items-center gap-4">
-<a href="/blog" class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black">BLOG</a>
-<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors">GET_STARTED</a>
+<div class="flex items-center space-x-8">
+<a class="font-headline text-sm tracking-widest text-black border-b-2 border-electric-green pb-1" href="/blog">BLOG</a>
+<a class="font-headline text-sm tracking-widest text-black opacity-70 hover:bg-electric-green hover:text-black px-2 py-1" href="https://github.com/maroondlabs/sourcebook">GET_STARTED</a>
 </div>
 </nav>
 
-<main class="max-w-3xl mx-auto px-6 py-16">
+<main class="pt-16">
 
-<h1 class="font-['Space_Grotesk'] font-bold text-5xl tracking-tighter mb-16">BLOG</h1>
+<!-- Header -->
+<header class="w-full bg-[#F3F3F3] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<h1 class="font-headline font-bold text-6xl md:text-8xl tracking-tighter text-black mb-4">BLOG</h1>
+<p class="font-body text-lg text-[#5F5E5E]">Research, techniques, and field notes on building for agents.</p>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20"></div>
 
-<!-- Post 1 -->
-<a href="/blog/why-auto-generated-context-makes-agents-worse" class="block group border-b border-[#eee] pb-10 mb-10 hover:border-[#00FF41] transition-colors">
-<div class="font-['Space_Grotesk'] text-xs uppercase tracking-widest text-[#5F5E5E] mb-3">RESEARCH · MARCH 2026</div>
-<h2 class="font-['Space_Grotesk'] font-bold text-2xl md:text-3xl tracking-tight mb-3 group-hover:text-[#00FF41] transition-colors">
+<!-- Post List -->
+<section class="max-w-screen-xl mx-auto px-6 py-16">
+
+<a href="/blog/why-auto-generated-context-makes-agents-worse" class="block group border-b border-[#C6C6C6]/30 pb-12 mb-12 hover:border-electric-green transition-colors">
+<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+<div class="flex-1">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">RESEARCH · MARCH 2026</span>
+<h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 group-hover:text-electric-green transition-colors">
 Why auto-generated CLAUDE.md files make your AI agents worse
 </h2>
-<p class="text-[#5F5E5E] text-base">
-ETH Zurich research shows auto-generated context files hurt performance by 2-3%. The only context that helps is what agents can't figure out alone.
+<p class="font-body text-[#5F5E5E] text-base max-w-2xl">
+ETH Zurich research shows auto-generated context files hurt performance by 2-3%. The only context that helps is what agents can't figure out alone. Three techniques that extract what they miss.
 </p>
+</div>
+<div class="font-headline text-xs tracking-widest text-[#5F5E5E] uppercase mt-2 md:mt-8 whitespace-nowrap">
+READ →
+</div>
+</div>
 </a>
+
+</section>
 
 </main>
 
 <!-- Footer -->
-<footer class="bg-white flex flex-col md:flex-row justify-between items-center w-full px-6 py-8 gap-4 border-t-2 border-black mt-12">
-<div class="flex items-center gap-2">
+<footer class="w-full bg-white border-t border-[#C6C6C6]/20 flex flex-col md:flex-row justify-between items-center px-8 py-12">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
 <img src="../logo.png" alt="sourcebook" class="h-6 w-6"/>
-<span class="font-['Space_Grotesk'] font-bold text-black">SOURCEBOOK</span>
+<span class="text-lg font-bold text-black font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
 </div>
-<div class="flex gap-8 items-center">
-<a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
-<a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors" href="https://www.npmjs.com/package/sourcebook">NPM</a>
-<a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors" href="https://x.com/maroond_">TWITTER_X</a>
 </div>
-<div class="flex items-center gap-4">
-<span class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E]">MIT_LICENSE</span>
-<div class="w-2 h-2 bg-[#00FF41] animate-pulse"></div>
+<div class="flex space-x-12 mb-8 md:mb-0">
+<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+MIT_LICENSE © 2026
 </div>
 </footer>
 
