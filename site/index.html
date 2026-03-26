@@ -40,6 +40,9 @@
         ::-webkit-scrollbar-thumb {
             background: #000000;
         }
+        html.dark body { background-color: #000000; color: #FFFFFF; }
+        html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+        html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
 
         /* Animations */
         @keyframes fadeUp {
@@ -171,25 +174,25 @@
       }
     </script>
 </head>
-<body class="bg-white text-black selection:bg-[#00FF41] selection:text-black">
+<body class="bg-white dark:bg-black text-black dark:text-white selection:bg-[#00FF41] selection:text-black">
 
 <!-- Nav -->
-<nav class="bg-white flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 sticky top-0 z-50">
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
 <a href="/" class="flex items-center gap-3">
 <img src="logo.png" alt="sourcebook" class="h-8 w-8"/>
-<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black">SOURCEBOOK</span>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
 </a>
 <div class="hidden md:flex gap-8 items-center">
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook#readme">DOCS</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] hover:text-[#00FF41] transition-colors duration-100" href="#features">FEATURES</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook/blob/main/CONTRIBUTING.md">CONTRIBUTE</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook/releases">CHANGELOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook#readme">DOCS</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="#features">FEATURES</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook/releases">CHANGELOG</a>
 </div>
 <div class="flex items-center gap-4">
-<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black hover:text-[#00FF41] transition-colors">terminal</a>
-<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
 </div>
 </nav>
 
@@ -198,14 +201,14 @@
 <!-- Hero -->
 <section class="px-6 py-12 md:py-32 flex flex-col md:grid md:grid-cols-[1.2fr_1fr] gap-8 md:gap-12 items-start max-w-7xl mx-auto overflow-hidden">
 <div class="space-y-8 min-w-0">
-<h1 class="font-headline font-bold text-6xl md:text-9xl tracking-tighter leading-[0.85] text-black animate-fade-up">
+<h1 class="font-headline font-bold text-6xl md:text-9xl tracking-tighter leading-[0.85] text-black dark:text-white animate-fade-up">
                     sourcebook
                 </h1>
-<p class="font-body text-xl md:text-2xl text-black max-w-md border-l-4 border-black pl-6 animate-fade-up delay-200">
+<p class="font-body text-xl md:text-2xl text-black dark:text-[#A0A0A0] max-w-md border-l-4 border-black dark:border-[#00FF41] pl-6 animate-fade-up delay-200">
                     Your codebase has conventions your AI agents keep missing.
                 </p>
 <div class="pt-4 animate-fade-up delay-300">
-<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white px-8 py-4 font-label font-bold text-lg hover:bg-[#00FF41] hover:text-black transition-colors duration-100 inline-flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transform">
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-8 py-4 font-label font-bold text-lg hover:bg-[#00FF41] hover:text-black transition-colors duration-100 inline-flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transform">
                         INITIALIZE_ENVIRONMENT
                         <span class="material-symbols-outlined">arrow_forward</span>
 </a>
@@ -246,33 +249,33 @@
 </section>
 
 <!-- Features Grid -->
-<section id="features" class="bg-[#F3F3F3] py-20 px-6 reveal">
+<section id="features" class="bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6 reveal">
 <div class="max-w-7xl mx-auto">
 <div class="grid md:grid-cols-3 gap-1">
-<div class="bg-white p-8 border border-[#C6C6C6] border-opacity-20 hover:bg-[#00FF41] group transition-colors duration-100">
+<div class="bg-white dark:bg-black p-8 border border-[#C6C6C6] dark:border-[#1A1A1A] border-opacity-20 hover:bg-[#00FF41] group transition-colors duration-100">
 <span class="font-label text-xs mb-4 block text-[#5F5E5E] group-hover:text-black">ALGORITHM_01</span>
-<h3 class="font-headline font-bold text-2xl mb-4 group-hover:text-black">Import Graph PageRank</h3>
-<p class="font-body text-sm mb-8 text-[#5F5E5E] group-hover:text-black">Ranks every file by structural importance. Find the hubs that break everything when you touch them.</p>
+<h3 class="font-headline font-bold text-2xl mb-4 dark:text-white group-hover:text-black">Import Graph PageRank</h3>
+<p class="font-body text-sm mb-8 text-[#5F5E5E] dark:text-[#A0A0A0] group-hover:text-black">Ranks every file by structural importance. Find the hubs that break everything when you touch them.</p>
 <div class="bg-[#0D0D0D] p-4 font-mono-tech text-[10px] text-[#00FF41]">
                             Hub: types.ts (183 importers)<br/>
                             Hub: fixtures.ts (86 importers)<br/>
                             Hub: http.ts (72 importers)
                         </div>
 </div>
-<div class="bg-white p-8 border border-[#C6C6C6] border-opacity-20 hover:bg-[#00FF41] group transition-colors duration-100">
+<div class="bg-white dark:bg-black p-8 border border-[#C6C6C6] dark:border-[#1A1A1A] border-opacity-20 hover:bg-[#00FF41] group transition-colors duration-100">
 <span class="font-label text-xs mb-4 block text-[#5F5E5E] group-hover:text-black">ALGORITHM_02</span>
-<h3 class="font-headline font-bold text-2xl mb-4 group-hover:text-black">Git Forensics</h3>
-<p class="font-body text-sm mb-8 text-[#5F5E5E] group-hover:text-black">Reverted commits are "don't do this" signals. Co-change coupling reveals invisible dependencies.</p>
+<h3 class="font-headline font-bold text-2xl mb-4 dark:text-white group-hover:text-black">Git Forensics</h3>
+<p class="font-body text-sm mb-8 text-[#5F5E5E] dark:text-[#A0A0A0] group-hover:text-black">Reverted commits are "don't do this" signals. Co-change coupling reveals invisible dependencies.</p>
 <div class="bg-[#0D0D0D] p-4 font-mono-tech text-[10px] text-[#00FF41]">
                             CO-CHANGE: auth.ts ↔ session.ts<br/>
                             CORRELATION: 88%<br/>
                             REVERTS: 2 found (anti-patterns)
                         </div>
 </div>
-<div class="bg-white p-8 border border-[#C6C6C6] border-opacity-20 hover:bg-[#00FF41] group transition-colors duration-100">
+<div class="bg-white dark:bg-black p-8 border border-[#C6C6C6] dark:border-[#1A1A1A] border-opacity-20 hover:bg-[#00FF41] group transition-colors duration-100">
 <span class="font-label text-xs mb-4 block text-[#5F5E5E] group-hover:text-black">ALGORITHM_03</span>
-<h3 class="font-headline font-bold text-2xl mb-4 group-hover:text-black">Convention Detection</h3>
-<p class="font-body text-sm mb-8 text-[#5F5E5E] group-hover:text-black">Naming patterns, export style, barrel exports, path aliases — the tribal knowledge no README captures.</p>
+<h3 class="font-headline font-bold text-2xl mb-4 dark:text-white group-hover:text-black">Convention Detection</h3>
+<p class="font-body text-sm mb-8 text-[#5F5E5E] dark:text-[#A0A0A0] group-hover:text-black">Naming patterns, export style, barrel exports, path aliases — the tribal knowledge no README captures.</p>
 <div class="bg-[#0D0D0D] p-4 font-mono-tech text-[10px] text-[#00FF41]">
                             EXPORTS: named (75:18 ratio)<br/>
                             IMPORTS: path alias @/ preferred<br/>
@@ -285,11 +288,11 @@
 
 <!-- Comparison -->
 <section class="py-24 px-6 max-w-7xl mx-auto reveal">
-<h2 class="font-headline font-bold text-4xl mb-16 tracking-tight">ANALYSIS_COMPARISON</h2>
+<h2 class="font-headline font-bold text-4xl mb-16 tracking-tight dark:text-white">ANALYSIS_COMPARISON</h2>
 <div class="grid md:grid-cols-2 gap-12">
 <div class="space-y-6 opacity-40">
 <span class="font-label text-xs tracking-widest text-[#5F5E5E]">WHAT_OTHERS_GENERATE</span>
-<div class="border border-[#C6C6C6] p-8 font-mono-tech text-xs space-y-2">
+<div class="border border-[#C6C6C6] dark:border-[#333333] dark:text-[#A0A0A0] p-8 font-mono-tech text-xs space-y-2">
 <div>📁 src</div>
 <div class="ml-4">📁 components</div>
 <div class="ml-8">📄 button.tsx</div>
@@ -301,23 +304,23 @@
 </div>
 <div class="space-y-6">
 <div class="flex justify-between items-end">
-<span class="font-label text-xs tracking-widest text-black">WHAT_SOURCEBOOK_GENERATES</span>
+<span class="font-label text-xs tracking-widest text-black dark:text-white">WHAT_SOURCEBOOK_GENERATES</span>
 <span class="text-[#00FF41] text-xs font-mono-tech">[PRECISION_MODE]</span>
 </div>
-<div class="border-2 border-black p-8 font-mono-tech text-xs space-y-6 bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+<div class="border-2 border-black dark:border-[#00FF41] p-8 font-mono-tech text-xs space-y-6 bg-white dark:bg-[#0D0D0D] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(0,255,65,0.3)]">
 <div class="space-y-1">
-<div class="text-black font-bold">CRITICAL_HUB: <span class="bg-black text-white px-1">lib/dispatcher.ts</span></div>
-<div class="text-[#5F5E5E]">Imported by 42 files. Modification risk: HIGH.</div>
+<div class="text-black dark:text-white font-bold">CRITICAL_HUB: <span class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-1">lib/dispatcher.ts</span></div>
+<div class="text-[#5F5E5E] dark:text-[#A0A0A0]">Imported by 42 files. Modification risk: HIGH.</div>
 </div>
 <div class="space-y-1 border-l-2 border-[#00FF41] pl-4">
-<div class="text-black font-bold">CO-CHANGE_COUPLING</div>
-<div class="text-[#5F5E5E]">Changing <span class="text-black">auth/provider.ts</span> usually requires updates in <span class="text-black">middleware/session.ts</span> (88% correlation).</div>
+<div class="text-black dark:text-white font-bold">CO-CHANGE_COUPLING</div>
+<div class="text-[#5F5E5E] dark:text-[#A0A0A0]">Changing <span class="text-black dark:text-[#00FF41]">auth/provider.ts</span> usually requires updates in <span class="text-black dark:text-[#00FF41]">middleware/session.ts</span> (88% correlation).</div>
 </div>
 <div class="space-y-1">
-<div class="text-black font-bold underline">CIRCULAR_DEPENDENCY</div>
+<div class="text-black dark:text-white font-bold underline">CIRCULAR_DEPENDENCY</div>
 <div class="text-error">models/user.ts → services/auth.ts → models/user.ts</div>
 </div>
-<div class="pt-4 border-t border-[#EEEEEE]">
+<div class="pt-4 border-t border-[#EEEEEE] dark:border-[#1A1A1A]">
 <div class="flex items-center gap-2 text-[#00FF41]">
 <span class="material-symbols-outlined text-sm">terminal</span>
 <span>Context injected. Agent ready.</span>
@@ -329,56 +332,56 @@
 </section>
 
 <!-- Research -->
-<section class="bg-[#F3F3F3] py-20 px-6 reveal">
+<section class="bg-[#F3F3F3] dark:bg-[#050505] py-20 px-6 reveal">
 <div class="max-w-7xl mx-auto">
-<h2 class="font-headline font-bold text-4xl mb-12 tracking-tight">RESEARCH_FOUNDATION</h2>
+<h2 class="font-headline font-bold text-4xl mb-12 tracking-tight dark:text-white">RESEARCH_FOUNDATION</h2>
 <div class="grid md:grid-cols-2 gap-8">
-<div class="bg-white p-8 border border-[#C6C6C6] border-opacity-20">
+<div class="bg-white dark:bg-[#0D0D0D] p-8 border border-[#C6C6C6] dark:border-[#1A1A1A] border-opacity-20">
 <span class="font-label text-xs mb-2 block text-[#5F5E5E]">ETH ZURICH, 2025</span>
-<h3 class="font-headline font-bold text-lg mb-3">Auto-generated obvious context makes agents worse</h3>
-<p class="font-body text-sm text-[#5F5E5E]">LLM-generated context files reduced task success by 2-3% and increased inference costs by 20%+. Only non-discoverable information improves performance.</p>
+<h3 class="font-headline font-bold text-lg mb-3 dark:text-white">Auto-generated obvious context makes agents worse</h3>
+<p class="font-body text-sm text-[#5F5E5E] dark:text-[#A0A0A0]">LLM-generated context files reduced task success by 2-3% and increased inference costs by 20%+. Only non-discoverable information improves performance.</p>
 </div>
-<div class="bg-white p-8 border border-[#C6C6C6] border-opacity-20">
+<div class="bg-white dark:bg-[#0D0D0D] p-8 border border-[#C6C6C6] dark:border-[#1A1A1A] border-opacity-20">
 <span class="font-label text-xs mb-2 block text-[#5F5E5E]">KARPATHY, 2026</span>
-<h3 class="font-headline font-bold text-lg mb-3">program.md is the #1 lever for agent effectiveness</h3>
-<p class="font-body text-sm text-[#5F5E5E]">Autoresearch ran 700 experiments in 2 days because the curated context file contained only what the agent couldn't figure out alone.</p>
+<h3 class="font-headline font-bold text-lg mb-3 dark:text-white">program.md is the #1 lever for agent effectiveness</h3>
+<p class="font-body text-sm text-[#5F5E5E] dark:text-[#A0A0A0]">Autoresearch ran 700 experiments in 2 days because the curated context file contained only what the agent couldn't figure out alone.</p>
 </div>
-<div class="bg-white p-8 border border-[#C6C6C6] border-opacity-20">
+<div class="bg-white dark:bg-[#0D0D0D] p-8 border border-[#C6C6C6] dark:border-[#1A1A1A] border-opacity-20">
 <span class="font-label text-xs mb-2 block text-[#5F5E5E]">AIDER</span>
-<h3 class="font-headline font-bold text-lg mb-3">PageRank on import graphs for structural importance</h3>
-<p class="font-body text-sm text-[#5F5E5E]">Repo-map technique ranks files by how many other files depend on them. sourcebook uses this to identify architectural hubs.</p>
+<h3 class="font-headline font-bold text-lg mb-3 dark:text-white">PageRank on import graphs for structural importance</h3>
+<p class="font-body text-sm text-[#5F5E5E] dark:text-[#A0A0A0]">Repo-map technique ranks files by how many other files depend on them. sourcebook uses this to identify architectural hubs.</p>
 </div>
-<div class="bg-white p-8 border border-[#C6C6C6] border-opacity-20">
+<div class="bg-white dark:bg-[#0D0D0D] p-8 border border-[#C6C6C6] dark:border-[#1A1A1A] border-opacity-20">
 <span class="font-label text-xs mb-2 block text-[#5F5E5E]">CHROMA RESEARCH, 2026</span>
-<h3 class="font-headline font-bold text-lg mb-3">LLMs lose 30%+ accuracy in the middle of long contexts</h3>
-<p class="font-body text-sm text-[#5F5E5E]">sourcebook places critical constraints at the top and bottom of output files — where LLMs pay the most attention.</p>
+<h3 class="font-headline font-bold text-lg mb-3 dark:text-white">LLMs lose 30%+ accuracy in the middle of long contexts</h3>
+<p class="font-body text-sm text-[#5F5E5E] dark:text-[#A0A0A0]">sourcebook places critical constraints at the top and bottom of output files — where LLMs pay the most attention.</p>
 </div>
 </div>
 </div>
 </section>
 
 <!-- CTA -->
-<section class="border-y-2 border-black py-20 text-center">
-<h2 class="font-headline font-extrabold text-5xl md:text-7xl tracking-tighter mb-8">READY_TO_INDEX?</h2>
+<section class="border-y-2 border-black dark:border-[#1A1A1A] dark:bg-[#050505] py-20 text-center">
+<h2 class="font-headline font-extrabold text-5xl md:text-7xl tracking-tighter mb-8 dark:text-white">READY_TO_INDEX?</h2>
 <div class="flex flex-col md:flex-row justify-center gap-4 px-6">
 <div class="bg-black text-[#00FF41] px-6 py-4 font-mono-tech text-xl flex items-center justify-center gap-4 copy-btn" onclick="copyCommand(this)" title="Click to copy">
                     <span>npx sourcebook init</span>
                     <span class="material-symbols-outlined text-sm opacity-50">content_copy</span>
                 </div>
-<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black px-8 py-4 font-label font-bold text-lg hover:bg-black hover:text-white transition-all duration-100 uppercase inline-flex items-center justify-center">
+<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black dark:border-white dark:text-white px-8 py-4 font-label font-bold text-lg hover:bg-black hover:text-white dark:hover:bg-[#00FF41] dark:hover:text-black dark:hover:border-[#00FF41] transition-all duration-100 uppercase inline-flex items-center justify-center">
                     VIEW_SOURCE
                 </a>
 </div>
-<p class="font-body text-sm text-[#5F5E5E] mt-6">No API keys. No LLM. Everything runs locally. MIT licensed.</p>
+<p class="font-body text-sm text-[#5F5E5E] dark:text-[#A0A0A0] mt-6">No API keys. No LLM. Everything runs locally. BSL-1.1 licensed.</p>
 </section>
 
 </main>
 
 <!-- Footer -->
-<footer class="bg-white flex flex-col md:flex-row justify-between items-center w-full px-6 py-8 gap-4 border-t-2 border-black mt-12">
+<footer class="bg-white dark:bg-black flex flex-col md:flex-row justify-between items-center w-full px-6 py-8 gap-4 border-t-2 border-black dark:border-t dark:border-[#1A1A1A] mt-12">
 <div class="flex items-center gap-2">
 <img src="logo.png" alt="sourcebook" class="h-6 w-6"/>
-<span class="font-['Space_Grotesk'] font-bold text-black">SOURCEBOOK</span>
+<span class="font-['Space_Grotesk'] font-bold text-black dark:text-white">SOURCEBOOK</span>
 </div>
 <div class="flex gap-8 items-center">
 <a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
@@ -386,7 +389,7 @@
 <a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors duration-100" href="https://x.com/maroond_">TWITTER_X</a>
 </div>
 <div class="flex items-center gap-4">
-<span class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E]">MIT_LICENSE</span>
+<span class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E]">BSL-1.1</span>
 <span class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E]">MAROOND_LABS</span>
 <div class="w-2 h-2 bg-[#00FF41] animate-pulse"></div>
 </div>
@@ -418,6 +421,24 @@ function copyCommand(el) {
     }, 2000);
   });
 }
+
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+// Apply saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+  }
+})();
 
 // Structured data for SEO
 const ld = {

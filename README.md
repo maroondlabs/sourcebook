@@ -168,4 +168,4 @@ Built on findings from:
 
 ## License
 
-MIT
+BSL-1.1 — source-available, free to use, cannot be offered as a hosted service. Converts to MIT on 2030-03-25. See [LICENSE](./LICENSE) for details.

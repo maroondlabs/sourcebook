@@ -6,6 +6,14 @@
 <meta name="description" content="Research, techniques, and insights on AI coding agent context — from the team behind sourcebook."/>
 <link rel="canonical" href="https://sourcebook.run/blog"/>
 <link rel="icon" type="image/png" href="../logo.png"/>
+<meta property="og:title" content="Blog — sourcebook"/>
+<meta property="og:description" content="Research, techniques, and insights on AI coding agent context."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://sourcebook.run/blog"/>
+<meta property="og:image" content="https://sourcebook.run/logo.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Blog — sourcebook"/>
+<meta name="twitter:description" content="Research, techniques, and insights on AI coding agent context."/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script>
@@ -28,47 +36,51 @@
 </script>
 <style>
     body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
     h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
     .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 </style>
 </head>
-<body class="antialiased">
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
 
 <!-- Nav -->
-<nav class="fixed top-0 w-full z-50 bg-white flex justify-between items-center px-6 py-4">
+<nav class="fixed top-0 w-full z-50 bg-white dark:bg-black dark:border-b dark:border-[#1A1A1A] flex justify-between items-center px-6 py-4">
 <a href="/" class="flex items-center gap-3">
 <img src="../logo.png" alt="sourcebook" class="h-8 w-8"/>
-<span class="text-xl font-bold tracking-tighter text-black uppercase font-headline">SOURCEBOOK</span>
+<span class="text-xl font-bold tracking-tighter text-black dark:text-white uppercase font-headline">SOURCEBOOK</span>
 </a>
 <div class="flex items-center space-x-8">
-<a class="font-headline text-sm tracking-widest text-black border-b-2 border-electric-green pb-1" href="/blog">BLOG</a>
-<a class="font-headline text-sm tracking-widest text-black opacity-70 hover:bg-electric-green hover:text-black px-2 py-1" href="https://github.com/maroondlabs/sourcebook">GET_STARTED</a>
+<a class="font-headline text-sm tracking-widest text-black dark:text-white border-b-2 border-electric-green pb-1" href="/blog">BLOG</a>
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-electric-green transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a class="font-headline text-sm tracking-widest text-black dark:text-[#A0A0A0] opacity-70 hover:bg-electric-green hover:text-black px-2 py-1" href="https://github.com/maroondlabs/sourcebook">GET_STARTED</a>
 </div>
 </nav>
 
 <main class="pt-16">
 
 <!-- Header -->
-<header class="w-full bg-[#F3F3F3] py-20 px-6">
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
 <div class="max-w-screen-xl mx-auto">
-<h1 class="font-headline font-bold text-6xl md:text-8xl tracking-tighter text-black mb-4">BLOG</h1>
-<p class="font-body text-lg text-[#5F5E5E]">Research, techniques, and field notes on building for agents.</p>
+<h1 class="font-headline font-bold text-6xl md:text-8xl tracking-tighter text-black dark:text-white mb-4">BLOG</h1>
+<p class="font-body text-lg text-[#5F5E5E] dark:text-[#A0A0A0]">Research, techniques, and field notes on building for agents.</p>
 </div>
 </header>
-<div class="w-full h-px bg-[#C6C6C6]/20"></div>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
 
 <!-- Post List -->
 <section class="max-w-screen-xl mx-auto px-6 py-16">
 
-<a href="/blog/why-auto-generated-context-makes-agents-worse" class="block group border-b border-[#C6C6C6]/30 pb-12 mb-12 hover:border-electric-green transition-colors">
+<a href="/blog/why-auto-generated-context-makes-agents-worse" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 <div class="flex-1">
 <span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">RESEARCH · MARCH 2026</span>
-<h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 group-hover:text-electric-green transition-colors">
+<h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 dark:text-white group-hover:text-electric-green transition-colors">
 Why auto-generated CLAUDE.md files make your AI agents worse
 </h2>
-<p class="font-body text-[#5F5E5E] text-base max-w-2xl">
+<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-base max-w-2xl">
 ETH Zurich research shows auto-generated context files hurt performance by 2-3%. The only context that helps is what agents can't figure out alone. Three techniques that extract what they miss.
 </p>
 </div>
@@ -83,11 +95,11 @@ READ →
 </main>
 
 <!-- Footer -->
-<footer class="w-full bg-white border-t border-[#C6C6C6]/20 flex flex-col md:flex-row justify-between items-center px-8 py-12">
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12">
 <div class="flex items-center space-x-4 mb-8 md:mb-0">
 <a href="/" class="flex items-center gap-2">
 <img src="../logo.png" alt="sourcebook" class="h-6 w-6"/>
-<span class="text-lg font-bold text-black font-headline">SOURCEBOOK</span>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
 </a>
 <div class="flex items-center space-x-2">
 <div class="pulsing-dot"></div>
@@ -95,13 +107,32 @@ READ →
 </div>
 </div>
 <div class="flex space-x-12 mb-8 md:mb-0">
-<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
-<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
-<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
 </div>
 <div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
-MIT_LICENSE © 2026
+BSL-1.1 © 2026
 </div>
 </footer>
 
+<script>
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+// Apply saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+  }
+})();
+</script>
 </body></html>

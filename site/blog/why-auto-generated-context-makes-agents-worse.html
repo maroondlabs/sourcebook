@@ -38,63 +38,67 @@
 <style>
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
     h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
     .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 </style>
 </head>
-<body class="antialiased">
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
 
 <!-- Nav -->
-<nav class="fixed top-0 w-full z-50 bg-white flex justify-between items-center px-6 py-4">
+<nav class="fixed top-0 w-full z-50 bg-white dark:bg-black dark:border-b dark:border-[#1A1A1A] flex justify-between items-center px-6 py-4">
 <a href="/" class="flex items-center gap-3">
 <img src="../logo.png" alt="sourcebook" class="h-8 w-8"/>
-<span class="text-xl font-bold tracking-tighter text-black uppercase font-headline">SOURCEBOOK</span>
+<span class="text-xl font-bold tracking-tighter text-black dark:text-white uppercase font-headline">SOURCEBOOK</span>
 </a>
 <div class="flex items-center space-x-8">
-<a class="font-headline text-sm tracking-widest text-black border-b-2 border-electric-green pb-1" href="/blog">BLOG</a>
-<a class="font-headline text-sm tracking-widest text-black opacity-70 hover:bg-electric-green hover:text-black px-2 py-1" href="https://github.com/maroondlabs/sourcebook">GET_STARTED</a>
+<a class="font-headline text-sm tracking-widest text-black dark:text-white border-b-2 border-electric-green pb-1" href="/blog">BLOG</a>
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-electric-green transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a class="font-headline text-sm tracking-widest text-black dark:text-[#A0A0A0] opacity-70 hover:bg-electric-green hover:text-black px-2 py-1" href="https://github.com/maroondlabs/sourcebook">GET_STARTED</a>
 </div>
 </nav>
 
 <main class="pt-16">
 
 <!-- Article Header -->
-<header class="w-full bg-[#F3F3F3] py-20 px-6">
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
 <div class="max-w-screen-xl mx-auto">
 <span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">RESEARCH · MARCH 2026</span>
-<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black mb-8 max-w-4xl">
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
 Why auto-generated CLAUDE.md files make your AI agents worse
 </h1>
-<div class="border-l-2 border-black pl-6 max-w-2xl">
-<p class="font-body text-xl text-[#1b1b1b] italic">And why the fix isn't better generation — it's knowing what to leave out.</p>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">And why the fix isn't better generation — it's knowing what to leave out.</p>
 </div>
 </div>
 </header>
-<div class="w-full h-px bg-[#C6C6C6]/20"></div>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
 
 <!-- Article Body -->
 <article class="max-w-[720px] mx-auto px-6 py-16">
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 Every AI coding tool now has a context file. Claude Code reads <code class="bg-terminal-black text-electric-green px-1 font-mono">CLAUDE.md</code>. Cursor reads <code class="bg-terminal-black text-electric-green px-1 font-mono">.cursorrules</code>. GitHub Copilot reads <code class="bg-terminal-black text-electric-green px-1 font-mono">copilot-instructions.md</code>. The idea is simple: give the agent a brief about your project so it writes better code.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 Most developers either skip it entirely or write something generic: "This is a Next.js project using TypeScript and Tailwind." Then a wave of tools appeared to auto-generate these files — scan the repo, detect the stack, dump the directory tree, output a context file.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 Sounds helpful. Turns out it makes things worse.
 </p>
 
-<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight">The research that changed how we think about context</h2>
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">The research that changed how we think about context</h2>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 In February 2025, researchers at ETH Zurich ran a systematic study on context files across 138 real repositories. They tested how auto-generated context affected AI coding agent performance on actual development tasks.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-6">The findings were counterintuitive:</p>
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">The findings were counterintuitive:</p>
 
 <ul class="space-y-4 mb-12">
 <li class="flex items-start">
@@ -111,26 +115,26 @@ In February 2025, researchers at ETH Zurich ran a systematic study on context fi
 </li>
 </ul>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 The reason: 100% of the auto-generated files contained information the agent could already discover by reading the code. Tech stack, directory structure, file organization — the agent already knows this. Telling it again doesn't help. It actively hurts by consuming context window space that could hold something useful.
 </p>
 
-<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight">What actually works: non-discoverable information</h2>
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">What actually works: non-discoverable information</h2>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 The same study found that <strong>human-written context files documenting non-obvious conventions</strong> showed a 28% runtime reduction and 17% fewer tokens used. The key distinction: the information had to be something the agent couldn't figure out by reading the code.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#5F5E5E] mb-4">Things agents can discover on their own (don't include):</p>
+<p class="font-body text-[17px] leading-[1.8] text-[#5F5E5E] dark:text-[#A0A0A0] mb-4">Things agents can discover on their own (don't include):</p>
 
 <ul class="space-y-2 mb-8 pl-6">
-<li class="font-body text-[17px] text-[#5F5E5E] list-disc">Your tech stack (they can read package.json)</li>
-<li class="font-body text-[17px] text-[#5F5E5E] list-disc">Directory structure (they can list files)</li>
-<li class="font-body text-[17px] text-[#5F5E5E] list-disc">What framework you use (they can see the imports)</li>
-<li class="font-body text-[17px] text-[#5F5E5E] list-disc">That you use TypeScript (they can see the .ts extensions)</li>
+<li class="font-body text-[17px] text-[#5F5E5E] dark:text-[#A0A0A0] list-disc">Your tech stack (they can read package.json)</li>
+<li class="font-body text-[17px] text-[#5F5E5E] dark:text-[#A0A0A0] list-disc">Directory structure (they can list files)</li>
+<li class="font-body text-[17px] text-[#5F5E5E] dark:text-[#A0A0A0] list-disc">What framework you use (they can see the imports)</li>
+<li class="font-body text-[17px] text-[#5F5E5E] dark:text-[#A0A0A0] list-disc">That you use TypeScript (they can see the .ts extensions)</li>
 </ul>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-4">Things agents keep missing (include these):</p>
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-4">Things agents keep missing (include these):</p>
 
 <ul class="space-y-3 mb-12">
 <li class="flex items-start">
@@ -155,43 +159,43 @@ The same study found that <strong>human-written context files documenting non-ob
 </li>
 </ul>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 The pattern is clear: <strong>conventions, constraints, hidden dependencies, and historical decisions</strong> — the tribal knowledge that lives in people's heads, not in the code.
 </p>
 
-<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight">The Karpathy connection</h2>
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">The Karpathy connection</h2>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 Andrej Karpathy's autoresearch project independently proved the same principle. His system uses three files: <code class="bg-terminal-black text-electric-green px-1 font-mono">program.md</code> (curated context), <code class="bg-terminal-black text-electric-green px-1 font-mono">train.py</code> (code the agent modifies), and <code class="bg-terminal-black text-electric-green px-1 font-mono">prepare.py</code> (read-only evaluation).
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 The agent ran 700 experiments in 2 days, producing 20 genuine improvements. It worked because <code class="bg-terminal-black text-electric-green px-1 font-mono">program.md</code> contained <em>only</em> what the agent couldn't figure out alone: the objective metric, what can vs. can't be changed, failure recovery rules, and the autonomy boundary.
 </p>
 
-<blockquote class="border-l-4 border-electric-green pl-8 py-2 mb-12 italic text-xl text-black">
+<blockquote class="border-l-4 border-electric-green pl-8 py-2 mb-12 italic text-xl text-black dark:text-white">
 "You don't program train.py. You program program.md. You are programming the programmer."
 </blockquote>
 
-<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight">Three techniques that extract what agents miss</h2>
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">Three techniques that extract what agents miss</h2>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 If the goal is to surface non-discoverable information, you need techniques that go beyond reading the current codebase. Here are three that work:
 </p>
 
-<h3 class="font-headline font-bold text-lg mt-8 mb-3">1. Import graph PageRank</h3>
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">1. Import graph PageRank</h3>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 Build a directed graph where files are nodes and imports are edges. Run PageRank. The highest-ranked files are your architectural hubs — the ones that break the most things when modified. An agent reading files one at a time can't see this structural importance. It treats a utility function and a core dispatcher the same.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 This technique comes from aider's repo-map. When you tell an agent "this file is imported by 183 others — changes have wide blast radius," it writes more careful code.
 </p>
 
-<h3 class="font-headline font-bold text-lg mt-8 mb-3">2. Git forensics</h3>
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">2. Git forensics</h3>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-4">The commit history contains signals no static analysis can find:</p>
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-4">The commit history contains signals no static analysis can find:</p>
 
 <ul class="space-y-4 mb-12">
 <li class="flex items-start">
@@ -208,19 +212,19 @@ This technique comes from aider's repo-map. When you tell an agent "this file is
 </li>
 </ul>
 
-<h3 class="font-headline font-bold text-lg mt-8 mb-3">3. Context-rot-aware formatting</h3>
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">3. Context-rot-aware formatting</h3>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 Chroma Research (2026) showed that LLMs have 30%+ accuracy drops for information placed in the middle of long contexts. They retain the beginning and end best — a U-shaped attention curve.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 This means the <em>structure</em> of your context file matters. Critical constraints should go at the top. Reference information goes in the middle (where it's least likely to be retained anyway). Actionable reminders go at the bottom.
 </p>
 
-<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight">The discoverability test</h2>
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">The discoverability test</h2>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-6">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
 Before including any finding in an agent context file, ask one question:
 </p>
 
@@ -231,17 +235,17 @@ Can the agent figure this out by reading the code?
 </p>
 </div>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 This single filter is the difference between context that helps and context that hurts. Every fact about your tech stack, every directory listing, every "this is a React project" — drop it all. The agent already knows.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 What survives the filter: conventions you'd explain to a new team member on their first day. Hidden dependencies between files that don't import each other. Approaches that were tried and failed. The one file that breaks everything if you touch it wrong.
 </p>
 
-<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight">Try it yourself</h2>
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">Try it yourself</h2>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-6">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
 We built <a href="https://github.com/maroondlabs/sourcebook" class="underline hover:text-electric-green">sourcebook</a> to automate this. One command, runs locally, no API keys:
 </p>
 
@@ -263,33 +267,33 @@ We built <a href="https://github.com/maroondlabs/sourcebook" class="underline ho
 </div>
 </div>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 It runs PageRank on your import graph, mines git history for anti-patterns and co-change coupling, detects conventions from code patterns, and formats the output for the U-shaped attention curve. Everything the agent can already see gets filtered out.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
-Generates <code class="bg-terminal-black text-electric-green px-1 font-mono">CLAUDE.md</code>, <code class="bg-terminal-black text-electric-green px-1 font-mono">.cursorrules</code>, and <code class="bg-terminal-black text-electric-green px-1 font-mono">copilot-instructions.md</code>. Works on TypeScript, Python, and Go projects. Open source, MIT licensed.
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Generates <code class="bg-terminal-black text-electric-green px-1 font-mono">CLAUDE.md</code>, <code class="bg-terminal-black text-electric-green px-1 font-mono">.cursorrules</code>, and <code class="bg-terminal-black text-electric-green px-1 font-mono">copilot-instructions.md</code>. Works on TypeScript, Python, and Go projects. Source-available, BSL-1.1 licensed.
 </p>
 
-<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] mb-8">
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
 Made by agents, for agents.
 </p>
 
 </article>
 
 <!-- CTA Section -->
-<section class="w-full bg-white border-t border-[#C6C6C6]/20 py-24 px-6 text-center">
+<section class="w-full bg-white dark:bg-[#050505] border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-24 px-6 text-center">
 <div class="max-w-2xl mx-auto">
-<h2 class="font-headline font-extrabold text-4xl mb-10 tracking-tight uppercase">TRY_IT_YOURSELF</h2>
+<h2 class="font-headline font-extrabold text-4xl mb-10 tracking-tight uppercase dark:text-white">TRY_IT_YOURSELF</h2>
 <div class="bg-terminal-black py-6 px-8 inline-block mb-10">
 <code class="font-mono text-electric-green text-xl">npx sourcebook init</code>
 </div>
 <div class="flex flex-col items-center gap-6">
-<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black px-12 py-4 font-headline font-bold text-sm tracking-[0.2em] hover:bg-black hover:text-white uppercase">
+<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black dark:border-white dark:text-white px-12 py-4 font-headline font-bold text-sm tracking-[0.2em] hover:bg-black hover:text-white dark:hover:bg-[#00FF41] dark:hover:text-black dark:hover:border-[#00FF41] uppercase">
 VIEW_SOURCE
 </a>
-<p class="font-body text-[#5F5E5E] text-sm tracking-wide">
-No API keys. No LLM. Everything runs locally. MIT licensed.
+<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-sm tracking-wide">
+No API keys. No LLM. Everything runs locally. BSL-1.1 licensed.
 </p>
 </div>
 </div>
@@ -298,11 +302,11 @@ No API keys. No LLM. Everything runs locally. MIT licensed.
 </main>
 
 <!-- Footer -->
-<footer class="w-full bg-white border-t border-[#C6C6C6]/20 flex flex-col md:flex-row justify-between items-center px-8 py-12">
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12">
 <div class="flex items-center space-x-4 mb-8 md:mb-0">
 <a href="/" class="flex items-center gap-2">
 <img src="../logo.png" alt="sourcebook" class="h-6 w-6"/>
-<span class="text-lg font-bold text-black font-headline">SOURCEBOOK</span>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
 </a>
 <div class="flex items-center space-x-2">
 <div class="pulsing-dot"></div>
@@ -310,13 +314,32 @@ No API keys. No LLM. Everything runs locally. MIT licensed.
 </div>
 </div>
 <div class="flex space-x-12 mb-8 md:mb-0">
-<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
-<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
-<a class="font-headline text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
 </div>
 <div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
-MIT_LICENSE © 2026
+BSL-1.1 © 2026
 </div>
 </footer>
 
+<script>
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+// Apply saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+  }
+})();
+</script>
 </body></html>
