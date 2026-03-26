@@ -1,18 +1,9 @@
-import Stripe from "stripe";
-import crypto from "crypto";
+const Stripe = require("stripe");
+const crypto = require("crypto");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-/**
- * Validate a license key by checking if it matches an active Stripe subscription.
- *
- * The key is deterministic: sb_<tier>_<hmac(subscriptionId)>
- * To validate, we list active subscriptions and check if any match.
- *
- * For scale, this should use a database cache. For launch, checking Stripe
- * directly is fine (rate limit: 100 reads/sec).
- */
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -22,7 +13,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ valid: false, tier: "free" });
   }
 
-  // Parse key format: sb_<tier>_<hash>
   const match = key.match(/^sb_(pro|team)_([a-f0-9]{32})$/);
   if (!match) {
     return res.status(200).json({ valid: false, tier: "free" });
@@ -32,7 +22,6 @@ export default async function handler(req, res) {
   const keyHash = match[2];
 
   try {
-    // List active subscriptions and check if any generate this key
     const subscriptions = await stripe.subscriptions.list({
       status: "active",
       limit: 100,
@@ -58,7 +47,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ valid: false, tier: "free" });
   } catch (err) {
-    console.error("License validation error:", err);
+    console.error("License validation error:", err.message);
     return res.status(500).json({ valid: false, tier: "free" });
   }
-}
+};

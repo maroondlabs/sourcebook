@@ -1,14 +1,9 @@
-import Stripe from "stripe";
-import crypto from "crypto";
+const Stripe = require("stripe");
+const crypto = require("crypto");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-/**
- * Generate a license key from a Stripe subscription.
- * Format: sb_pro_<32 hex chars> or sb_team_<32 hex chars>
- * The key is deterministic per subscription ID so it's recoverable.
- */
 function generateLicenseKey(tier, subscriptionId) {
   const hash = crypto
     .createHmac("sha256", process.env.LICENSE_SECRET || "sourcebook-default-secret")
@@ -18,24 +13,18 @@ function generateLicenseKey(tier, subscriptionId) {
   return `sb_${tier}_${hash}`;
 }
 
-export const config = {
-  api: { bodyParser: false },
-};
-
-async function buffer(readable) {
-  const chunks = [];
-  for await (const chunk of readable) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-  }
-  return Buffer.concat(chunks);
-}
-
-export default async function handler(req, res) {
+// Disable body parsing for webhook signature verification
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const buf = await buffer(req);
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+  }
+  const buf = Buffer.concat(chunks);
+
   const sig = req.headers["stripe-signature"];
 
   let event;
@@ -54,8 +43,6 @@ export default async function handler(req, res) {
 
     const licenseKey = generateLicenseKey(tier, subscriptionId);
 
-    // Store the license (in production, save to database)
-    // For now, log it — the validation endpoint checks Stripe directly
     console.log(
       `[LICENSE] Generated key for ${customerEmail}: ${licenseKey} (${tier})`
     );
@@ -67,4 +54,8 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).json({ received: true });
-}
+};
+
+module.exports.config = {
+  api: { bodyParser: false },
+};
