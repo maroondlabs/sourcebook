@@ -18,7 +18,7 @@
 <meta name="robots" content="index, follow"/>
 <meta name="theme-color" content="#000000"/>
 <link rel="icon" type="image/png" href="logo.png"/>
-<meta property="og:image" content="https://sourcebook.run/logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -179,7 +179,8 @@
 <!-- Nav -->
 <nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
 <a href="/" class="flex items-center gap-3">
-<img src="logo.png" alt="sourcebook" class="h-8 w-8"/>
+<img src="logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
 <span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
 </a>
 <div class="hidden md:flex gap-8 items-center">
@@ -189,7 +190,7 @@
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="#features">FEATURES</a>
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook/releases">CHANGELOG</a>
 </div>
-<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
 <button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
 <a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
 <a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
@@ -380,7 +381,8 @@
 <!-- Footer -->
 <footer class="bg-white dark:bg-black flex flex-col md:flex-row justify-between items-center w-full px-6 py-8 gap-4 border-t-2 border-black dark:border-t dark:border-[#1A1A1A] mt-12">
 <div class="flex items-center gap-2">
-<img src="logo.png" alt="sourcebook" class="h-6 w-6"/>
+<img src="logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
 <span class="font-['Space_Grotesk'] font-bold text-black dark:text-white">SOURCEBOOK</span>
 </div>
 <div class="flex gap-8 items-center">
