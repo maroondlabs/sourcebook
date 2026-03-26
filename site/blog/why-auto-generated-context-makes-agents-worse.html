@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Why auto-generated CLAUDE.md files make your AI agents worse — sourcebook</title>
+<meta name="description" content="ETH Zurich research shows auto-generated context files hurt AI coding agent performance by 2-3%. Here's what actually works: non-discoverable information only."/>
+<meta property="og:title" content="Why auto-generated CLAUDE.md files make your AI agents worse"/>
+<meta property="og:description" content="Auto-generated context hurts by 2-3%. The only context that helps is what agents can't figure out alone."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/blog/why-auto-generated-context-makes-agents-worse"/>
+<meta property="article:published_time" content="2026-03-25"/>
+<meta property="article:author" content="maroond"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Why auto-generated CLAUDE.md files make your AI agents worse"/>
+<meta name="twitter:description" content="ETH Zurich research shows the only context that helps is what agents can't discover on their own."/>
+<link rel="canonical" href="https://sourcebook.run/blog/why-auto-generated-context-makes-agents-worse"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    body { font-family: 'Inter', sans-serif; background: #fff; color: #000; }
+    .font-mono-tech { font-family: 'Space Grotesk', monospace; }
+    html { scroll-behavior: smooth; }
+    article h2 { margin-top: 3rem; margin-bottom: 1rem; }
+    article p { margin-bottom: 1.25rem; }
+    article pre { margin-bottom: 1.5rem; }
+    article ul, article ol { margin-bottom: 1.25rem; }
+</style>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                },
+            },
+        },
+    }
+</script>
+</head>
+<body class="bg-white text-black selection:bg-[#00FF41] selection:text-black">
+
+<!-- Nav -->
+<nav class="bg-white flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 border-b border-[#eee]">
+<a href="/" class="flex items-center gap-3">
+<img src="../logo.png" alt="sourcebook" class="h-8 w-8"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black">SOURCEBOOK</span>
+</a>
+<div class="flex items-center gap-4">
+<a href="/blog" class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] hover:text-[#00FF41] transition-colors">BLOG</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors">GET_STARTED</a>
+</div>
+</nav>
+
+<main class="max-w-2xl mx-auto px-6 py-16">
+
+<!-- Article Header -->
+<div class="mb-12">
+<div class="font-['Space_Grotesk'] text-xs uppercase tracking-widest text-[#5F5E5E] mb-4">RESEARCH · MARCH 2026</div>
+<h1 class="font-['Space_Grotesk'] font-bold text-4xl md:text-5xl tracking-tight leading-tight mb-6">
+Why auto-generated CLAUDE.md files make your AI agents worse
+</h1>
+<p class="text-lg text-[#5F5E5E] border-l-4 border-black pl-6">
+And why the fix isn't better generation — it's knowing what to leave out.
+</p>
+</div>
+
+<!-- Article Body -->
+<article class="font-body text-[17px] leading-relaxed text-[#1b1b1b]">
+
+<p>
+Every AI coding tool now has a context file. Claude Code reads <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">CLAUDE.md</code>. Cursor reads <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">.cursorrules</code>. GitHub Copilot reads <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">copilot-instructions.md</code>. The idea is simple: give the agent a brief about your project so it writes better code.
+</p>
+
+<p>
+Most developers either skip it entirely or write something generic: "This is a Next.js project using TypeScript and Tailwind." Then a wave of tools appeared to auto-generate these files — scan the repo, detect the stack, dump the directory tree, output a context file.
+</p>
+
+<p>
+Sounds helpful. Turns out it makes things worse.
+</p>
+
+<h2 class="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">The research that changed how we think about context</h2>
+
+<p>
+In February 2025, researchers at ETH Zurich ran a systematic study on context files across 138 real repositories. They tested how auto-generated context affected AI coding agent performance on actual development tasks.
+</p>
+
+<p>The findings were counterintuitive:</p>
+
+<ul class="list-none space-y-3 pl-0">
+<li class="flex gap-3">
+<span class="text-[#ba1a1a] font-bold mt-0.5">×</span>
+<span>LLM-generated context files <strong>reduced task success by 2-3%</strong></span>
+</li>
+<li class="flex gap-3">
+<span class="text-[#ba1a1a] font-bold mt-0.5">×</span>
+<span>Inference costs increased by <strong>20%+</strong> (more tokens, worse results)</span>
+</li>
+<li class="flex gap-3">
+<span class="text-[#ba1a1a] font-bold mt-0.5">×</span>
+<span>Agents developed <strong>anchoring bias</strong> — fixating on mentioned tools even when deprecated</span>
+</li>
+</ul>
+
+<p>
+The reason: 100% of the auto-generated files contained information the agent could already discover by reading the code. Tech stack, directory structure, file organization — the agent already knows this. Telling it again doesn't help. It actively hurts by consuming context window space that could hold something useful.
+</p>
+
+<h2 class="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">What actually works: non-discoverable information</h2>
+
+<p>
+The same study found that <strong>human-written context files documenting non-obvious conventions</strong> showed a 28% runtime reduction and 17% fewer tokens used. The key distinction: the information had to be something the agent couldn't figure out by reading the code.
+</p>
+
+<p>Things agents can discover on their own (don't include):</p>
+
+<ul class="list-disc pl-6 space-y-1 text-[#5F5E5E]">
+<li>Your tech stack (they can read package.json)</li>
+<li>Directory structure (they can list files)</li>
+<li>What framework you use (they can see the imports)</li>
+<li>That you use TypeScript (they can see the .ts extensions)</li>
+</ul>
+
+<p>Things agents keep missing (include these):</p>
+
+<ul class="list-disc pl-6 space-y-1">
+<li>"We use barrel exports — import from the directory, not from deep paths"</li>
+<li>"The auth middleware must run before the rate limiter, not after"</li>
+<li>"Tests use real Supabase, not mocks — we got burned by mock divergence"</li>
+<li>"Files auth/provider.ts and middleware/session.ts always need to change together, even though there's no import between them"</li>
+<li>"That decorator-based auth approach was tried and reverted — don't re-attempt it"</li>
+</ul>
+
+<p>
+The pattern is clear: <strong>conventions, constraints, hidden dependencies, and historical decisions</strong> — the tribal knowledge that lives in people's heads, not in the code.
+</p>
+
+<h2 class="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">The Karpathy connection</h2>
+
+<p>
+Andrej Karpathy's autoresearch project independently proved the same principle. His system uses three files: <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">program.md</code> (curated context), <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">train.py</code> (code the agent modifies), and <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">prepare.py</code> (read-only evaluation).
+</p>
+
+<p>
+The agent ran 700 experiments in 2 days, producing 20 genuine improvements. It worked because <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">program.md</code> contained <em>only</em> what the agent couldn't figure out alone: the objective metric, what can vs. can't be changed, failure recovery rules, and the autonomy boundary.
+</p>
+
+<p>
+His insight: "You don't program train.py. You program program.md. You are programming the programmer."
+</p>
+
+<h2 class="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">Three techniques that extract what agents miss</h2>
+
+<p>
+If the goal is to surface non-discoverable information, you need techniques that go beyond reading the current codebase. Here are three that work:
+</p>
+
+<h3 class="font-['Space_Grotesk'] font-bold text-lg mt-8 mb-3">1. Import graph PageRank</h3>
+
+<p>
+Build a directed graph where files are nodes and imports are edges. Run PageRank. The highest-ranked files are your architectural hubs — the ones that break the most things when modified. An agent reading files one at a time can't see this structural importance. It treats a utility function and a core dispatcher the same.
+</p>
+
+<p>
+This technique comes from aider's repo-map. When you tell an agent "this file is imported by 183 others — changes have wide blast radius," it writes more careful code.
+</p>
+
+<h3 class="font-['Space_Grotesk'] font-bold text-lg mt-8 mb-3">2. Git forensics</h3>
+
+<p>
+The commit history contains signals no static analysis can find:
+</p>
+
+<ul class="list-disc pl-6 space-y-2">
+<li><strong>Reverted commits</strong> are literal "don't do this" signals. If someone committed a decorator-based auth approach and then reverted it, that's an explicit anti-pattern.</li>
+<li><strong>Co-change coupling</strong> reveals invisible dependencies. If two files in different directories always change together but have no import relationship, there's a hidden dependency the agent will miss.</li>
+<li><strong>Rapid re-edits</strong> (5+ edits in one week) mark code that was hard to get right. The agent should treat these files with extra care.</li>
+</ul>
+
+<h3 class="font-['Space_Grotesk'] font-bold text-lg mt-8 mb-3">3. Context-rot-aware formatting</h3>
+
+<p>
+Chroma Research (2026) showed that LLMs have 30%+ accuracy drops for information placed in the middle of long contexts. They retain the beginning and end best — a U-shaped attention curve.
+</p>
+
+<p>
+This means the <em>structure</em> of your context file matters. Critical constraints should go at the top. Reference information goes in the middle (where it's least likely to be retained anyway). Actionable reminders go at the bottom.
+</p>
+
+<h2 class="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">The discoverability test</h2>
+
+<p>
+Before including any finding in an agent context file, ask one question:
+</p>
+
+<div class="bg-[#0D0D0D] text-[#00FF41] p-6 font-['Space_Grotesk'] text-sm my-8">
+"Can the agent figure this out by reading the code?"<br/><br/>
+If yes → drop it.<br/>
+If no → keep it.
+</div>
+
+<p>
+This single filter is the difference between context that helps and context that hurts. Every fact about your tech stack, every directory listing, every "this is a React project" — drop it all. The agent already knows.
+</p>
+
+<p>
+What survives the filter: conventions you'd explain to a new team member on their first day. Hidden dependencies between files that don't import each other. Approaches that were tried and failed. The one file that breaks everything if you touch it wrong.
+</p>
+
+<h2 class="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">Try it yourself</h2>
+
+<p>
+We built <a href="https://github.com/maroondlabs/sourcebook" class="underline hover:text-[#00FF41] transition-colors">sourcebook</a> to automate this. One command, runs locally, no API keys:
+</p>
+
+<div class="bg-[#0D0D0D] text-white p-6 font-['Space_Grotesk'] text-sm my-8">
+<span class="text-[#5F5E5E]">$</span> npx sourcebook init<br/><br/>
+<span class="text-[#00FF41]">✓</span> Scanned 10,456 files, 3 frameworks detected<br/>
+<span class="text-[#00FF41]">✓</span> Extracted 11 findings<br/><br/>
+<span class="text-[#00FF41]">●</span> <strong>Core modules:</strong> types.ts imported by <span class="text-[#00FF41]">183 files</span><br/>
+<span class="text-[#00FF41]">●</span> <strong>Co-change:</strong> auth/provider.ts ↔ middleware/session.ts (88%)<br/>
+<span class="text-[#00FF41]">●</span> <strong>Circular deps:</strong> bookingScenario.ts ↔ getMockRequestData.ts<br/><br/>
+<span class="bg-[#00FF41] text-black px-1">DONE</span> Wrote CLAUDE.md — only non-discoverable information.
+</div>
+
+<p>
+It runs PageRank on your import graph, mines git history for anti-patterns and co-change coupling, detects conventions from code patterns, and formats the output for the U-shaped attention curve. Everything the agent can already see gets filtered out.
+</p>
+
+<p>
+Generates <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">CLAUDE.md</code>, <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">.cursorrules</code>, and <code class="bg-[#f3f3f3] px-1.5 py-0.5 text-sm">copilot-instructions.md</code>. Works on TypeScript, Python, and Go projects. Open source, MIT licensed.
+</p>
+
+<p class="text-[#5F5E5E] text-sm mt-12 pt-8 border-t border-[#eee]">
+<a href="https://github.com/maroondlabs/sourcebook" class="underline hover:text-[#00FF41]">sourcebook on GitHub</a> ·
+<a href="https://sourcebook.run" class="underline hover:text-[#00FF41]">sourcebook.run</a> ·
+Built by <a href="https://maroond.ai" class="underline hover:text-[#00FF41]">maroond</a>
+</p>
+
+</article>
+
+</main>
+
+<!-- Footer -->
+<footer class="bg-white flex flex-col md:flex-row justify-between items-center w-full px-6 py-8 gap-4 border-t-2 border-black mt-12">
+<div class="flex items-center gap-2">
+<img src="../logo.png" alt="sourcebook" class="h-6 w-6"/>
+<span class="font-['Space_Grotesk'] font-bold text-black">SOURCEBOOK</span>
+</div>
+<div class="flex gap-8 items-center">
+<a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E]">MIT_LICENSE</span>
+<div class="w-2 h-2 bg-[#00FF41] animate-pulse"></div>
+</div>
+</footer>
+
+</body></html>
