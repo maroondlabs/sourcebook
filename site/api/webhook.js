@@ -5,8 +5,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 function generateLicenseKey(tier, subscriptionId) {
+  const secret = process.env.LICENSE_SECRET;
+  if (!secret) {
+    throw new Error("LICENSE_SECRET environment variable is required");
+  }
   const hash = crypto
-    .createHmac("sha256", process.env.LICENSE_SECRET || "sourcebook-default-secret")
+    .createHmac("sha256", secret)
     .update(subscriptionId)
     .digest("hex")
     .slice(0, 32);
@@ -43,8 +47,13 @@ module.exports = async function handler(req, res) {
 
     const licenseKey = generateLicenseKey(tier, subscriptionId);
 
+    // Store key in Stripe subscription metadata for retrieval
+    await stripe.subscriptions.update(subscriptionId, {
+      metadata: { license_key: licenseKey, tier },
+    });
+
     console.log(
-      `[LICENSE] Generated key for ${customerEmail}: ${licenseKey} (${tier})`
+      `[LICENSE] Generated key for ${customerEmail}: tier=${tier}, sub=${subscriptionId}`
     );
   }
 

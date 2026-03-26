@@ -3,9 +3,34 @@ const crypto = require("crypto");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Simple in-memory rate limiter (per Vercel function instance)
+const rateLimit = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 10; // 10 requests per minute per IP
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = rateLimit.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW) {
+    rateLimit.set(ip, { windowStart: now, count: 1 });
+    return false;
+  }
+  entry.count++;
+  if (entry.count > RATE_LIMIT_MAX) {
+    return true;
+  }
+  return false;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Rate limit by IP
+  const ip = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown";
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: "Too many requests. Try again in a minute." });
   }
 
   const { key } = req.body;
@@ -18,8 +43,13 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ valid: false, tier: "free" });
   }
 
-  const tier = match[1];
   const keyHash = match[2];
+
+  const secret = process.env.LICENSE_SECRET;
+  if (!secret) {
+    console.error("LICENSE_SECRET environment variable is not set");
+    return res.status(500).json({ valid: false, tier: "free" });
+  }
 
   try {
     const subscriptions = await stripe.subscriptions.list({
@@ -29,17 +59,17 @@ module.exports = async function handler(req, res) {
 
     for (const sub of subscriptions.data) {
       const expectedHash = crypto
-        .createHmac("sha256", process.env.LICENSE_SECRET || "sourcebook-default-secret")
+        .createHmac("sha256", secret)
         .update(sub.id)
         .digest("hex")
         .slice(0, 32);
 
       if (expectedHash === keyHash) {
-        const customer = await stripe.customers.retrieve(sub.customer);
+        // Get tier from Stripe metadata, not from the key format
+        const actualTier = sub.metadata?.tier || "pro";
         return res.status(200).json({
           valid: true,
-          tier,
-          email: customer.email || undefined,
+          tier: actualTier,
           expiresAt: new Date(sub.current_period_end * 1000).toISOString().split("T")[0],
         });
       }

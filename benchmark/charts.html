@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sourcebook benchmark results</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0D0D0D;
+    color: #ffffff;
+    font-family: 'Space Grotesk', sans-serif;
+    padding: 60px 40px 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  h1 span { color: #00FF41; }
+  .subtitle {
+    font-size: 1.1rem;
+    color: #888;
+    font-weight: 300;
+    margin-bottom: 72px;
+  }
+  .chart-section {
+    margin-bottom: 80px;
+  }
+  .chart-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #eee;
+  }
+  .chart-annotation {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 24px;
+    font-weight: 300;
+  }
+  .chart-container {
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 28px 24px 20px;
+    position: relative;
+  }
+  .chart-container canvas {
+    max-height: 420px;
+  }
+  .small-multiples {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .small-multiples .chart-container {
+    padding: 20px 16px 16px;
+  }
+  .small-multiples .chart-container canvas {
+    max-height: 260px;
+  }
+  .panel-label {
+    font-size: 0.8rem;
+    color: #888;
+    font-weight: 500;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .progression-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .watermark {
+    text-align: center;
+    margin-top: 60px;
+    font-size: 0.85rem;
+    color: #333;
+    font-weight: 400;
+    letter-spacing: 1px;
+  }
+  .watermark a {
+    color: #444;
+    text-decoration: none;
+    border-bottom: 1px solid #333;
+  }
+  .watermark a:hover { color: #00FF41; border-color: #00FF41; }
+
+  @media (max-width: 700px) {
+    body { padding: 32px 16px 60px; }
+    h1 { font-size: 1.8rem; }
+    .small-multiples, .progression-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1><span>sourcebook</span> benchmark results</h1>
+<p class="subtitle">Measured on real GitHub issues across 3 repos, 4 conditions</p>
+
+<!-- Chart 1: Scatter -->
+<div class="chart-section">
+  <div class="chart-title">Time vs Patch Completeness</div>
+  <div class="chart-annotation">Each point is one issue run. Lower-left = fast but small patch. Upper-left = fast and thorough. sourcebook v0.5 consistently lands upper-left.</div>
+  <div class="chart-container">
+    <canvas id="scatterChart"></canvas>
+  </div>
+</div>
+
+<!-- Chart 2: Progression -->
+<div class="chart-section">
+  <div class="chart-title">sourcebook Progression on cal.com Tasks</div>
+  <div class="chart-annotation">Average across cal.com #27298 and #27907. Handwritten context shown as baseline. Lower time is better; higher patch lines is better.</div>
+  <div class="progression-row">
+    <div class="chart-container">
+      <div class="panel-label">Average Time (seconds) &darr; lower is better</div>
+      <canvas id="progTime"></canvas>
+    </div>
+    <div class="chart-container">
+      <div class="panel-label">Average Patch Lines &uarr; higher is better</div>
+      <canvas id="progPatch"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Chart 3: Small Multiples -->
+<div class="chart-section">
+  <div class="chart-title">Per-Task Time Comparison</div>
+  <div class="chart-annotation">Time in seconds for each task. handwritten = human-curated context, v0.3 = first auto-generated, v0.5 = latest.</div>
+  <div class="small-multiples">
+    <div>
+      <div class="panel-label">cal.com #27298</div>
+      <div class="chart-container"><canvas id="task1"></canvas></div>
+    </div>
+    <div>
+      <div class="panel-label">cal.com #27907</div>
+      <div class="chart-container"><canvas id="task2"></canvas></div>
+    </div>
+    <div>
+      <div class="panel-label">hono #4806</div>
+      <div class="chart-container"><canvas id="task3"></canvas></div>
+    </div>
+    <div>
+      <div class="panel-label">pydantic #12715</div>
+      <div class="chart-container"><canvas id="task4"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="watermark"><a href="https://sourcebook.run">sourcebook.run</a></div>
+
+<script>
+const COLORS = {
+  none: '#777777',
+  handwritten: '#3B82F6',
+  repomix: '#F59E0B',
+  sourcebook: '#00FF41',
+  v03: '#1a5c1a',
+  v041: '#2d8a2d',
+  v05: '#00FF41',
+};
+
+const gridColor = '#222';
+const tickColor = '#555';
+
+const commonScales = (xLabel, yLabel) => ({
+  x: {
+    title: { display: true, text: xLabel, color: '#888', font: { family: 'Space Grotesk', size: 12 } },
+    grid: { color: gridColor },
+    ticks: { color: tickColor, font: { family: 'Space Grotesk' } },
+  },
+  y: {
+    title: { display: true, text: yLabel, color: '#888', font: { family: 'Space Grotesk', size: 12 } },
+    grid: { color: gridColor },
+    ticks: { color: tickColor, font: { family: 'Space Grotesk' } },
+  }
+});
+
+Chart.defaults.font.family = 'Space Grotesk';
+
+// ─── Chart 1: Scatter ───
+const scatterLabels = {
+  none: ['cal.com #27298','cal.com #27907','hono #4806','pydantic #12715'],
+  handwritten: ['cal.com #27298','cal.com #27907','hono #4806','pydantic #12715'],
+  repomix: ['cal.com #27298','cal.com #27907','hono #4806','pydantic #12715'],
+  sourcebook: ['cal.com #27298','cal.com #27907','hono #4806','pydantic #12715'],
+};
+
+new Chart(document.getElementById('scatterChart'), {
+  type: 'scatter',
+  data: {
+    datasets: [
+      {
+        label: 'none',
+        data: [{x:241,y:381},{x:94,y:314},{x:253,y:31},{x:312,y:99}],
+        backgroundColor: COLORS.none,
+        pointRadius: 10,
+        pointHoverRadius: 13,
+        _labels: scatterLabels.none,
+      },
+      {
+        label: 'handwritten',
+        data: [{x:120,y:321},{x:115,y:362},{x:323,y:86},{x:180,y:83}],
+        backgroundColor: COLORS.handwritten,
+        pointRadius: 10,
+        pointHoverRadius: 13,
+        _labels: scatterLabels.handwritten,
+      },
+      {
+        label: 'repomix',
+        data: [{x:176,y:283},{x:121,y:314},{x:245,y:82},{x:208,y:35}],
+        backgroundColor: COLORS.repomix,
+        pointRadius: 10,
+        pointHoverRadius: 13,
+        _labels: scatterLabels.repomix,
+      },
+      {
+        label: 'sourcebook v0.5',
+        data: [{x:136,y:469},{x:113,y:458},{x:267,y:101},{x:308,y:117}],
+        backgroundColor: COLORS.sourcebook,
+        pointRadius: 10,
+        pointHoverRadius: 13,
+        _labels: scatterLabels.sourcebook,
+      },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: { color: '#ccc', font: { family: 'Space Grotesk', size: 13 }, usePointStyle: true, pointStyle: 'circle', padding: 20 },
+        position: 'top',
+      },
+      tooltip: {
+        backgroundColor: '#1a1a1a',
+        borderColor: '#333',
+        borderWidth: 1,
+        titleColor: '#fff',
+        bodyColor: '#ccc',
+        titleFont: { family: 'Space Grotesk', weight: '600' },
+        bodyFont: { family: 'Space Grotesk' },
+        callbacks: {
+          title: (items) => {
+            const ds = items[0].dataset;
+            return ds._labels[items[0].dataIndex];
+          },
+          label: (item) => `${item.dataset.label}  |  ${item.parsed.x}s, ${item.parsed.y} lines`,
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Time (seconds)', color: '#888', font: { family: 'Space Grotesk', size: 13 } },
+        grid: { color: gridColor },
+        ticks: { color: tickColor, font: { family: 'Space Grotesk' } },
+        min: 50,
+        max: 360,
+      },
+      y: {
+        title: { display: true, text: 'Patch lines', color: '#888', font: { family: 'Space Grotesk', size: 13 } },
+        grid: { color: gridColor },
+        ticks: { color: tickColor, font: { family: 'Space Grotesk' } },
+        min: 0,
+        max: 520,
+      }
+    }
+  }
+});
+
+// ─── Chart 2: Progression bars ───
+const progLabels = ['v0.3', 'v0.4.1', 'v0.5', 'handwritten'];
+const progTimeColors = [COLORS.v03, COLORS.v041, COLORS.v05, COLORS.handwritten];
+const progPatchColors = [COLORS.v03, COLORS.v041, COLORS.v05, COLORS.handwritten];
+
+function makeProgChart(id, data, colors, yLabel) {
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels: progLabels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        borderRadius: 6,
+        maxBarThickness: 60,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          borderColor: '#333',
+          borderWidth: 1,
+          titleColor: '#fff',
+          bodyColor: '#ccc',
+          titleFont: { family: 'Space Grotesk', weight: '600' },
+          bodyFont: { family: 'Space Grotesk' },
+          callbacks: {
+            label: (item) => `${item.parsed.y} ${yLabel === 'time' ? 's' : 'lines'}`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#aaa', font: { family: 'Space Grotesk', size: 12, weight: '500' } },
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { family: 'Space Grotesk' } },
+          beginAtZero: true,
+        }
+      }
+    }
+  });
+}
+
+makeProgChart('progTime', [122, 128, 125, 118], progTimeColors, 'time');
+makeProgChart('progPatch', [370, 431, 464, 342], progPatchColors, 'patch');
+
+// ─── Chart 3: Small Multiples ───
+const taskConfigs = [
+  { id: 'task1', data: [120, 140, 136] },
+  { id: 'task2', data: [115, 103, 113] },
+  { id: 'task3', data: [323, 274, 267] },
+  { id: 'task4', data: [180, 315, 308] },
+];
+
+const smLabels = ['handwritten', 'v0.3', 'v0.5'];
+const smColors = [COLORS.handwritten, COLORS.v03, COLORS.v05];
+
+taskConfigs.forEach(t => {
+  new Chart(document.getElementById(t.id), {
+    type: 'bar',
+    data: {
+      labels: smLabels,
+      datasets: [{
+        data: t.data,
+        backgroundColor: smColors,
+        borderRadius: 5,
+        maxBarThickness: 52,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          borderColor: '#333',
+          borderWidth: 1,
+          titleColor: '#fff',
+          bodyColor: '#ccc',
+          titleFont: { family: 'Space Grotesk', weight: '600' },
+          bodyFont: { family: 'Space Grotesk' },
+          callbacks: { label: (item) => `${item.parsed.y}s` }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#aaa', font: { family: 'Space Grotesk', size: 11, weight: '500' } },
+        },
+        y: {
+          title: { display: true, text: 'seconds', color: '#666', font: { family: 'Space Grotesk', size: 11 } },
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { family: 'Space Grotesk' } },
+          beginAtZero: true,
+        }
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>

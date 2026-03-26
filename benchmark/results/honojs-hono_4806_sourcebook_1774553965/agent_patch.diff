@@ -1,0 +1,101 @@
+diff --git a/src/request.test.ts b/src/request.test.ts
+index b27126d..27d3a71 100644
+--- a/src/request.test.ts
++++ b/src/request.test.ts
+@@ -441,6 +441,50 @@ describe('Body methods with caching', () => {
+       })
+     })
+   })
++
++  describe('Edge case: non-Promise in bodyCache', () => {
++    it('should handle non-Promise cached values gracefully', async () => {
++      const req = new HonoRequest(
++        new Request('http://localhost', {
++          method: 'POST',
++          body: JSON.stringify({ test: 'data' }),
++          headers: { 'Content-Type': 'application/json' },
++        })
++      )
++
++      // Directly inject a non-Promise value into the cache to test the edge case
++      // This simulates the scenario described in the bug report
++      req.bodyCache.json = { test: 'data' } as any
++
++      // These should not throw "TypeError: bodyCache[anyCachedKey].then is not a function"
++      const text = await req.text()
++      expect(text).toBe('{"test":"data"}')
++
++      const arrayBuffer = await req.arrayBuffer()
++      expect(arrayBuffer).toBeInstanceOf(ArrayBuffer)
++    })
++
++    it('should handle string values in bodyCache correctly', async () => {
++      const req = new HonoRequest(
++        new Request('http://localhost', {
++          method: 'POST',
++          body: '{"valid": "json"}',
++          headers: { 'Content-Type': 'application/json' },
++        })
++      )
++
++      // Inject a string value directly into cache
++      req.bodyCache.text = '{"valid": "json"}' as any
++
++      // This should work without throwing the ".then is not a function" error
++      const json = await req.json()
++      expect(json).toEqual({ valid: 'json' })
++
++      // Also test that accessing other body formats works
++      const blob = await req.blob()
++      expect(blob).toBeInstanceOf(Blob)
++    })
++  })
+ })
+ 
+ describe('cloneRawRequest', () => {
+diff --git a/src/request.ts b/src/request.ts
+index bbb74a3..4628a67 100644
+--- a/src/request.ts
++++ b/src/request.ts
+@@ -222,17 +222,34 @@ export class HonoRequest<P extends string = '/', I extends Input['out'] = {}> {
+     const cachedBody = bodyCache[key]
+ 
+     if (cachedBody) {
+-      return cachedBody
++      // Check if the cached value is a Promise
++      if (cachedBody && typeof cachedBody.then === 'function') {
++        return cachedBody
++      }
++      // If it's not a Promise, wrap it in a resolved Promise
++      return Promise.resolve(cachedBody)
+     }
+ 
+     const anyCachedKey = Object.keys(bodyCache)[0]
+     if (anyCachedKey) {
+-      return (bodyCache[anyCachedKey as keyof Body] as Promise<BodyInit>).then((body) => {
+-        if (anyCachedKey === 'json') {
+-          body = JSON.stringify(body)
+-        }
+-        return new Response(body)[key]()
+-      })
++      const cachedValue = bodyCache[anyCachedKey as keyof Body]
++
++      // Check if the cached value is a Promise before calling .then()
++      if (cachedValue && typeof cachedValue.then === 'function') {
++        return (cachedValue as Promise<BodyInit>).then((body) => {
++          if (anyCachedKey === 'json') {
++            body = JSON.stringify(body)
++          }
++          return new Response(body)[key]()
++        })
++      }
++
++      // If it's not a Promise, convert it to a usable body format
++      let body: BodyInit = cachedValue as BodyInit
++      if (anyCachedKey === 'json') {
++        body = JSON.stringify(body)
++      }
++      return new Response(body)[key]()
+     }
+ 
+     return (bodyCache[key] = raw[key]())

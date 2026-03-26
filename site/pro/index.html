@@ -148,7 +148,7 @@ npx sourcebook init
 <span class="font-body text-sm">Priority language &amp; framework support</span>
 </li>
 </ul>
-<button onclick="checkout('pro')" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-6 py-4 font-['Space_Grotesk'] font-bold text-sm tracking-widest uppercase hover:bg-electric-green hover:text-black transition-colors w-full">
+<button onclick="checkout('pro', event)" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-6 py-4 font-['Space_Grotesk'] font-bold text-sm tracking-widest uppercase hover:bg-electric-green hover:text-black transition-colors w-full">
 GET_PRO
 </button>
 </div>
@@ -187,7 +187,7 @@ GET_PRO
 <span class="font-body text-sm">SSO / SAML</span>
 </li>
 </ul>
-<button onclick="checkout('team')" class="border-2 border-black dark:border-white dark:text-white px-6 py-4 font-['Space_Grotesk'] font-bold text-sm tracking-widest uppercase hover:bg-black hover:text-white dark:hover:bg-[#00FF41] dark:hover:text-black dark:hover:border-[#00FF41] transition-colors w-full">
+<button onclick="checkout('team', event)" class="border-2 border-black dark:border-white dark:text-white px-6 py-4 font-['Space_Grotesk'] font-bold text-sm tracking-widest uppercase hover:bg-black hover:text-white dark:hover:bg-[#00FF41] dark:hover:text-black dark:hover:border-[#00FF41] transition-colors w-full">
 GET_TEAM
 </button>
 </div>
@@ -290,11 +290,13 @@ function toggleTheme() {
   if (saved === 'dark') {
     document.documentElement.classList.remove('light');
     document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
   }
 })();
 
-async function checkout(tier) {
-  const btn = event.target;
+async function checkout(tier, evt) {
+  const btn = evt ? evt.target : document.activeElement;
   btn.textContent = "LOADING...";
   btn.disabled = true;
 

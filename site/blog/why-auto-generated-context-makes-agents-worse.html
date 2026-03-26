@@ -347,6 +347,8 @@ function toggleTheme() {
   if (saved === 'dark') {
     document.documentElement.classList.remove('light');
     document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
   }
 })();
 </script>

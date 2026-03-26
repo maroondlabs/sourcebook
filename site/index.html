@@ -391,7 +391,7 @@
 <a class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E] hover:bg-[#00FF41] hover:text-black px-2 py-1 transition-colors duration-100" href="https://x.com/maroond_">TWITTER_X</a>
 </div>
 <div class="flex items-center gap-4">
-<span class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E]">BSL-1.1</span>
+<span class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E]">BSL-1.1 &copy; 2026</span>
 <span class="font-['Space_Grotesk'] text-xs uppercase text-[#5F5E5E]">MAROOND_LABS</span>
 <div class="w-2 h-2 bg-[#00FF41] animate-pulse"></div>
 </div>
@@ -439,6 +439,8 @@ function toggleTheme() {
   if (saved === 'dark') {
     document.documentElement.classList.remove('light');
     document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
   }
 })();
 
