@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { init } from "./commands/init.js";
 import { update } from "./commands/update.js";
 import { diff } from "./commands/diff.js";
+import { activate } from "./commands/activate.js";
 
 const program = new Command();
 
@@ -62,5 +63,10 @@ program
     "4000"
   )
   .action(diff);
+
+program
+  .command("activate <key>")
+  .description("Activate a Pro or Team license key")
+  .action(activate);
 
 program.parse();

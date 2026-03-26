@@ -6,6 +6,7 @@ import { generateClaude } from "../generators/claude.js";
 import { generateCursor, generateCursorLegacy } from "../generators/cursor.js";
 import { generateCopilot } from "../generators/copilot.js";
 import { writeOutput } from "../utils/output.js";
+import { requirePro } from "../auth/license.js";
 
 interface UpdateOptions {
   dir: string;
@@ -47,6 +48,8 @@ const SOURCEBOOK_HEADERS = new Set([
  * 5. Replace sourcebook sections, keep manual sections in their original positions
  */
 export async function update(options: UpdateOptions) {
+  await requirePro("sourcebook update");
+
   const targetDir = path.resolve(options.dir);
   const formats = options.format.split(",").map((f) => f.trim());
   const budget = parseInt(options.budget, 10);
