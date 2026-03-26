@@ -58,6 +58,9 @@ export async function detectPatterns(
   // --- Go conventions ---
   findings.push(...detectGoConventions(files, fileContents));
 
+  // --- Dominant API/usage patterns ---
+  findings.push(...detectDominantPatterns(dir, files, fileContents, frameworks));
+
   // Filter out discoverable findings
   return findings.filter((f) => !f.discoverable);
 }
@@ -324,6 +327,309 @@ function detectGoConventions(
       confidence: "medium",
       discoverable: false,
     });
+  }
+
+  return findings;
+}
+
+/**
+ * Detect dominant API/usage patterns — the conventions humans naturally
+ * put in handwritten briefs but agents can't infer from structure alone.
+ *
+ * This closes the gap between sourcebook and handwritten context.
+ */
+function detectDominantPatterns(
+  dir: string,
+  files: string[],
+  contents: Map<string, string>,
+  frameworks: string[]
+): Finding[] {
+  const findings: Finding[] = [];
+
+  // Read MORE files for pattern detection — we need a wider sample
+  // to detect dominant patterns reliably
+  const allSource = files.filter(
+    (f) =>
+      (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".jsx") ||
+       f.endsWith(".py") || f.endsWith(".go")) &&
+      !f.includes("node_modules") && !f.includes(".test.") && !f.includes(".spec.")
+  );
+
+  // Read up to 100 additional files for pattern counts
+  const extraSample = allSource.sort(() => Math.random() - 0.5).slice(0, 100);
+  const allContents = new Map(contents);
+  for (const file of extraSample) {
+    if (!allContents.has(file)) {
+      try {
+        const content = fs.readFileSync(path.join(dir, file), "utf-8");
+        allContents.set(file, content);
+      } catch { /* skip */ }
+    }
+  }
+
+  // ========================================
+  // 1. I18N / LOCALIZATION PATTERNS
+  // ========================================
+  const i18nPatterns: { pattern: string; hook: string; count: number; files: string[] }[] = [
+    { pattern: "useLocale", hook: "useLocale()", count: 0, files: [] },
+    { pattern: "useTranslation", hook: "useTranslation()", count: 0, files: [] },
+    { pattern: "useTranslations", hook: "useTranslations()", count: 0, files: [] },
+    { pattern: "useIntl", hook: "useIntl()", count: 0, files: [] },
+    { pattern: "intl\\.formatMessage", hook: "intl.formatMessage()", count: 0, files: [] },
+    { pattern: "\\bt\\(['\"]", hook: "t(\"key\")", count: 0, files: [] },
+    { pattern: "i18next", hook: "i18next", count: 0, files: [] },
+    { pattern: "gettext", hook: "gettext()", count: 0, files: [] },
+    { pattern: "_\\(['\"]", hook: "_(\"string\")", count: 0, files: [] },
+  ];
+
+  for (const [file, content] of allContents) {
+    for (const p of i18nPatterns) {
+      if (new RegExp(p.pattern).test(content)) {
+        p.count++;
+        if (p.files.length < 3) p.files.push(file);
+      }
+    }
+  }
+
+  const dominantI18n = i18nPatterns.filter((p) => p.count >= 3).sort((a, b) => b.count - a.count);
+  if (dominantI18n.length > 0) {
+    const primary = dominantI18n[0];
+    let desc = `User-facing strings use ${primary.hook} for internationalization.`;
+
+    // Find where translation keys live
+    const localeFiles = files.filter(
+      (f) =>
+        (f.includes("locale") || f.includes("i18n") || f.includes("translations") || f.includes("messages")) &&
+        (f.endsWith(".json") || f.endsWith(".ts") || f.endsWith(".js")) &&
+        !f.includes("node_modules")
+    );
+    const commonLocale = localeFiles.find((f) => f.includes("en/") || f.includes("en."));
+
+    if (commonLocale) {
+      desc += ` Add new translation keys in ${commonLocale}.`;
+    } else if (localeFiles.length > 0) {
+      desc += ` Translation files are in: ${localeFiles[0]}.`;
+    }
+
+    findings.push({
+      category: "Dominant patterns",
+      description: desc,
+      evidence: `${primary.count} files use ${primary.hook}`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 2. ROUTING / API PATTERNS
+  // ========================================
+  const routerPatterns: { pattern: string; name: string; count: number }[] = [
+    { pattern: "trpc\\.router|createTRPCRouter|t\\.router", name: "tRPC routers", count: 0 },
+    { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0 },
+    { pattern: "app\\.get\\(|app\\.post\\(|app\\.put\\(", name: "Express app routes", count: 0 },
+    { pattern: "Hono|app\\.route\\(|c\\.json\\(", name: "Hono routes", count: 0 },
+    { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0 },
+    { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0 },
+    { pattern: "gin\\.Engine|r\\.GET|r\\.POST", name: "Gin routes", count: 0 },
+    { pattern: "fiber\\.App|app\\.Get|app\\.Post", name: "Fiber routes", count: 0 },
+  ];
+
+  for (const [, content] of allContents) {
+    for (const p of routerPatterns) {
+      if (new RegExp(p.pattern).test(content)) {
+        p.count++;
+      }
+    }
+  }
+
+  const dominantRouter = routerPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
+  if (dominantRouter.length > 0) {
+    const primary = dominantRouter[0];
+    findings.push({
+      category: "Dominant patterns",
+      description: `API endpoints use ${primary.name}. Follow this pattern for new routes.`,
+      evidence: `${primary.count} files use ${primary.name}`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 3. VALIDATION / SCHEMA PATTERNS
+  // ========================================
+  const schemaPatterns: { pattern: string; name: string; usage: string; count: number }[] = [
+    { pattern: "z\\.object|z\\.string|z\\.number", name: "Zod", usage: "Use Zod schemas for validation", count: 0 },
+    { pattern: "BaseModel|Field\\(", name: "Pydantic", usage: "Use Pydantic BaseModel for data classes", count: 0 },
+    { pattern: "Joi\\.object|Joi\\.string", name: "Joi", usage: "Use Joi schemas for validation", count: 0 },
+    { pattern: "yup\\.object|yup\\.string", name: "Yup", usage: "Use Yup schemas for validation", count: 0 },
+    { pattern: "class.*Serializer.*:|serializers\\.Serializer", name: "Django serializers", usage: "Use Django REST serializers for API data", count: 0 },
+    { pattern: "@dataclass", name: "dataclasses", usage: "Use @dataclass for data structures", count: 0 },
+  ];
+
+  for (const [, content] of allContents) {
+    for (const p of schemaPatterns) {
+      if (new RegExp(p.pattern).test(content)) {
+        p.count++;
+      }
+    }
+  }
+
+  const dominantSchema = schemaPatterns.filter((p) => p.count >= 3).sort((a, b) => b.count - a.count);
+  if (dominantSchema.length > 0) {
+    const primary = dominantSchema[0];
+    findings.push({
+      category: "Dominant patterns",
+      description: `${primary.usage}. This is the project's standard validation approach.`,
+      evidence: `${primary.count} files use ${primary.name}`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 4. STATE MANAGEMENT / DATA FETCHING
+  // ========================================
+  const statePatterns: { pattern: string; name: string; desc: string; count: number }[] = [
+    { pattern: "useQuery|useMutation|QueryClient", name: "React Query/TanStack Query", desc: "Data fetching uses React Query (useQuery/useMutation)", count: 0 },
+    { pattern: "useSWR|mutate\\(", name: "SWR", desc: "Data fetching uses SWR (useSWR)", count: 0 },
+    { pattern: "createSlice|configureStore", name: "Redux Toolkit", desc: "State management uses Redux Toolkit (createSlice)", count: 0 },
+    { pattern: "create\\(.*set.*get|useStore", name: "Zustand", desc: "State management uses Zustand", count: 0 },
+    { pattern: "atom\\(|useAtom", name: "Jotai", desc: "State management uses Jotai atoms", count: 0 },
+  ];
+
+  for (const [, content] of allContents) {
+    for (const p of statePatterns) {
+      if (new RegExp(p.pattern).test(content)) {
+        p.count++;
+      }
+    }
+  }
+
+  const dominantState = statePatterns.filter((p) => p.count >= 3).sort((a, b) => b.count - a.count);
+  if (dominantState.length > 0) {
+    const primary = dominantState[0];
+    findings.push({
+      category: "Dominant patterns",
+      description: `${primary.desc}. Follow this pattern for new data operations.`,
+      evidence: `${primary.count} files`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 5. TESTING PATTERNS
+  // ========================================
+  const testPatterns: { pattern: string; name: string; count: number }[] = [
+    { pattern: "describe\\(|it\\(|test\\(", name: "Jest/Vitest", count: 0 },
+    { pattern: "def test_|class Test|pytest", name: "pytest", count: 0 },
+    { pattern: "func Test.*\\(t \\*testing\\.T\\)", name: "Go testing", count: 0 },
+    { pattern: "expect\\(.*\\)\\.to", name: "Chai/expect", count: 0 },
+  ];
+
+  const testFiles = [...allContents.entries()].filter(
+    ([f]) => f.includes(".test.") || f.includes(".spec.") || f.includes("_test.") || f.startsWith("test_")
+  );
+
+  // Read a few test files specifically
+  const testSampled = files
+    .filter((f) => f.includes(".test.") || f.includes(".spec.") || f.includes("_test.go") || f.includes("test_"))
+    .slice(0, 10);
+
+  for (const file of testSampled) {
+    if (!allContents.has(file)) {
+      try {
+        const content = fs.readFileSync(path.join(dir, file), "utf-8");
+        allContents.set(file, content);
+      } catch { /* skip */ }
+    }
+  }
+
+  for (const [f, content] of allContents) {
+    if (f.includes("test") || f.includes("spec")) {
+      for (const p of testPatterns) {
+        if (new RegExp(p.pattern).test(content)) {
+          p.count++;
+        }
+      }
+    }
+  }
+
+  const dominantTest = testPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
+  if (dominantTest.length > 0) {
+    const primary = dominantTest[0];
+    // Also detect common test utilities/helpers
+    const testHelperFiles = files.filter(
+      (f) =>
+        (f.includes("test-utils") || f.includes("testUtils") || f.includes("fixtures") || f.includes("helpers")) &&
+        (f.includes("test") || f.includes("spec"))
+    );
+
+    let desc = `Tests use ${primary.name}.`;
+    if (testHelperFiles.length > 0) {
+      desc += ` Test utilities in: ${testHelperFiles[0]}.`;
+    }
+
+    findings.push({
+      category: "Dominant patterns",
+      description: desc,
+      evidence: `${primary.count} test files`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 6. KEY DIRECTORY PURPOSES (app-specific)
+  // ========================================
+  // Detect directories with clear domain purposes
+  const dirPurposes: { dir: string; purpose: string }[] = [];
+
+  // App store / plugin / integration directories
+  // Only match top-level integration directories (not deeply nested editor plugins etc.)
+  const integrationDirCandidates = ["app-store", "plugins", "integrations", "addons", "extensions"];
+  let bestIntegrationDir = "";
+  let bestIntegrationCount = 0;
+
+  for (const dirName of integrationDirCandidates) {
+    // Find files matching pattern: <prefix>/<dirName>/<integration-name>/<file>
+    const matchingFiles = files.filter(
+      (f) => new RegExp(`/${dirName}/[^/]+/[^/]+`).test(f) && !f.includes("node_modules")
+    );
+    const integrationNames = matchingFiles
+      .map((f) => {
+        const match = f.match(new RegExp(`(.*?/${dirName})/([^/]+)/`));
+        return match ? { dir: match[1], name: match[2] } : null;
+      })
+      .filter((v): v is { dir: string; name: string } => v !== null && !v.name.startsWith("_"));
+
+    const uniqueNames = [...new Set(integrationNames.map((i) => i.name))];
+    if (uniqueNames.length > bestIntegrationCount) {
+      bestIntegrationCount = uniqueNames.length;
+      bestIntegrationDir = integrationNames[0]?.dir || "";
+    }
+  }
+
+  if (bestIntegrationCount >= 3 && bestIntegrationDir) {
+    const integrations = files
+      .filter((f) => f.startsWith(bestIntegrationDir + "/") && !f.includes("node_modules"))
+      .map((f) => {
+        const suffix = f.slice(bestIntegrationDir.length + 1);
+        return suffix.split("/")[0];
+      })
+      .filter((v) => v && !v.startsWith("_") && v !== "templates" && !v.includes("."))
+      .filter((v, i, a) => a.indexOf(v) === i);
+
+    if (integrations.length > 0) {
+      const sampleIntegrations = integrations.slice(0, 6).join(", ");
+      findings.push({
+        category: "Dominant patterns",
+        description: `Third-party integrations live under ${bestIntegrationDir}/ (${sampleIntegrations}${integrations.length > 6 ? ", ..." : ""}). Each integration has its own directory with components, lib, and API code.`,
+        evidence: `${integrations.length} integrations found`,
+        confidence: "high",
+        discoverable: false,
+      });
+    }
   }
 
   return findings;
