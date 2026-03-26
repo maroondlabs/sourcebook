@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pricing — sourcebook</title>
+<meta name="description" content="sourcebook Pro: smart context generation for AI coding agents. $19/mo for update, serve, watch, and more."/>
+<link rel="canonical" href="https://sourcebook.run/pro"/>
+<link rel="icon" type="image/png" href="../logo.png"/>
+<meta property="og:title" content="sourcebook Pro — $19/mo"/>
+<meta property="og:description" content="19,680x fewer tokens. Only what your agents keep missing."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { "electric-green": "#00FF41", "terminal-black": "#0D0D0D" },
+                fontFamily: { "headline": ["Space Grotesk"], "body": ["Inter"] },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    body { font-family: 'Inter', sans-serif; background: #fff; color: #000; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+</style>
+</head>
+<body class="antialiased selection:bg-electric-green selection:text-black">
+
+<!-- Nav -->
+<nav class="fixed top-0 w-full z-50 bg-white flex justify-between items-center px-6 py-4">
+<a href="/" class="flex items-center gap-3">
+<img src="../logo.png" alt="sourcebook" class="h-8 w-8"/>
+<span class="text-xl font-bold tracking-tighter text-black uppercase font-['Space_Grotesk']">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-8">
+<a class="font-['Space_Grotesk'] text-sm tracking-widest text-black opacity-70 hover:text-electric-green" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] text-sm tracking-widest text-black border-b-2 border-electric-green pb-1" href="/pro">PRICING</a>
+<a class="font-['Space_Grotesk'] text-sm tracking-widest text-black opacity-70 hover:bg-electric-green hover:text-black px-2 py-1" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+</div>
+</nav>
+
+<main class="pt-16">
+
+<!-- Hero -->
+<section class="bg-[#F3F3F3] py-20 px-6">
+<div class="max-w-screen-xl mx-auto text-center">
+<span class="block font-['Space_Grotesk'] text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">PRICING</span>
+<h1 class="font-['Space_Grotesk'] font-bold text-5xl md:text-7xl tracking-tighter text-black mb-6">
+19,680x fewer tokens.<br/>Only what matters.
+</h1>
+<p class="font-body text-xl text-[#5F5E5E] max-w-2xl mx-auto">
+sourcebook generates 858 tokens of non-discoverable context where others generate 16.8 million tokens of everything. Made by agents, for agents.
+</p>
+</div>
+</section>
+
+<!-- Pricing Cards -->
+<section class="py-20 px-6">
+<div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-0">
+
+<!-- Free -->
+<div class="border-2 border-[#C6C6C6] p-10 flex flex-col">
+<span class="font-['Space_Grotesk'] text-xs tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">FREE</span>
+<div class="mb-6">
+<span class="font-['Space_Grotesk'] font-bold text-5xl">$0</span>
+<span class="text-[#5F5E5E] text-sm ml-1">forever</span>
+</div>
+<p class="font-body text-sm text-[#5F5E5E] mb-8">Generate context files for any project. One scan at a time.</p>
+<ul class="space-y-3 mb-10 flex-1">
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm"><code class="bg-terminal-black text-electric-green px-1 font-mono text-xs">sourcebook init</code> — full analysis</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm"><code class="bg-terminal-black text-electric-green px-1 font-mono text-xs">sourcebook diff</code> — see what changed</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">CLAUDE.md, .cursorrules, copilot-instructions.md</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">TypeScript, Python, Go support</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">Import graph PageRank + git forensics</span>
+</li>
+</ul>
+<div class="bg-terminal-black text-electric-green px-6 py-4 font-mono text-center text-sm">
+npx sourcebook init
+</div>
+</div>
+
+<!-- Pro (featured) -->
+<div class="border-2 border-black p-10 flex flex-col relative shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+<div class="absolute -top-4 left-6 bg-electric-green text-black px-3 py-1 font-['Space_Grotesk'] text-xs font-bold tracking-widest uppercase">RECOMMENDED</div>
+<span class="font-['Space_Grotesk'] text-xs tracking-[0.3em] text-black uppercase mb-4 font-bold">PRO</span>
+<div class="mb-6">
+<span class="font-['Space_Grotesk'] font-bold text-5xl">$19</span>
+<span class="text-[#5F5E5E] text-sm ml-1">/month</span>
+</div>
+<p class="font-body text-sm text-[#1b1b1b] mb-8">Context that stays fresh. For developers who ship daily.</p>
+<ul class="space-y-3 mb-10 flex-1">
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm font-medium">Everything in Free, plus:</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm"><code class="bg-terminal-black text-electric-green px-1 font-mono text-xs">sourcebook update</code> — preserve manual edits</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm"><code class="bg-terminal-black text-electric-green px-1 font-mono text-xs">sourcebook serve</code> — MCP server mode</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm"><code class="bg-terminal-black text-electric-green px-1 font-mono text-xs">sourcebook watch</code> — auto-regenerate</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">Web demo — shareable analysis links</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">Priority language &amp; framework support</span>
+</li>
+</ul>
+<button onclick="checkout('pro')" class="bg-black text-white px-6 py-4 font-['Space_Grotesk'] font-bold text-sm tracking-widest uppercase hover:bg-electric-green hover:text-black transition-colors w-full">
+GET_PRO
+</button>
+</div>
+
+<!-- Team -->
+<div class="border-2 border-[#C6C6C6] p-10 flex flex-col">
+<span class="font-['Space_Grotesk'] text-xs tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">TEAM</span>
+<div class="mb-6">
+<span class="font-['Space_Grotesk'] font-bold text-5xl">$39</span>
+<span class="text-[#5F5E5E] text-sm ml-1">/seat/month</span>
+</div>
+<p class="font-body text-sm text-[#5F5E5E] mb-8">Consistent conventions across every repo. For teams of 5+.</p>
+<ul class="space-y-3 mb-10 flex-1">
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm font-medium">Everything in Pro, plus:</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">Shared conventions across repos</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">GitHub Action — auto-update on merge</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">Multi-repo dashboard</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">Drift alerts — know when context goes stale</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-electric-green font-bold mt-0.5">●</span>
+<span class="font-body text-sm">SSO / SAML</span>
+</li>
+</ul>
+<button onclick="checkout('team')" class="border-2 border-black px-6 py-4 font-['Space_Grotesk'] font-bold text-sm tracking-widest uppercase hover:bg-black hover:text-white transition-colors w-full">
+GET_TEAM
+</button>
+</div>
+
+</div>
+</section>
+
+<!-- The Number -->
+<section class="bg-terminal-black py-20 px-6">
+<div class="max-w-4xl mx-auto text-center">
+<div class="font-['Space_Grotesk'] font-bold text-7xl md:text-9xl text-electric-green tracking-tighter mb-6">19,680x</div>
+<p class="font-body text-xl text-white max-w-2xl mx-auto mb-8">
+fewer tokens than Repomix on the same codebase. 858 tokens of what matters vs 16.8 million tokens of everything.
+</p>
+<p class="font-body text-sm text-[#5F5E5E]">
+Measured on cal.com (10,456 files). sourcebook extracts only non-discoverable information — conventions, hidden dependencies, anti-patterns, and architectural hubs your agents keep missing.
+</p>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="py-20 px-6">
+<div class="max-w-3xl mx-auto">
+<h2 class="font-['Space_Grotesk'] font-bold text-3xl tracking-tight mb-12 uppercase">FAQ</h2>
+
+<div class="space-y-8">
+<div class="border-b border-[#C6C6C6]/30 pb-8">
+<h3 class="font-['Space_Grotesk'] font-bold text-lg mb-3">What's the difference between init and update?</h3>
+<p class="font-body text-[#5F5E5E]"><code class="bg-terminal-black text-electric-green px-1 font-mono text-xs">init</code> generates fresh context files (free). <code class="bg-terminal-black text-electric-green px-1 font-mono text-xs">update</code> re-analyzes your codebase while preserving any sections you added manually (Pro). If you've added architectural decisions, team conventions, or domain knowledge to your CLAUDE.md, update keeps those and refreshes everything else.</p>
+</div>
+
+<div class="border-b border-[#C6C6C6]/30 pb-8">
+<h3 class="font-['Space_Grotesk'] font-bold text-lg mb-3">What's MCP server mode?</h3>
+<p class="font-body text-[#5F5E5E]"><code class="bg-terminal-black text-electric-green px-1 font-mono text-xs">sourcebook serve</code> runs a local MCP server that AI agents can query on-demand. Instead of reading a static file, agents ask questions like "what's the naming convention for hooks?" and get targeted answers. Works with Claude Code, Cursor, and any MCP-compatible tool.</p>
+</div>
+
+<div class="border-b border-[#C6C6C6]/30 pb-8">
+<h3 class="font-['Space_Grotesk'] font-bold text-lg mb-3">Does any data leave my machine?</h3>
+<p class="font-body text-[#5F5E5E]">No. All analysis runs locally. The only network call is license key validation (once per 24 hours, sends just the key — no code, no file contents, no repo data). The web demo feature runs server-side but processes public GitHub repos only.</p>
+</div>
+
+<div class="border-b border-[#C6C6C6]/30 pb-8">
+<h3 class="font-['Space_Grotesk'] font-bold text-lg mb-3">Can I cancel anytime?</h3>
+<p class="font-body text-[#5F5E5E]">Yes. Cancel from Stripe's customer portal. Your Pro features stay active until the end of your billing period. Context files you've already generated are yours to keep — they're local files on your machine.</p>
+</div>
+
+<div class="pb-8">
+<h3 class="font-['Space_Grotesk'] font-bold text-lg mb-3">Why BSL instead of MIT?</h3>
+<p class="font-body text-[#5F5E5E]">The core analysis is free to use, modify, and self-host. BSL prevents competitors from reselling sourcebook as a hosted service. The license converts to MIT in 2030. This is the same model used by Sentry, MariaDB, and CockroachDB.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- CTA -->
+<section class="border-t-2 border-black py-20 text-center">
+<h2 class="font-['Space_Grotesk'] font-extrabold text-4xl md:text-6xl tracking-tighter mb-8 uppercase">MADE_BY_AGENTS<br/>FOR_AGENTS</h2>
+<div class="bg-terminal-black py-6 px-8 inline-block mb-6">
+<code class="font-mono text-electric-green text-xl">npx sourcebook init</code>
+</div>
+<p class="font-body text-sm text-[#5F5E5E]">Free to start. Pro when you're ready.</p>
+</section>
+
+</main>
+
+<!-- Footer -->
+<footer class="w-full bg-white border-t border-[#C6C6C6]/20 flex flex-col md:flex-row justify-between items-center px-8 py-12">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../logo.png" alt="sourcebook" class="h-6 w-6"/>
+<span class="text-lg font-bold text-black font-['Space_Grotesk']">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-['Space_Grotesk'] text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0">
+<a class="font-['Space_Grotesk'] text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-['Space_Grotesk'] text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-['Space_Grotesk'] text-xs tracking-widest text-black hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-['Space_Grotesk'] text-[#5F5E5E] tracking-widest">BSL-1.1 © 2026</div>
+</footer>
+
+<script>
+async function checkout(tier) {
+  const btn = event.target;
+  btn.textContent = "LOADING...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tier }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Something went wrong. Please try again.");
+      btn.textContent = tier === "pro" ? "GET_PRO" : "GET_TEAM";
+      btn.disabled = false;
+    }
+  } catch (err) {
+    alert("Connection error. Please try again.");
+    btn.textContent = tier === "pro" ? "GET_PRO" : "GET_TEAM";
+    btn.disabled = false;
+  }
+}
+</script>
+
+</body></html>

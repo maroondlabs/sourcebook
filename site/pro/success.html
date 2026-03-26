@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Welcome to sourcebook Pro</title>
+<link rel="icon" type="image/png" href="../logo.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { "electric-green": "#00FF41", "terminal-black": "#0D0D0D" },
+                fontFamily: { "headline": ["Space Grotesk"], "body": ["Inter"] },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    body { font-family: 'Inter', sans-serif; background: #fff; color: #000; }
+</style>
+</head>
+<body class="antialiased selection:bg-electric-green selection:text-black">
+
+<main class="min-h-screen flex items-center justify-center px-6">
+<div class="max-w-xl text-center">
+
+<div class="bg-electric-green text-black px-4 py-2 font-['Space_Grotesk'] font-bold text-xs tracking-widest uppercase inline-block mb-8">ACTIVATED</div>
+
+<h1 class="font-['Space_Grotesk'] font-bold text-5xl tracking-tighter mb-6">Welcome to<br/>sourcebook Pro</h1>
+
+<p class="font-body text-lg text-[#5F5E5E] mb-10">
+Your license key has been sent to your email. Activate it with:
+</p>
+
+<div class="bg-terminal-black p-6 font-mono text-sm mb-10 text-left">
+<p class="text-[#5F5E5E] mb-2"># Copy your key from the email, then:</p>
+<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook activate</span> <span class="text-electric-green">sb_pro_your_key_here</span></p>
+<p class="text-electric-green mt-4">✓ License activated — pro tier</p>
+<p class="text-[#5F5E5E] mt-4"># Now you can use:</p>
+<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook update</span> <span class="text-[#5F5E5E]"># preserve manual edits</span></p>
+<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook serve</span> <span class="text-[#5F5E5E]"># MCP server mode</span></p>
+<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook watch</span> <span class="text-[#5F5E5E]"># auto-regenerate</span></p>
+</div>
+
+<p class="font-body text-sm text-[#5F5E5E] mb-4">
+Questions? <a href="mailto:roy@maroond.ai" class="underline hover:text-electric-green">roy@maroond.ai</a>
+</p>
+
+<a href="/" class="font-['Space_Grotesk'] text-sm tracking-widest text-black hover:text-electric-green uppercase">← BACK_TO_HOME</a>
+
+</div>
+</main>
+
+</body></html>
