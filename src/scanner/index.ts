@@ -31,6 +31,7 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
     nodir: true,
     ignore: IGNORE_PATTERNS,
     dot: true,
+    follow: false,
   });
 
   // Detect languages from file extensions

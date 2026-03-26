@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import type { Finding } from "../types.js";
 
@@ -51,7 +51,7 @@ export async function analyzeGitHistory(dir: string): Promise<GitAnalysis> {
 
 function isGitRepo(dir: string): boolean {
   try {
-    execSync("git rev-parse --is-inside-work-tree", {
+    execFileSync("git", ["rev-parse", "--is-inside-work-tree"], {
       cwd: dir,
       stdio: "pipe",
     });
@@ -61,9 +61,9 @@ function isGitRepo(dir: string): boolean {
   }
 }
 
-function git(dir: string, args: string): string {
+function git(dir: string, args: string[]): string {
   try {
-    return execSync(`git ${args}`, {
+    return execFileSync("git", args, {
       cwd: dir,
       stdio: "pipe",
       maxBuffer: 10 * 1024 * 1024,
@@ -84,7 +84,7 @@ function detectRevertedPatterns(
 
   const revertLog = git(
     dir,
-    'log --grep="^Revert" --oneline --since="1 year ago" -50'
+    ["log", "--grep=^Revert", "--oneline", "--since=1 year ago", "-50"]
   );
 
   if (!revertLog.trim()) return findings;
@@ -128,7 +128,7 @@ function detectAntiPatterns(dir: string): Finding[] {
   // Extract detailed info from reverted commits
   const revertLog = git(
     dir,
-    'log --grep="^Revert" --format="%s" --since="1 year ago" -20'
+    ["log", "--grep=^Revert", "--format=%s", "--since=1 year ago", "-20"]
   );
 
   if (revertLog.trim()) {
@@ -157,7 +157,7 @@ function detectAntiPatterns(dir: string): Finding[] {
   // Detect files deleted in bulk (abandoned features/approaches)
   const deletedLog = git(
     dir,
-    'log --diff-filter=D --name-only --pretty=format:"COMMIT %s" --since="6 months ago" -50'
+    ["log", "--diff-filter=D", "--name-only", "--pretty=format:COMMIT %s", "--since=6 months ago", "-50"]
   );
 
   if (deletedLog.trim()) {
@@ -166,7 +166,7 @@ function detectAntiPatterns(dir: string): Finding[] {
     let currentFiles: string[] = [];
 
     for (const line of deletedLog.split("\n")) {
-      const commitMatch = line.match(/^"?COMMIT (.+)"?$/);
+      const commitMatch = line.match(/^COMMIT (.+)$/);
       if (commitMatch) {
         if (currentFiles.length >= 3) {
           deletionBatches.push({ message: currentMessage, files: currentFiles });
@@ -212,7 +212,7 @@ function detectActiveAreas(
   // Get files changed in the last 30 days, count changes per directory
   const recentChanges = git(
     dir,
-    'log --since="30 days ago" --name-only --pretty=format: --diff-filter=AMRC'
+    ["log", "--since=30 days ago", "--name-only", "--pretty=format:", "--diff-filter=AMRC"]
   );
 
   if (!recentChanges.trim()) return findings;
@@ -264,7 +264,7 @@ function detectCoChangeCoupling(
   // Get the last 200 commits with their changed files
   const log = git(
     dir,
-    'log --name-only --pretty=format:"COMMIT" --since="6 months ago" -200'
+    ["log", "--name-only", "--pretty=format:COMMIT", "--since=6 months ago", "-200"]
   );
 
   if (!log.trim()) return findings;
@@ -274,7 +274,7 @@ function detectCoChangeCoupling(
   let current: string[] = [];
 
   for (const line of log.split("\n")) {
-    if (line.trim() === '"COMMIT"' || line.trim() === "COMMIT") {
+    if (line.trim() === "COMMIT") {
       if (current.length > 0) commits.push(current);
       current = [];
     } else if (line.trim() && !line.includes("node_modules")) {
@@ -382,7 +382,7 @@ function detectRapidReEdits(dir: string): Finding[] {
   // Get files with high commit frequency in short windows
   const log = git(
     dir,
-    'log --format="%H %aI" --name-only --since="3 months ago" -300'
+    ["log", "--format=%H %aI", "--name-only", "--since=3 months ago", "-300"]
   );
 
   if (!log.trim()) return findings;
@@ -457,7 +457,7 @@ function detectRapidReEdits(dir: string): Finding[] {
 function detectCommitPatterns(dir: string): Finding[] {
   const findings: Finding[] = [];
 
-  const log = git(dir, 'log --oneline --since="6 months ago" -200');
+  const log = git(dir, ["log", "--oneline", "--since=6 months ago", "-200"]);
   if (!log.trim()) return findings;
 
   const messages = log.trim().split("\n").filter(Boolean);

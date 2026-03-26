@@ -57,12 +57,13 @@ export async function checkLicense(): Promise<LicenseInfo> {
   } catch {
     // Network error or timeout — fall back to cache or offline validation
     if (cached && cached.key === key) {
-      return cached.info;
+      // Only grant offline access if last validation was within 7 days
+      const OFFLINE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - cached.timestamp <= OFFLINE_GRACE_MS) {
+        return cached.info;
+      }
     }
-    // Offline grace: if key looks valid (format check), allow Pro for 7 days
-    if (isValidKeyFormat(key)) {
-      return { valid: true, tier: "pro" };
-    }
+    // No valid cached validation within 7 days — deny access
   }
 
   return { valid: false, tier: "free" };
@@ -73,9 +74,22 @@ export async function checkLicense(): Promise<LicenseInfo> {
  */
 export function saveLicenseKey(key: string): void {
   if (!fs.existsSync(LICENSE_DIR)) {
-    fs.mkdirSync(LICENSE_DIR, { recursive: true });
+    fs.mkdirSync(LICENSE_DIR, { recursive: true, mode: 0o700 });
   }
-  fs.writeFileSync(LICENSE_FILE, key.trim(), "utf-8");
+  fs.writeFileSync(LICENSE_FILE, key.trim(), { encoding: "utf-8", mode: 0o600 });
+}
+
+/**
+ * Remove the license key from disk.
+ */
+export function removeLicenseKey(): void {
+  try {
+    if (fs.existsSync(LICENSE_FILE)) {
+      fs.unlinkSync(LICENSE_FILE);
+    }
+  } catch {
+    // ignore cleanup errors
+  }
 }
 
 /**
@@ -119,10 +133,10 @@ function readCache(): CacheEntry | null {
 
 function writeCache(key: string, info: LicenseInfo): void {
   if (!fs.existsSync(LICENSE_DIR)) {
-    fs.mkdirSync(LICENSE_DIR, { recursive: true });
+    fs.mkdirSync(LICENSE_DIR, { recursive: true, mode: 0o700 });
   }
   const entry: CacheEntry = { key, info, timestamp: Date.now() };
-  fs.writeFileSync(CACHE_FILE, JSON.stringify(entry), "utf-8");
+  fs.writeFileSync(CACHE_FILE, JSON.stringify(entry), { encoding: "utf-8", mode: 0o600 });
 }
 
 function isCacheExpired(timestamp: number): boolean {

@@ -2,6 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import type { FrameworkDetection, Finding } from "../types.js";
 
+function safePath(dir: string, file: string): string | null {
+  const resolved = path.resolve(path.join(dir, file));
+  if (!resolved.startsWith(path.resolve(dir) + path.sep) && resolved !== path.resolve(dir)) {
+    return null;
+  }
+  return resolved;
+}
+
 export async function detectFrameworks(
   dir: string,
   files: string[]
@@ -16,7 +24,8 @@ export async function detectFrameworks(
 
   const allDeps: Record<string, string> = {};
   for (const pkgFile of pkgFiles) {
-    const pkgPath = path.join(dir, pkgFile);
+    const pkgPath = safePath(dir, pkgFile);
+    if (!pkgPath) continue;
     if (fs.existsSync(pkgPath)) {
       try {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
@@ -61,9 +70,10 @@ export async function detectFrameworks(
       /^next\.config\.(js|mjs|ts)$/.test(f)
     );
     if (nextConfig) {
-      try {
+      const safeNextConfig = safePath(dir, nextConfig);
+      if (safeNextConfig) try {
         const configContent = fs.readFileSync(
-          path.join(dir, nextConfig),
+          safeNextConfig,
           "utf-8"
         );
         if (configContent.includes("output:") && configContent.includes("standalone")) {
@@ -198,7 +208,9 @@ export async function detectFrameworks(
         const configPath = files.find((f) =>
           /^tailwind\.config\.(js|ts|mjs|cjs)$/.test(f)
         )!;
-        const content = fs.readFileSync(path.join(dir, configPath), "utf-8");
+        const safeConfigPath = safePath(dir, configPath);
+        if (!safeConfigPath) throw new Error("path escape");
+        const content = fs.readFileSync(safeConfigPath, "utf-8");
 
         if (content.includes("extend") && content.includes("colors")) {
           findings.push({

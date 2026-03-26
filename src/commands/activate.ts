@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { saveLicenseKey, checkLicense } from "../auth/license.js";
+import { saveLicenseKey, removeLicenseKey, checkLicense } from "../auth/license.js";
 
 interface ActivateOptions {
   key: string;
@@ -16,10 +16,9 @@ export async function activate(key: string) {
   console.log(chalk.bold("\nsourcebook activate"));
   console.log(chalk.dim("Validating license key...\n"));
 
-  // Save key first
+  // Validate first, only save if valid
+  // Temporarily save so checkLicense can read it, then remove if invalid
   saveLicenseKey(key);
-
-  // Validate it
   const license = await checkLicense();
 
   if (license.tier === "pro" || license.tier === "team") {
@@ -40,13 +39,15 @@ export async function activate(key: string) {
     console.log(chalk.dim("  · sourcebook watch"));
     console.log("");
   } else {
+    // Validation failed — remove the saved key to prevent offline bypass
+    removeLicenseKey();
     console.log(
       chalk.yellow("⚠") +
-        " License key saved but could not be validated."
+        " License key could not be validated and was not saved."
     );
     console.log(
       chalk.dim(
-        "  This may be a network issue. The key will be re-validated on next use."
+        "  This may be a network issue. Please try again when you have an internet connection."
       )
     );
     console.log(

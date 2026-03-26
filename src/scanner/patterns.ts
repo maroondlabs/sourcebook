@@ -2,6 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Finding } from "../types.js";
 
+function safePath(dir: string, file: string): string | null {
+  const resolved = path.resolve(path.join(dir, file));
+  if (!resolved.startsWith(path.resolve(dir) + path.sep) && resolved !== path.resolve(dir)) {
+    return null;
+  }
+  return resolved;
+}
+
 /**
  * Detect code patterns and conventions that are non-obvious.
  * This is the core intelligence layer -- finding things agents miss.
@@ -29,8 +37,10 @@ export async function detectPatterns(
   const fileContents = new Map<string, string>();
 
   for (const file of sampled) {
+    const safe = safePath(dir, file);
+    if (!safe) continue;
     try {
-      const content = fs.readFileSync(path.join(dir, file), "utf-8");
+      const content = fs.readFileSync(safe, "utf-8");
       fileContents.set(file, content);
     } catch {
       // skip unreadable files
@@ -360,8 +370,10 @@ function detectDominantPatterns(
   const allContents = new Map(contents);
   for (const file of extraSample) {
     if (!allContents.has(file)) {
+      const safe = safePath(dir, file);
+      if (!safe) continue;
       try {
-        const content = fs.readFileSync(path.join(dir, file), "utf-8");
+        const content = fs.readFileSync(safe, "utf-8");
         allContents.set(file, content);
       } catch { /* skip */ }
     }
@@ -538,8 +550,10 @@ function detectDominantPatterns(
 
   for (const file of testSampled) {
     if (!allContents.has(file)) {
+      const safe = safePath(dir, file);
+      if (!safe) continue;
       try {
-        const content = fs.readFileSync(path.join(dir, file), "utf-8");
+        const content = fs.readFileSync(safe, "utf-8");
         allContents.set(file, content);
       } catch { /* skip */ }
     }
@@ -656,8 +670,9 @@ function detectDominantPatterns(
     if (primary.name === "Tailwind CSS") {
       const twConfig = files.find((f) => f.includes("tailwind.config"));
       if (twConfig) {
-        try {
-          const configContent = fs.readFileSync(path.join(dir, twConfig), "utf-8");
+        const safeTw = safePath(dir, twConfig);
+        if (safeTw) try {
+          const configContent = fs.readFileSync(safeTw, "utf-8");
           if (configContent.includes("colors") || configContent.includes("extend")) {
             desc += ` Custom design tokens defined in ${twConfig} — use these instead of arbitrary values.`;
           }

@@ -7,9 +7,13 @@ export async function writeOutput(
   content: string
 ): Promise<void> {
   const filePath = path.join(dir, filename);
-  const parentDir = path.dirname(filePath);
+  const resolved = path.resolve(filePath);
+  if (!resolved.startsWith(path.resolve(dir) + path.sep)) {
+    throw new Error(`Output path escapes target directory: ${filename}`);
+  }
+  const parentDir = path.dirname(resolved);
   if (!fs.existsSync(parentDir)) {
     fs.mkdirSync(parentDir, { recursive: true });
   }
-  fs.writeFileSync(filePath, content, "utf-8");
+  fs.writeFileSync(resolved, content, "utf-8");
 }

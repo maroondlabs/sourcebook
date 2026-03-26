@@ -2,6 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import type { BuildCommands } from "../types.js";
 
+function safePath(dir: string, file: string): string | null {
+  const resolved = path.resolve(path.join(dir, file));
+  if (!resolved.startsWith(path.resolve(dir) + path.sep) && resolved !== path.resolve(dir)) {
+    return null;
+  }
+  return resolved;
+}
+
 export async function detectBuildCommands(dir: string): Promise<BuildCommands> {
   const commands: BuildCommands = {};
 
