@@ -1,0 +1,38 @@
+You are working on the calcom/cal.com repository.
+
+## Task
+Fix the following issue:
+
+**PayPal Setup component contains untranslated strings (TODO)**
+
+Found a bug? Please fill out the sections below. 👍
+
+### Issue Summary
+
+The `PayPal Setup` component contains untranslated hardcoded strings in the setup instructions section.
+
+<img width="607" height="127" alt="Image" src="https://github.com/user-attachments/assets/6c42924a-0db7-4fc7-a372-c046d65c37ff" />
+
+### Steps to Reproduce
+
+1. Go to Apps
+2. Install PayPal
+3. Observe setup window
+
+
+### Actual Results
+
+Strings are hardcoded
+
+### Expected Results
+
+All user facing strings should use locale keys and the t() function to support internationalization.
+
+## Instructions
+- Read the codebase to understand the problem
+- Make the minimal changes needed to fix the issue
+- Follow the existing code conventions and patterns
+- Do not add unnecessary changes
+- Create or modify tests if the fix warrants it
+
+When you are done, stop. Do not run tests unless you are confident they exist and will work.

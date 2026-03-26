@@ -580,7 +580,248 @@ function detectDominantPatterns(
   }
 
   // ========================================
-  // 6. KEY DIRECTORY PURPOSES (app-specific)
+  // 6. AUTH PATTERNS
+  // ========================================
+  const authPatterns: { pattern: string; name: string; count: number }[] = [
+    { pattern: "useAuth|useSession|useUser", name: "auth hooks (useAuth/useSession/useUser)", count: 0 },
+    { pattern: "withAuth|authMiddleware|requireAuth", name: "auth middleware", count: 0 },
+    { pattern: "passport\\.authenticate", name: "Passport.js", count: 0 },
+    { pattern: "jwt\\.verify|jwt\\.sign|jsonwebtoken", name: "JWT (jsonwebtoken)", count: 0 },
+    { pattern: "@login_required|LoginRequiredMixin", name: "Django login_required", count: 0 },
+    { pattern: "IsAuthenticated|AllowAny|BasePermission", name: "DRF permissions", count: 0 },
+    { pattern: "NextAuth|getServerSession", name: "NextAuth.js", count: 0 },
+    { pattern: "supabase\\.auth|useSupabaseClient", name: "Supabase Auth", count: 0 },
+    { pattern: "clerk|useClerk|ClerkProvider", name: "Clerk", count: 0 },
+  ];
+
+  for (const [, content] of allContents) {
+    for (const p of authPatterns) {
+      if (new RegExp(p.pattern).test(content)) {
+        p.count++;
+      }
+    }
+  }
+
+  const dominantAuth = authPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
+  if (dominantAuth.length > 0) {
+    const primary = dominantAuth[0];
+    // Find auth middleware/guard files
+    const authFiles = files.filter(
+      (f) =>
+        (f.includes("auth") || f.includes("middleware") || f.includes("guard") || f.includes("session")) &&
+        !f.includes("node_modules") && !f.includes(".test.") &&
+        (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".py"))
+    );
+    const authEntrypoint = authFiles.find(
+      (f) => f.includes("middleware") || f.includes("guard") || f.includes("auth/index")
+    );
+
+    let desc = `Auth uses ${primary.name}.`;
+    if (authEntrypoint) {
+      desc += ` Auth logic lives in ${authEntrypoint}.`;
+    }
+
+    findings.push({
+      category: "Dominant patterns",
+      description: desc,
+      evidence: `${primary.count} files`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 7. STYLING CONVENTIONS
+  // ========================================
+  const stylePatterns: { pattern: string; name: string; desc: string; count: number }[] = [
+    { pattern: "className=|class=.*tw-", name: "Tailwind CSS", desc: "Styling uses Tailwind CSS utility classes", count: 0 },
+    { pattern: "styled\\.|styled\\(|css`", name: "styled-components/Emotion", desc: "Styling uses CSS-in-JS (styled-components or Emotion)", count: 0 },
+    { pattern: "styles\\.\\w+|from.*\\.module\\.(css|scss)", name: "CSS Modules", desc: "Styling uses CSS Modules (*.module.css)", count: 0 },
+  ];
+
+  for (const [f, content] of allContents) {
+    for (const p of stylePatterns) {
+      if (new RegExp(p.pattern).test(content)) {
+        p.count++;
+      }
+    }
+  }
+
+  const dominantStyle = stylePatterns.filter((p) => p.count >= 3).sort((a, b) => b.count - a.count);
+  if (dominantStyle.length > 0) {
+    const primary = dominantStyle[0];
+    let desc = `${primary.desc}.`;
+
+    // For Tailwind, check for custom tokens
+    if (primary.name === "Tailwind CSS") {
+      const twConfig = files.find((f) => f.includes("tailwind.config"));
+      if (twConfig) {
+        try {
+          const configContent = fs.readFileSync(path.join(dir, twConfig), "utf-8");
+          if (configContent.includes("colors") || configContent.includes("extend")) {
+            desc += ` Custom design tokens defined in ${twConfig} — use these instead of arbitrary values.`;
+          }
+        } catch { /* skip */ }
+      }
+    }
+
+    findings.push({
+      category: "Dominant patterns",
+      description: desc,
+      evidence: `${primary.count} files`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 8. DATABASE / ORM PATTERNS
+  // ========================================
+  const dbPatterns: { pattern: string; name: string; entryHint: string; count: number }[] = [
+    { pattern: "prisma\\.|PrismaClient|\\$queryRaw", name: "Prisma", entryHint: "prisma/schema.prisma", count: 0 },
+    { pattern: "drizzle\\(|pgTable|sqliteTable", name: "Drizzle ORM", entryHint: "drizzle.config.ts", count: 0 },
+    { pattern: "knex\\(|knex\\.schema", name: "Knex.js", entryHint: "knexfile", count: 0 },
+    { pattern: "sequelize\\.define|Model\\.init", name: "Sequelize", entryHint: "models/", count: 0 },
+    { pattern: "TypeORM|@Entity|getRepository", name: "TypeORM", entryHint: "entities/", count: 0 },
+    { pattern: "mongoose\\.model|Schema\\(\\{", name: "Mongoose", entryHint: "models/", count: 0 },
+    { pattern: "from django\\.db|models\\.Model", name: "Django ORM", entryHint: "models.py", count: 0 },
+    { pattern: "SQLAlchemy|declarative_base|sessionmaker", name: "SQLAlchemy", entryHint: "models/", count: 0 },
+    { pattern: "from tortoise|tortoise\\.models", name: "Tortoise ORM", entryHint: "models/", count: 0 },
+  ];
+
+  for (const [, content] of allContents) {
+    for (const p of dbPatterns) {
+      if (new RegExp(p.pattern).test(content)) {
+        p.count++;
+      }
+    }
+  }
+
+  const dominantDB = dbPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
+  if (dominantDB.length > 0) {
+    const primary = dominantDB[0];
+    // Try to find the actual entrypoint file
+    const dbEntryFile = files.find(
+      (f) => f.includes(primary.entryHint) && !f.includes("node_modules")
+    );
+    let desc = `Database access uses ${primary.name}.`;
+    if (dbEntryFile) {
+      desc += ` Schema/models defined in ${dbEntryFile}.`;
+    } else {
+      desc += ` Look for schemas in ${primary.entryHint}.`;
+    }
+
+    findings.push({
+      category: "Dominant patterns",
+      description: desc,
+      evidence: `${primary.count} files`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 9. GENERATED / DO-NOT-EDIT FILES
+  // ========================================
+  const generatedFiles: string[] = [];
+  for (const [file, content] of allContents) {
+    const firstLines = content.slice(0, 500);
+    if (
+      /@generated/.test(firstLines) ||
+      /DO NOT EDIT/i.test(firstLines) ||
+      /auto-generated/i.test(firstLines) ||
+      /this file is generated/i.test(firstLines) ||
+      /generated by/i.test(firstLines)
+    ) {
+      generatedFiles.push(file);
+    }
+  }
+
+  // Also check for common generated file patterns in the full file list
+  const knownGenerated = files.filter(
+    (f) =>
+      !f.includes("node_modules") &&
+      (f.includes(".generated.") ||
+       f.includes(".gen.") ||
+       f.endsWith(".d.ts") && f.includes("generated") ||
+       f.includes("__generated__") ||
+       f.includes("codegen"))
+  );
+
+  const allGenerated = [...new Set([...generatedFiles, ...knownGenerated])];
+  if (allGenerated.length >= 2) {
+    const samples = allGenerated.slice(0, 5).join(", ");
+    findings.push({
+      category: "Critical constraints",
+      description: `Generated files detected (${samples}${allGenerated.length > 5 ? ", ..." : ""}). Do NOT edit these directly — modify the source/schema they are generated from.`,
+      evidence: `${allGenerated.length} generated files`,
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
+  // ========================================
+  // 10. EDIT ENTRYPOINTS (where changes usually land)
+  // ========================================
+  // For routing — find where route definitions live
+  if (dominantRouter.length > 0) {
+    const routeDirs = files
+      .filter(
+        (f) =>
+          (f.includes("routes") || f.includes("routers") || f.includes("api/") || f.includes("app/api/")) &&
+          !f.includes("node_modules") && !f.includes(".test.") &&
+          (f.endsWith(".ts") || f.endsWith(".js") || f.endsWith(".py") || f.endsWith(".go"))
+      )
+      .map((f) => {
+        const parts = f.split("/");
+        // Get the directory containing route files
+        return parts.slice(0, -1).join("/");
+      })
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .slice(0, 3);
+
+    if (routeDirs.length > 0) {
+      findings.push({
+        category: "Dominant patterns",
+        description: `Route definitions live in: ${routeDirs.join(", ")}. Add new endpoints here.`,
+        evidence: `${routeDirs.length} route directories`,
+        confidence: "high",
+        discoverable: false,
+      });
+    }
+  }
+
+  // For components — find where UI components live
+  const componentDirs = files
+    .filter(
+      (f) =>
+        (f.includes("/components/") || f.includes("/ui/")) &&
+        !f.includes("node_modules") && !f.includes(".test.") &&
+        (f.endsWith(".tsx") || f.endsWith(".jsx") || f.endsWith(".vue") || f.endsWith(".svelte"))
+    )
+    .map((f) => {
+      const match = f.match(/(.*\/(?:components|ui))\//);
+      return match ? match[1] : null;
+    })
+    .filter((v): v is string => v !== null)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .slice(0, 3);
+
+  if (componentDirs.length > 0 && componentDirs.some((d) => !d.includes("node_modules"))) {
+    const filtered = componentDirs.filter((d) => !d.includes("node_modules"));
+    if (filtered.length > 0) {
+      findings.push({
+        category: "Dominant patterns",
+        description: `UI components live in: ${filtered.join(", ")}. Add new components here.`,
+        evidence: `${filtered.length} component directories`,
+        confidence: "medium",
+        discoverable: false,
+      });
+    }
+  }
+
+  // ========================================
+  // 11. KEY DIRECTORY PURPOSES (app-specific)
   // ========================================
   // Detect directories with clear domain purposes
   const dirPurposes: { dir: string; purpose: string }[] = [];

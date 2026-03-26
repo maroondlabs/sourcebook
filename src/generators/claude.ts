@@ -5,6 +5,8 @@ import {
   hasCommands,
   categorizeFindings,
   enforceTokenBudget,
+  buildQuickReference,
+  getModePriorities,
 } from "./shared.js";
 
 /**
@@ -18,6 +20,7 @@ import {
  */
 export function generateClaude(scan: ProjectScan, budget: number): string {
   const { critical, important, supplementary } = categorizeFindings(scan.findings);
+  const priorities = getModePriorities(scan.repoMode);
 
   const sections: { key: string; content: string; priority: number }[] = [];
 
@@ -35,7 +38,13 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
   ].join("\n");
   sections.push({ key: "header", content: header, priority: 100 });
 
-  // Commands first -- most immediately actionable
+  // Quick Reference — the "30-second handoff" (highest priority in app mode)
+  const quickRef = buildQuickReference(scan.findings);
+  if (quickRef) {
+    sections.push({ key: "quick_reference", content: quickRef, priority: priorities.quick_reference });
+  }
+
+  // Commands — most immediately actionable
   if (hasCommands(scan.commands)) {
     const lines = ["## Commands", ""];
     if (scan.commands.dev) lines.push(`- **Dev:** \`${scan.commands.dev}\``);
@@ -58,7 +67,7 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
       lines.push(`- **${finding.category}:** ${finding.description}`);
     }
     lines.push("");
-    sections.push({ key: "critical", content: lines.join("\n"), priority: 90 });
+    sections.push({ key: "critical", content: lines.join("\n"), priority: priorities.critical });
   }
 
   // ============================================
@@ -69,7 +78,7 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
   // Stack (brief)
   if (scan.frameworks.length > 0) {
     const content = ["## Stack", "", scan.frameworks.join(", "), ""].join("\n");
-    sections.push({ key: "stack", content, priority: 50 });
+    sections.push({ key: "stack", content, priority: priorities.stack });
   }
 
   // Key directories (only non-obvious ones)
@@ -83,7 +92,7 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
         lines.push(`- \`${dir}/\` — ${purpose}`);
       }
       lines.push("");
-      sections.push({ key: "structure", content: lines.join("\n"), priority: 40 });
+      sections.push({ key: "structure", content: lines.join("\n"), priority: priorities.structure });
     }
   }
 
@@ -95,7 +104,7 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
       lines.push(`- \`${file}\``);
     }
     lines.push("");
-    sections.push({ key: "core_modules", content: lines.join("\n"), priority: 60 });
+    sections.push({ key: "core_modules", content: lines.join("\n"), priority: priorities.core_modules });
   }
 
   // Important findings (high confidence, non-critical)
@@ -113,7 +122,7 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
       }
     }
     lines.push("");
-    sections.push({ key: "conventions", content: lines.join("\n"), priority: 30 });
+    sections.push({ key: "conventions", content: lines.join("\n"), priority: priorities.conventions });
   }
 
   // Supplementary findings (medium confidence)
@@ -131,7 +140,7 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
       }
     }
     lines.push("");
-    sections.push({ key: "supplementary", content: lines.join("\n"), priority: 20 });
+    sections.push({ key: "supplementary", content: lines.join("\n"), priority: priorities.supplementary });
   }
 
   // ============================================

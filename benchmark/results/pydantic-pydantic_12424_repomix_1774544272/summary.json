@@ -1,0 +1,18 @@
+{
+  "repo": "pydantic/pydantic",
+  "issue": 12424,
+  "issue_title": "Fields with `exclude_if` should not be required in serialization JSON schema",
+  "condition": "repomix",
+  "run_id": "pydantic-pydantic_12424_repomix_1774544272",
+  "model": "claude-sonnet-4-20250514",
+  "repo_sha": "84a6c0b7f7db78211d15078833f24973a26044ea",
+  "agent_time_ms": 188756,
+  "patch_lines":        0,
+  "files_changed":        0,
+  "input_tokens": 14132,
+  "output_tokens": 10161,
+  "tool_calls": 0,
+  "turns": 33,
+  "produced_patch": false,
+  "timestamp": "2026-03-26T17:01:03Z"
+}

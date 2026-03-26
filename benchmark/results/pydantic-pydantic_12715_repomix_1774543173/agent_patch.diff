@@ -1,0 +1,35 @@
+diff --git a/pydantic/_internal/_validators.py b/pydantic/_internal/_validators.py
+index 3ad6c92..1f1ce1a 100644
+--- a/pydantic/_internal/_validators.py
++++ b/pydantic/_internal/_validators.py
+@@ -70,7 +70,17 @@ def import_string(value: Any) -> Any:
+         try:
+             return _import_string_logic(value)
+         except ImportError as e:
+-            raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
++            # Distinguish between path-related errors and internal module import errors
++            error_msg = str(e)
++            if (isinstance(e, ModuleNotFoundError) or
++                'cannot import name' in error_msg or
++                'Import strings should' in error_msg):
++                # These are path-related errors, so the "Invalid python path" prefix is appropriate
++                raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': error_msg}) from e
++            else:
++                # This is likely an internal module import error (e.g., missing dependency),
++                # so we preserve the original error message without the misleading prefix
++                raise PydanticCustomError('import_error', '{error}', {'error': error_msg}) from e
+     else:
+         # otherwise we just return the value and let the next validator do the rest of the work
+         return value
+@@ -118,6 +128,11 @@ def _import_string_logic(dotted_path: str) -> Any:
+             except ImportError:
+                 pass
+         raise
++    except ImportError:
++        # If it's not a ModuleNotFoundError, the module path is valid but the module
++        # itself has import issues (e.g., missing dependencies). We re-raise this
++        # as-is so that the outer handler can preserve the original error message.
++        raise
+ 
+     if attribute is not None:
+         try:

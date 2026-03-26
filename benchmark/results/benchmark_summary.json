@@ -1,0 +1,24 @@
+{
+  "total_tasks": 5,
+  "conditions": {
+    "none": {
+      "n": 7,
+      "avg_total_tokens": 21575.714285714286,
+      "avg_time_ms": 221088.7142857143,
+      "avg_patch_lines": 207.42857142857142
+    },
+    "repomix": {
+      "n": 5,
+      "avg_total_tokens": 21624.6,
+      "avg_time_ms": 188130.8,
+      "avg_patch_lines": 142.8
+    },
+    "sourcebook": {
+      "n": 5,
+      "avg_total_tokens": 26254.2,
+      "avg_time_ms": 227162.8,
+      "avg_patch_lines": 170.0
+    }
+  },
+  "paired_comparisons": 5
+}

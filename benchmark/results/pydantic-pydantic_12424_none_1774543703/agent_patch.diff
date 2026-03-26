@@ -1,0 +1,55 @@
+diff --git a/pydantic/_internal/_generate_schema.py b/pydantic/_internal/_generate_schema.py
+index 3c47de5..f2f692f 100644
+--- a/pydantic/_internal/_generate_schema.py
++++ b/pydantic/_internal/_generate_schema.py
+@@ -2606,27 +2606,45 @@ def apply_model_validators(
+ 
+ def wrap_default(field_info: FieldInfo, schema: core_schema.CoreSchema) -> core_schema.CoreSchema:
+     """Wrap schema with default schema if default value or `default_factory` are available.
++    Also handles serialization attributes like `exclude_if` for annotated fields.
+ 
+     Args:
+         field_info: The field info object.
+         schema: The schema to apply default on.
+ 
+     Returns:
+-        Updated schema by default value or `default_factory`.
++        Updated schema by default value or `default_factory`, and wrapped with serialization attributes if needed.
+     """
++    # Handle defaults first
+     if field_info.default_factory:
+-        return core_schema.with_default_schema(
++        schema = core_schema.with_default_schema(
+             schema,
+             default_factory=field_info.default_factory,
+             default_factory_takes_data=takes_validated_data_argument(field_info.default_factory),
+             validate_default=field_info.validate_default,
+         )
+     elif field_info.default is not PydanticUndefined:
+-        return core_schema.with_default_schema(
++        schema = core_schema.with_default_schema(
+             schema, default=field_info.default, validate_default=field_info.validate_default
+         )
+-    else:
+-        return schema
++
++    # Handle serialization attributes for annotated fields
++    # If the FieldInfo has serialization attributes, wrap with a model field to preserve them
++    has_serialization_attrs = (
++        field_info.exclude_if is not None
++        or field_info.exclude is not False
++        or field_info.serialization_alias is not None
++    )
++
++    if has_serialization_attrs:
++        schema = core_schema.model_field(
++            schema,
++            serialization_exclude=field_info.exclude,
++            serialization_alias=field_info.serialization_alias,
++            serialization_exclude_if=field_info.exclude_if,
++        )
++
++    return schema
+ 
+ 
+ def _extract_get_pydantic_json_schema(tp: Any) -> GetJsonSchemaFunction | None:

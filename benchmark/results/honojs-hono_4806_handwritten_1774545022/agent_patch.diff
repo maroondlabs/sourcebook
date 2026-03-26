@@ -1,0 +1,86 @@
+diff --git a/src/request.test.ts b/src/request.test.ts
+index b27126d..cc2c857 100644
+--- a/src/request.test.ts
++++ b/src/request.test.ts
+@@ -396,6 +396,50 @@ describe('Body methods with caching', () => {
+       })
+     })
+ 
++    describe('#cachedBody should handle non-Promise cached values', () => {
++      it('should not throw TypeError when bodyCache contains plain objects', async () => {
++        const req = new HonoRequest(
++          new Request('http://localhost', {
++            method: 'POST',
++            body: JSON.stringify({ event: 'push' }),
++            headers: { 'Content-Type': 'application/json' },
++          })
++        )
++
++        // Simulate a scenario where a non-Promise value gets stored in bodyCache
++        // (e.g., from validator code or other middleware)
++        // @ts-ignore - accessing private property for test
++        req.bodyCache.someKey = 'plain-value'
++
++        // The main fix: this should not throw "bodyCache[anyCachedKey].then is not a function"
++        // We're specifically testing that the TypeError is not thrown, not the content
++        await expect(req.text()).resolves.toBeDefined()
++        await expect(req.arrayBuffer()).resolves.toBeInstanceOf(ArrayBuffer)
++        await expect(req.blob()).resolves.toBeInstanceOf(Blob)
++      })
++
++      it('should handle FormData objects in cache (validator scenario)', async () => {
++        const req = new HonoRequest(
++          new Request('http://localhost', {
++            method: 'POST',
++            body: JSON.stringify({ event: 'push' }),
++            headers: { 'Content-Type': 'application/json' },
++          })
++        )
++
++        // Simulate validator code storing FormData directly in cache
++        const formData = new FormData()
++        formData.append('key', 'value')
++        // @ts-ignore - accessing private property for test
++        req.bodyCache.formData = formData
++
++        // Should not throw TypeError: bodyCache[anyCachedKey].then is not a function
++        await expect(req.text()).resolves.toBeDefined()
++        const text = await req.text()
++        expect(typeof text).toBe('string')
++      })
++    })
++
+     describe('Return type', () => {
+       let req: HonoRequest
+       beforeEach(() => {
+diff --git a/src/request.ts b/src/request.ts
+index bbb74a3..5a7097a 100644
+--- a/src/request.ts
++++ b/src/request.ts
+@@ -227,12 +227,24 @@ export class HonoRequest<P extends string = '/', I extends Input['out'] = {}> {
+ 
+     const anyCachedKey = Object.keys(bodyCache)[0]
+     if (anyCachedKey) {
+-      return (bodyCache[anyCachedKey as keyof Body] as Promise<BodyInit>).then((body) => {
++      const anyCachedValue = bodyCache[anyCachedKey as keyof Body]
++
++      // Check if the cached value is a Promise
++      if (anyCachedValue && typeof anyCachedValue.then === 'function') {
++        return (anyCachedValue as Promise<BodyInit>).then((body) => {
++          if (anyCachedKey === 'json') {
++            body = JSON.stringify(body)
++          }
++          return new Response(body)[key]()
++        })
++      } else {
++        // Handle already resolved data (non-Promise values)
++        let body = anyCachedValue as BodyInit
+         if (anyCachedKey === 'json') {
+           body = JSON.stringify(body)
+         }
+         return new Response(body)[key]()
+-      })
++      }
+     }
+ 
+     return (bodyCache[key] = raw[key]())

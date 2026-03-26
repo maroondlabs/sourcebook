@@ -1,0 +1,17 @@
+You are working on the calcom/cal.com repository.
+
+## Task
+Fix the following issue:
+
+**Fix OAuth flow if sign up is required**
+
+Fix the OAuth flow when the user needs to sign up first. At the moment, when a user signs up, they’re removed from the OAuth flow. Sign-in works and redirects back to the consent screen.
+
+## Instructions
+- Read the codebase to understand the problem
+- Make the minimal changes needed to fix the issue
+- Follow the existing code conventions and patterns
+- Do not add unnecessary changes
+- Create or modify tests if the fix warrants it
+
+When you are done, stop. Do not run tests unless you are confident they exist and will work.

@@ -1,0 +1,30 @@
+=== sourcebook benchmark ===
+Repo:      pydantic/pydantic
+Issue:     #12715
+Condition: handwritten
+Model:     claude-sonnet-4-20250514
+Run ID:    pydantic-pydantic_12715_handwritten_1774542992
+
+[1/7] Fetching issue and PR info...
+Issue: Improve logic around `ImportString` validation when the `ImportError` originates from another source
+Base SHA: ...
+[2/7] Setting up pydantic/pydantic at pre-fix state...
+Reusing existing clone at /tmp/sourcebook-bench/pydantic-pydantic
+[3/7] Applying context condition: handwritten...
+Handwritten: 322 tokens
+[4/7] Creating task prompt...
+[5/7] Running agent...
+{"type":"result","subtype":"success","is_error":false,"duration_ms":179483,"duration_api_ms":202535,"num_turns":27,"result":"Perfect! I've successfully implemented a fix for the `ImportString` validation issue. Let me summarize what was done:\n\n## Problem Analysis\nThe issue was that when a module exists but has internal import errors (like missing dependencies), Pydantic's `ImportString` validator was incorrectly reporting \"Invalid python path: No module named 'my_module.MyClass'\" instead of the actual error \"No module named 'torch'\".\n\n## Solution Implemented\n\n### 1. Modified `_import_string_logic` function\n- Changed exception handling to catch `ImportError` instead of just `ModuleNotFoundError` \n- Added logic to distinguish between path-related errors and internal module errors\n- Internal import errors are marked with a special attribute `_is_internal_import_error`\n\n### 2. Updated `import_string` function  \n- Added `_is_internal_import_error` helper function to detect internal vs path-related errors\n- For internal errors: preserve the original error message without \"Invalid python path\" prefix\n- For path-related errors: keep the existing \"Invalid python path\" prefix\n\n### 3. Added comprehensive test coverage\n- Enhanced the existing test `test_importstring_reports_internal_import_error` (which was already expecting the fix)\n- Added `test_importstring_still_reports_invalid_path_errors` to ensure path-related errors still work correctly\n\n## Key Changes Made\n\n**File: `pydantic/_internal/_validators.py`**\n- Modified the `try/except` block in `_import_string_logic` to handle `ImportError` vs `ModuleNotFoundError` differently\n- Internal import errors get tagged and preserve their original message  \n- Path-related errors continue to get the \"Invalid python path\" prefix\n\n**File: `tests/test_types.py`**  \n- Added test case to ensure both error types work correctly\n\n## Result\nNow when you have:\n```python\n# my_module.py\nimport torch  # missing dependency\n\n# Using ImportString  \nadapter.validate_python('my_module.MyClass')\n```\n\nInstead of the misleading:\n```\nInvalid python path: No module named 'my_module.MyClass'  \n```\n\nYou get the actual error:\n```\nNo module named 'torch'\n```\n\nWhile still preserving proper error messages for actual invalid paths like `'nonexistent_module.SomeClass'` which will still show `\"Invalid python path: No module named 'nonexistent_module'\"`.\n\nThe fix is minimal, targeted, and maintains full backward compatibility while resolving the confusing error messaging issue.","stop_reason":null,"session_id":"af789eb4-c610-4b67-968e-1f5c9fd3373a","total_cost_usd":0.4962426499999999,"usage":{"input_tokens":218,"cache_creation_input_tokens":21997,"cache_read_input_tokens":843123,"output_tokens":9956,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":21997,"ephemeral_5m_input_tokens":0},"inference_geo":"","iterations":[],"speed":"standard"},"modelUsage":{"claude-sonnet-4-20250514":{"inputTokens":218,"outputTokens":9956,"cacheReadInputTokens":843123,"cacheCreationInputTokens":21997,"webSearchRequests":0,"costUSD":0.48541965,"contextWindow":200000,"maxOutputTokens":32000},"claude-haiku-4-5-20251001":{"inputTokens":8828,"outputTokens":399,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"webSearchRequests":0,"costUSD":0.010823,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"uuid":"57be9168-aa39-43b0-a94f-091b9e4d2505"}
+[6/7] Capturing results...
+[7/7] Scoring quality...
+
+=== Run complete ===
+Condition:     handwritten
+Time:          180s
+Input tokens:  9046
+Output tokens: 10355
+Tool calls:    0
+Turns:         27
+Files changed:        2
+Patch lines:         83
+Results:       /Users/rhagent/Documents/sourcebook/benchmark/results/pydantic-pydantic_12715_handwritten_1774542992

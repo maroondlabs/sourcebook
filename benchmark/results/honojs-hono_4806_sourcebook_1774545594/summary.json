@@ -1,0 +1,18 @@
+{
+  "repo": "honojs/hono",
+  "issue": 4806,
+  "issue_title": "parseBody() breaks subsequent text()/json() calls with TypeError",
+  "condition": "sourcebook",
+  "run_id": "honojs-hono_4806_sourcebook_1774545594",
+  "model": "claude-sonnet-4-20250514",
+  "repo_sha": "e1ae0eb0f5a2dc1001895523016db02141972695",
+  "agent_time_ms": 274472,
+  "patch_lines":       82,
+  "files_changed":        2,
+  "input_tokens": 13681,
+  "output_tokens": 14295,
+  "tool_calls": 0,
+  "turns": 40,
+  "produced_patch": true,
+  "timestamp": "2026-03-26T17:24:31Z"
+}

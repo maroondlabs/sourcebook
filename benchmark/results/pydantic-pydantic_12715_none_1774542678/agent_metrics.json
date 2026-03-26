@@ -1,0 +1,1 @@
+{"input_tokens": 18792, "output_tokens": 15765, "cache_read_tokens": 1670184, "cache_create_tokens": 51423, "total_tokens": 1756164, "tool_calls": 0, "turns": 49, "errors": 0, "cost_usd": 0.9417, "permission_denials": 0}

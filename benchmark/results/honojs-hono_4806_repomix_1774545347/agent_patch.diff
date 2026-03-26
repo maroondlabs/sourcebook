@@ -1,0 +1,82 @@
+diff --git a/src/request.test.ts b/src/request.test.ts
+index b27126d..6f6e607 100644
+--- a/src/request.test.ts
++++ b/src/request.test.ts
+@@ -440,6 +440,46 @@ describe('Body methods with caching', () => {
+         ).toEqualTypeOf<{ key1: string; key2: string }>()
+       })
+     })
++
++    // Test for the specific issue described in the bug report
++    describe('Issue reproduction: parseBody() breaks subsequent text()/json() calls', () => {
++      it('should handle mixed cache entries correctly when validator caches FormData', async () => {
++        const req = new HonoRequest(
++          new Request('http://localhost', {
++            method: 'POST',
++            body: JSON.stringify({ event: 'push' }),
++            headers: { 'Content-Type': 'application/json' },
++          })
++        )
++
++        // Simulate the scenario where validator middleware caches a resolved FormData object
++        // This is what happens in src/validator/validator.ts line 121: c.req.bodyCache.formData = formData
++        const mockFormData = new FormData()
++        req.bodyCache.formData = mockFormData as any
++
++        // After the fix, this should work correctly instead of throwing an error
++        // The main point is that it doesn't crash with "TypeError: .then is not a function"
++        const text = await req.text()
++        expect(text).toMatch(/------formdata/) // FormData serializes to multipart format
++      })
++
++      it('should handle mixed cache entries correctly when a plain object is cached', async () => {
++        const req = new HonoRequest(
++          new Request('http://localhost', {
++            method: 'POST',
++            body: JSON.stringify({ event: 'push' }),
++            headers: { 'Content-Type': 'application/json' },
++          })
++        )
++
++        // Manually create another problematic scenario where a plain object is cached
++        req.bodyCache.json = { event: 'push' } as any
++
++        // After the fix, this should work correctly instead of throwing an error
++        const text = await req.text()
++        expect(text).toBe(JSON.stringify({ event: 'push' }))
++      })
++    })
+   })
+ })
+ 
+diff --git a/src/request.ts b/src/request.ts
+index bbb74a3..db2b8a5 100644
+--- a/src/request.ts
++++ b/src/request.ts
+@@ -227,12 +227,24 @@ export class HonoRequest<P extends string = '/', I extends Input['out'] = {}> {
+ 
+     const anyCachedKey = Object.keys(bodyCache)[0]
+     if (anyCachedKey) {
+-      return (bodyCache[anyCachedKey as keyof Body] as Promise<BodyInit>).then((body) => {
++      const cachedValue = bodyCache[anyCachedKey as keyof Body]
++
++      // Check if the cached value is a Promise before calling .then()
++      if (cachedValue && typeof cachedValue.then === 'function') {
++        return (cachedValue as Promise<BodyInit>).then((body) => {
++          if (anyCachedKey === 'json') {
++            body = JSON.stringify(body)
++          }
++          return new Response(body)[key]()
++        })
++      } else {
++        // If it's not a Promise, convert the cached value to the requested format
++        let body = cachedValue as BodyInit
+         if (anyCachedKey === 'json') {
+           body = JSON.stringify(body)
+         }
+         return new Response(body)[key]()
+-      })
++      }
+     }
+ 
+     return (bodyCache[key] = raw[key]())

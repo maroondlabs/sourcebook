@@ -13,6 +13,7 @@ const CRITICAL_CATEGORIES = new Set([
   "Git history",
   "Commit conventions",
   "Anti-patterns",
+  "Critical constraints",
 ]);
 
 const CRITICAL_KEYWORDS = [
@@ -75,6 +76,108 @@ export function categorizeFindings(findings: Finding[]): {
  * 6. Supplementary findings (drop first)
  * 7. Footer/manual section (always keep — end of context = high retention)
  */
+/**
+ * Build a Quick Reference section from dominant pattern findings.
+ * This is the "30-second senior engineer handoff" — the single most
+ * actionable section in the output.
+ */
+export function buildQuickReference(findings: Finding[]): string | null {
+  const patterns = findings.filter((f) => f.category === "Dominant patterns");
+  if (patterns.length < 2) return null;
+
+  const lines = ["## Quick Reference", ""];
+
+  for (const p of patterns) {
+    // Extract a short label from the description
+    const desc = p.description;
+    let label = "";
+    let value = desc;
+
+    if (desc.includes("internationalization") || desc.includes("i18n") || desc.includes("translation")) {
+      label = "i18n";
+    } else if (desc.includes("route") || desc.includes("endpoint") || desc.includes("API")) {
+      label = "routing";
+    } else if (desc.includes("validation") || desc.includes("schema") || desc.includes("Zod") || desc.includes("Pydantic")) {
+      label = "validation";
+    } else if ((desc.includes("auth") || desc.includes("Auth") || desc.includes("session")) && !desc.includes("integration")) {
+      label = "auth";
+    } else if (desc.includes("Test") || desc.includes("test")) {
+      label = "testing";
+    } else if (desc.includes("Tailwind") || desc.includes("styled") || desc.includes("CSS")) {
+      label = "styling";
+    } else if (desc.includes("database") || desc.includes("Database") || desc.includes("Prisma") || desc.includes("ORM")) {
+      label = "database";
+    } else if (desc.includes("fetching") || desc.includes("Query") || desc.includes("SWR")) {
+      label = "data fetching";
+    } else if (desc.includes("Route definitions") || desc.includes("Add new endpoints")) {
+      label = "routes";
+    } else if (desc.includes("integration") || desc.includes("Third-party")) {
+      label = "integrations";
+    } else if (desc.includes("components") || desc.includes("UI")) {
+      label = "components";
+    } else if (desc.includes("Generated") || desc.includes("generated") || desc.includes("DO NOT")) {
+      label = "generated";
+    } else {
+      continue; // Skip findings we can't label cleanly
+    }
+
+    // Compress the description to a short actionable line
+    const short = desc
+      .replace(/\. Follow this pattern.*$/, "")
+      .replace(/\. This is the project's standard.*$/, "")
+      .replace(/\. Each integration has.*$/, "");
+
+    lines.push(`- **${label}:** ${short}`);
+  }
+
+  if (lines.length <= 2) return null; // Nothing useful
+
+  // Deduplicate by label — keep only first occurrence of each
+  const seen = new Set<string>();
+  const deduped = [lines[0], lines[1]]; // Keep header
+  for (let i = 2; i < lines.length; i++) {
+    const labelMatch = lines[i].match(/^\- \*\*(\w[\w\s]*)\:\*\*/);
+    if (labelMatch) {
+      const lbl = labelMatch[1];
+      if (seen.has(lbl)) continue;
+      seen.add(lbl);
+    }
+    deduped.push(lines[i]);
+  }
+
+  deduped.push("");
+  return deduped.join("\n");
+}
+
+/**
+ * Get priority adjustments based on repo mode.
+ * App repos: boost dominant patterns, demote structural.
+ * Library repos: boost structural, demote patterns.
+ */
+export function getModePriorities(repoMode?: "app" | "library" | "monorepo"): Record<string, number> {
+  if (repoMode === "library") {
+    return {
+      quick_reference: 85,
+      critical: 92,
+      core_modules: 90,
+      conventions: 80,
+      stack: 50,
+      structure: 40,
+      supplementary: 25,
+    };
+  }
+  // Default: app mode (boost patterns, Quick Reference highest)
+  return {
+    quick_reference: 96,
+    critical: 92,
+    core_modules: 50,
+    conventions: 85,
+    stack: 45,
+    structure: 60,
+    supplementary: 20,
+  };
+}
+
 export function enforceTokenBudget(
   sections: { key: string; content: string; priority: number }[],
   budget: number

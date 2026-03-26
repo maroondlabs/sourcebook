@@ -1,0 +1,54 @@
+diff --git a/tests/test_json_schema.py b/tests/test_json_schema.py
+index ff6bc3c..b00a611 100644
+--- a/tests/test_json_schema.py
++++ b/tests/test_json_schema.py
+@@ -7237,3 +7237,49 @@ def test_nested_model_deduplication() -> None:
+     assert 'Level1' in definitions
+     assert 'Level1-Input' not in definitions
+     assert 'Level1-Output' not in definitions
++
++
++def test_exclude_if_annotated_field_not_required_in_serialization():
++    """Test the specific issue reported: Annotated fields with exclude_if should not be required in serialization schema."""
++    from typing_extensions import Annotated
++
++    class MyModel(BaseModel):
++        field: Annotated[str, Field(exclude_if=lambda x: x == "null")]
++
++    # Get validation/input schema - field should be required
++    input_schema = MyModel.model_json_schema(mode='validation')
++    assert 'field' in input_schema['required'], "Field should be required in validation schema"
++
++    # Get serialization/output schema - field should NOT be required
++    output_schema = MyModel.model_json_schema(mode='serialization')
++    output_required = output_schema.get('required', [])
++    assert 'field' not in output_required, f"Field should not be required in serialization schema, but found in: {output_required}"
++
++    # Verify serialization behavior works as expected
++    model1 = MyModel(field="hello")
++    assert model1.model_dump() == {'field': 'hello'}
++
++    model2 = MyModel(field="null")
++    assert model2.model_dump() == {}
++
++
++def test_exclude_if_validation_vs_serialization_schema_difference():
++    """Test that fields with exclude_if behave differently in validation vs serialization schemas."""
++    class ModelWithExcludeIf(BaseModel):
++        required_field: str = Field(exclude_if=lambda x: x == "skip")
++        optional_field: str = Field(default="default", exclude_if=lambda x: x == "skip")
++
++    # Validation schema - both fields should be present, required_field should be required
++    validation_schema = ModelWithExcludeIf.model_json_schema(mode='validation')
++    assert 'required_field' in validation_schema['required']
++    assert 'optional_field' not in validation_schema['required']  # has default
++    assert 'required_field' in validation_schema['properties']
++    assert 'optional_field' in validation_schema['properties']
++
++    # Serialization schema - fields with exclude_if should not be required
++    serialization_schema = ModelWithExcludeIf.model_json_schema(mode='serialization')
++    serialization_required = serialization_schema.get('required', [])
++    assert 'required_field' not in serialization_required, "Fields with exclude_if should not be required in serialization"
++    assert 'optional_field' not in serialization_required
++    assert 'required_field' in serialization_schema['properties']
++    assert 'optional_field' in serialization_schema['properties']

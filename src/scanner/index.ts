@@ -63,6 +63,9 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
     ...graphAnalysis.findings,
   ];
 
+  // Detect repo mode for prioritization
+  const repoMode = detectRepoMode(dir, files, frameworks.map((f) => f.name));
+
   return {
     dir,
     files,
@@ -72,7 +75,35 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
     structure,
     findings,
     rankedFiles: graphAnalysis.rankedFiles,
+    repoMode,
   };
+}
+
+function detectRepoMode(dir: string, files: string[], frameworks: string[]): "app" | "library" | "monorepo" {
+  // Monorepo detection
+  const hasWorkspaces = files.some(
+    (f) => f === "pnpm-workspace.yaml" || f === "lerna.json" || f === "nx.json"
+  );
+  if (hasWorkspaces) return "monorepo";
+
+  // Library detection
+  const hasPublishConfig = files.some((f) => f === "setup.py" || f === "pyproject.toml" || f === "setup.cfg");
+  const hasSrcLib = files.some((f) => f.startsWith("src/lib/") || f.startsWith("lib/"));
+  const hasExportsField = false; // would need to read package.json, but frameworks already detected
+  const isLibraryFramework = frameworks.some((f) =>
+    ["FastAPI", "Flask", "Django", "Hono", "Express"].includes(f)
+  );
+  // If it has a setup.py/pyproject.toml AND no app/ or pages/ → library
+  const hasAppDirs = files.some(
+    (f) => f.startsWith("app/") || f.startsWith("pages/") || f.startsWith("src/app/") || f.startsWith("src/pages/")
+  );
+  const hasComponents = files.some((f) => f.includes("/components/"));
+
+  if (hasPublishConfig && !hasAppDirs && !hasComponents) return "library";
+  if (hasSrcLib && !hasAppDirs && !hasComponents && !isLibraryFramework) return "library";
+
+  // Default: app
+  return "app";
 }
 
 function detectLanguages(files: string[]): string[] {

@@ -1,0 +1,65 @@
+=== sourcebook benchmark ===
+Repo:      calcom/cal.com
+Issue:     #27298
+Condition: sourcebook
+Model:     claude-sonnet-4-20250514
+Run ID:    calcom-cal.com_27298_sourcebook_1774542533
+
+[1/7] Fetching issue and PR info...
+Issue: Fix OAuth flow if sign up is required
+Base SHA: ...
+[2/7] Setting up calcom/cal.com at pre-fix state...
+Reusing existing clone at /tmp/sourcebook-bench/calcom-cal.com
+[3/7] Applying context condition: sourcebook...
+Generating sourcebook context...
+
+sourcebook
+Extracting repo truths...
+
+✓ Scanned project structure
+  10451 files, 3 frameworks detected
+✓ Extracted 18 findings
+
+  ● Project structure: This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
+  ● Testing: Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.
+  ● Import conventions: Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.
+    evidence: 40 barrel export files found
+  ● Environment: Environment variables are documented in .env.example. Copy it to .env.local before running the project.
+  ● Environment: 4 env vars detected. Public (browser-exposed): NEXT_PUBLIC_WEBAPP_URL. Private (server-only): CI, PLAYWRIGHT_HEADLESS, PWDEBUG.
+  ● Export conventions: Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.
+    evidence: 26 named vs 2 default exports in sampled files
+  ● Git history: 6 reverted commits in the last year. Previously attempted and rolled back: revert (#27933)
+  ● Anti-patterns: Tried and reverted: "revert (#27933)". This approach was explicitly rejected.
+  ● Anti-patterns: Abandoned: "refactor: migrate webhooks page to coss/ui components (#27714)" (4 files deleted including EventTypeWebhookListItem.tsx, WebhookListItemSkeleton.tsx, WebhookListSkeleton.tsx)
+  ● Anti-patterns: Abandoned: "refactor: extract dedicated @calcom/i18n package (#28141)" (5 files deleted including next-i18next.config.js, next-i18next.config.js, next-i18next.config.ts)
+  ● Anti-patterns: Abandoned: "docs: declare credentials and environment variables in calcom-api skill (#28047)" (8 files deleted including SKILL.md, authentication.md, bookings.md)
+  ● Active development: Most active areas in the last 30 days: packages/ (392 changes), apps/ (269 changes), .github/ (16 changes), specs/ (14 changes), docs/ (9 changes). Expect ongoing changes here.
+  ● Hidden dependencies: Files that change together across directories (invisible coupling): slots.controller.e2e-spec.ts ↔ user-event-type-slots.controller.e2e-spec.ts (4 co-commits)
+  ● Fragile code: Files that required many rapid edits (hard to get right): apps/web/public/static/locales/en/common.json (11 edits in one week); apps/web/modules/bookings/components/BookingDetailsSheet.tsx (8 edits in one week); docs/api-reference/v2/openapi.json (6 edits in one week)
+  ● Commit conventions: Uses Conventional Commits (feat/fix/docs/etc). Common scopes: i18n, form-builder, deps, e2e, calendar. Follow this pattern for new commits.
+  ● Core modules: Hub files (most depended on): packages/trpc/server/types.ts (imported by 183 files); apps/web/playwright/lib/fixtures.ts (imported by 86 files); packages/platform/atoms/lib/http.ts (imported by 72 files); packages/features/di/di.ts (imported by 60 files); packages/app-store/_utils/getAppKeysFromSlug.ts (imported by 53 files). Changes here have the widest blast radius.
+  ● Circular dependencies: Circular import chains detected: bookingScenario.ts → getMockRequestDataForBooking.ts → bookingScenario.ts; create-event-type.input.ts → CantHaveRecurrenceAndBookerActiveBookingsLimit.ts → create-event-type.input.ts; handleMarkNoShow.ts → handleSendingAttendeeNoShowDataToApps.ts → handleMarkNoShow.ts. Avoid adding to these cycles.
+  ● Dead code candidates: 1907 source files have no import connections (potential dead code): scripts/seed-pbac-organization.ts, scripts/seed-insights.ts, scripts/seed-booking-audit.ts, scripts/reassign-attributes.ts, scripts/pull-coss-ui-components.ts, ...
+
+✓ Wrote CLAUDE.md
+
+Review the generated files and edit to add context only you know.
+The best repo truths come from human + machine together.
+
+sourcebook: 1180 tokens, 2820ms
+[4/7] Creating task prompt...
+[5/7] Running agent...
+{"type":"result","subtype":"success","is_error":false,"duration_ms":139954,"duration_api_ms":160363,"num_turns":29,"result":"## Fixed OAuth Flow Issue\n\nI've successfully identified and fixed the OAuth flow issue where users were being removed from the OAuth flow after signing up.\n\n### Root Cause Analysis\n\nThe issue was in the `constructCallBackUrl()` function in `/apps/web/modules/signup-view.tsx`. Here's what was happening:\n\n1. **OAuth Flow Start**: User visits OAuth authorization URL (`auth/oauth2/authorize?client_id=...&redirect_uri=...&state=...`)\n\n2. **Unauthenticated Redirect**: Since the user isn't authenticated, the authorize view redirects to login with `callbackUrl=auth/oauth2/authorize?client_id=...&redirect_uri=...&state=...`\n\n3. **Signup Link**: User clicks signup link, which redirects to signup with `redirect=https://cal.com/auth/oauth2/authorize?client_id=...&redirect_uri=...&state=...`\n\n4. **Server-Side Props**: The signup page's `getServerSideProps` parses the `redirect` query parameter and passes it as the `redirectUrl` prop\n\n5. **Bug in Callback URL Construction**: When the user successfully signs up, the `constructCallBackUrl()` function was only checking for `callbackUrl` in search params, completely ignoring the `redirectUrl` prop that contained the OAuth authorization URL\n\n### Solution\n\nI updated the `constructCallBackUrl()` function to prioritize the `redirectUrl` prop (which contains the OAuth authorization URL) before falling back to the `callbackUrl` search parameter:\n\n```typescript\nconst constructCallBackUrl = () => {\n  // First check for redirectUrl prop (from OAuth flow)\n  if (redirectUrl) {\n    return redirectUrl;\n  }\n  // Fallback to callbackUrl from search params\n  const callbackUrlSearchParams = searchParams?.get(\"callbackUrl\");\n  return callbackUrlSearchParams ? constructCallBackIfUrlPresent() : constructCallBackIfUrlNotPresent();\n};\n```\n\n### Impact\n\n- **Before**: Users who signed up during OAuth flow were redirected to getting-started/onboarding instead of back to the OAuth consent screen\n- **After**: Users who sign up during OAuth flow are now properly redirected back to the OAuth authorization page to complete the consent process\n- **Backward Compatibility**: The fix maintains existing behavior for non-OAuth signup flows by preserving the original fallback logic\n\nThis minimal change ensures that OAuth flows work correctly while maintaining all existing functionality for regular signup processes.","stop_reason":null,"session_id":"daf8612f-ef8b-40f6-93a0-96546b96a482","total_cost_usd":1.1895393999999997,"usage":{"input_tokens":234,"cache_creation_input_tokens":93282,"cache_read_input_tokens":2480023,"output_tokens":5583,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":93282,"ephemeral_5m_input_tokens":0},"inference_geo":"","iterations":[],"speed":"standard"},"modelUsage":{"claude-sonnet-4-20250514":{"inputTokens":234,"outputTokens":5583,"cacheReadInputTokens":2480023,"cacheCreationInputTokens":93282,"webSearchRequests":0,"costUSD":1.1782613999999998,"contextWindow":200000,"maxOutputTokens":32000},"claude-haiku-4-5-20251001":{"inputTokens":9478,"outputTokens":360,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"webSearchRequests":0,"costUSD":0.011277999999999998,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"uuid":"6ab3e5c5-ec5f-4ae4-bd64-adfdecd01881"}
+[6/7] Capturing results...
+[7/7] Scoring quality...
+
+=== Run complete ===
+Condition:     sourcebook
+Time:          140s
+Input tokens:  9712
+Output tokens: 5943
+Tool calls:    0
+Turns:         29
+Files changed:        3
+Patch lines:        350
+Results:       /Users/rhagent/Documents/sourcebook/benchmark/results/calcom-cal.com_27298_sourcebook_1774542533

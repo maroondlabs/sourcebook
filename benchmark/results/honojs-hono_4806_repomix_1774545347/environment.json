@@ -1,0 +1,6 @@
+{
+  "model": "claude-sonnet-4-20250514",
+  "max_turns": 50,
+  "harness_version": "0.2.0",
+  "timestamp": "2026-03-26T17:15:47Z"
+}

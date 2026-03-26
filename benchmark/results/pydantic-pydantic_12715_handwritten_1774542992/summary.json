@@ -1,0 +1,18 @@
+{
+  "repo": "pydantic/pydantic",
+  "issue": 12715,
+  "issue_title": "Improve logic around `ImportString` validation when the `ImportError` originates from another source",
+  "condition": "handwritten",
+  "run_id": "pydantic-pydantic_12715_handwritten_1774542992",
+  "model": "claude-sonnet-4-20250514",
+  "repo_sha": "84a6c0b7f7db78211d15078833f24973a26044ea",
+  "agent_time_ms": 180219,
+  "patch_lines":       83,
+  "files_changed":        2,
+  "input_tokens": 9046,
+  "output_tokens": 10355,
+  "tool_calls": 0,
+  "turns": 27,
+  "produced_patch": true,
+  "timestamp": "2026-03-26T16:39:33Z"
+}

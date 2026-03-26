@@ -1,0 +1,28 @@
+diff --git a/pydantic/_internal/_validators.py b/pydantic/_internal/_validators.py
+index 3ad6c92..3fb6331 100644
+--- a/pydantic/_internal/_validators.py
++++ b/pydantic/_internal/_validators.py
+@@ -70,7 +70,22 @@ def import_string(value: Any) -> Any:
+         try:
+             return _import_string_logic(value)
+         except ImportError as e:
+-            raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
++            error_message = str(e)
++
++            # Extract the base module name from the import string
++            # Handle both 'module.attr' and 'module:attr' formats
++            import_parts = value.replace(':', '.').split('.')
++            base_module = import_parts[0] if import_parts else ''
++
++            # Check if this looks like an internal import error (error about a different module)
++            # vs. a path error (error about the module/path we're trying to import)
++            if base_module and (base_module in error_message or value in error_message):
++                # Error mentions the module/path we're importing, so it's likely a path issue
++                raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': error_message}) from e
++            else:
++                # Error is about some other module, likely an internal import issue
++                # Report it directly without the "Invalid python path" prefix
++                raise PydanticCustomError('import_error', '{error}', {'error': error_message}) from e
+     else:
+         # otherwise we just return the value and let the next validator do the rest of the work
+         return value

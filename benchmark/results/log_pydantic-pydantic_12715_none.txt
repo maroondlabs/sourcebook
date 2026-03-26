@@ -1,0 +1,30 @@
+=== sourcebook benchmark ===
+Repo:      pydantic/pydantic
+Issue:     #12715
+Condition: none
+Model:     claude-sonnet-4-20250514
+Run ID:    pydantic-pydantic_12715_none_1774542678
+
+[1/7] Fetching issue and PR info...
+Issue: Improve logic around `ImportString` validation when the `ImportError` originates from another source
+Base SHA: ...
+[2/7] Setting up pydantic/pydantic at pre-fix state...
+Cloning pydantic/pydantic (this may take a minute for large repos)...
+[3/7] Applying context condition: none...
+No context file applied.
+[4/7] Creating task prompt...
+[5/7] Running agent...
+{"type":"result","subtype":"success","is_error":false,"duration_ms":311334,"duration_api_ms":354957,"num_turns":49,"result":"## Summary\n\nI have successfully fixed the `ImportString` validation issue where `ImportError` originating from another source was being incorrectly reported as an invalid import path.\n\n### Problem\nWhen a module exists but has its own `ImportError` (like missing dependencies), the error handling was catching the exception and wrapping it in a misleading \"Invalid python path\" message instead of preserving the actual error.\n\n### Root Cause\nThe issue was in `pydantic/_internal/_validators.py` in the `import_string` function:\n\n1. All `ImportError` exceptions were caught and wrapped with the generic message `'Invalid python path: {error}'`\n2. This didn't distinguish between:\n   - Legitimate path validation errors (module doesn't exist)\n   - Internal module errors (module exists but has import issues)\n\n### Solution\nI implemented a two-part fix:\n\n1. **Modified `import_string` function** to use a helper function to determine the type of error before wrapping it\n2. **Added `_is_path_validation_error` helper function** that intelligently distinguishes between:\n   - **Path validation errors** (returns `True`): Get the \"Invalid python path\" prefix\n   - **Internal module errors** (returns `False`): Preserve the original error message without prefix\n\n### Key Implementation Details\n\n**Helper Function Logic:**\n- Parses import paths correctly (handles both `module.attr` and `module:attr` notation)\n- For `ModuleNotFoundError`: Checks if the error message mentions the target module or a dependency\n- For other `ImportError` types: Uses `importlib.util.find_spec()` to check if the module exists\n- Handles edge cases like empty module names and fallback attribute resolution\n\n**Error Message Handling:**\n- Path errors: `\"Invalid python path: {original_error}\"`\n- Internal module errors: `\"{original_error}\"` (preserves original message)\n\n### Test Case Validation\nThe fix addresses the exact scenario described in the issue and aligns with the existing test case in `tests/test_types.py` (lines 6510-6517) which expects the original dependency error message to be preserved:\n\n```python\nwith pytest.raises(ValidationError, match=\"No module named 'definitely_missing_dep_xyz'\"):\n    adapter.validate_python('my_module.MyClass')\n```\n\n### Files Modified\n- `pydantic/_internal/_validators.py`: Added `_is_path_validation_error()` helper and updated `import_string()` logic\n- Also updated `_import_string_logic()` to catch `ImportError` in addition to `ModuleNotFoundError` for consistency\n\nThe fix is minimal, focused, and preserves all existing functionality while providing clearer error messages for users facing dependency issues in their imported modules.","stop_reason":null,"session_id":"c77908f8-fbd6-4d01-8f62-461beac0efbb","total_cost_usd":0.9416764500000002,"usage":{"input_tokens":394,"cache_creation_input_tokens":51423,"cache_read_input_tokens":1670184,"output_tokens":14938,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":51423,"ephemeral_5m_input_tokens":0},"inference_geo":"","iterations":[],"speed":"standard"},"modelUsage":{"claude-sonnet-4-20250514":{"inputTokens":394,"outputTokens":14938,"cacheReadInputTokens":1670184,"cacheCreationInputTokens":51423,"webSearchRequests":0,"costUSD":0.9191434500000001,"contextWindow":200000,"maxOutputTokens":32000},"claude-haiku-4-5-20251001":{"inputTokens":18398,"outputTokens":827,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"webSearchRequests":0,"costUSD":0.022533,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"uuid":"9dc826c2-e690-4d38-8f64-aae45e31d103"}
+[6/7] Capturing results...
+[7/7] Scoring quality...
+
+=== Run complete ===
+Condition:     none
+Time:          312s
+Input tokens:  18792
+Output tokens: 15765
+Tool calls:    0
+Turns:         49
+Files changed:        1
+Patch lines:         99
+Results:       /Users/rhagent/Documents/sourcebook/benchmark/results/pydantic-pydantic_12715_none_1774542678

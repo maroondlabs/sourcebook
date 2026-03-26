@@ -1,0 +1,82 @@
+diff --git a/src/request.test.ts b/src/request.test.ts
+index b27126d..1d8c2ab 100644
+--- a/src/request.test.ts
++++ b/src/request.test.ts
+@@ -396,6 +396,45 @@ describe('Body methods with caching', () => {
+       })
+     })
+ 
++    describe('should handle non-Promise values in bodyCache', () => {
++      it('text() should work when non-Promise values are manually cached', async () => {
++        const req = new HonoRequest(
++          new Request('http://localhost', {
++            method: 'POST',
++            body: JSON.stringify({ test: 'data' }),
++            headers: { 'Content-Type': 'application/json' },
++          })
++        )
++
++        // Simulate the scenario where a non-Promise value gets cached
++        // This could happen if some middleware or future parseBody implementation
++        // caches a plain object instead of a Promise
++        ;(req as any).bodyCache.parsedBody = { test: 'data' }
++
++        // This should not throw "bodyCache[anyCachedKey].then is not a function"
++        // Instead, it should fall back to reading from the raw request
++        const result = await req.text()
++        expect(result).toBe('{"test":"data"}')
++      })
++
++      it('json() should work when non-Promise values are manually cached', async () => {
++        const req = new HonoRequest(
++          new Request('http://localhost', {
++            method: 'POST',
++            body: JSON.stringify({ test: 'data' }),
++            headers: { 'Content-Type': 'application/json' },
++          })
++        )
++
++        // Simulate caching a plain object
++        ;(req as any).bodyCache.parsedBody = { cached: 'object' }
++
++        // Should handle the non-Promise cached value gracefully by falling back to raw
++        const result = await req.json()
++        expect(result).toEqual({ test: 'data' })
++      })
++    })
++
+     describe('Return type', () => {
+       let req: HonoRequest
+       beforeEach(() => {
+diff --git a/src/request.ts b/src/request.ts
+index bbb74a3..77c1e2e 100644
+--- a/src/request.ts
++++ b/src/request.ts
+@@ -227,12 +227,21 @@ export class HonoRequest<P extends string = '/', I extends Input['out'] = {}> {
+ 
+     const anyCachedKey = Object.keys(bodyCache)[0]
+     if (anyCachedKey) {
+-      return (bodyCache[anyCachedKey as keyof Body] as Promise<BodyInit>).then((body) => {
+-        if (anyCachedKey === 'json') {
+-          body = JSON.stringify(body)
+-        }
+-        return new Response(body)[key]()
+-      })
++      const cachedValue = bodyCache[anyCachedKey as keyof Body]
++      // Check if the cached value is a Promise before calling .then()
++      if (cachedValue && typeof cachedValue.then === 'function') {
++        return (cachedValue as Promise<BodyInit>).then((body) => {
++          if (anyCachedKey === 'json') {
++            body = JSON.stringify(body)
++          }
++          return new Response(body)[key]()
++        })
++      } else {
++        // Handle non-Promise cached values
++        // If there's a non-Promise value cached, it means some code stored raw data
++        // We should fall back to reading from the raw request to avoid type mismatches
++        return (bodyCache[key] = raw[key]())
++      }
+     }
+ 
+     return (bodyCache[key] = raw[key]())

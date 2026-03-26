@@ -1,0 +1,6 @@
+ AGENTS.md                                          | 244 ---------------------
+ CLAUDE.md                                          |   1 -
+ .../auth/signup/handlers/calcomSignupHandler.ts    |  23 ++
+ .../api/auth/signup/handlers/selfHostedHandler.ts  |  22 +-
+ apps/web/app/api/auth/signup/route.ts              |   2 +-
+ 5 files changed, 44 insertions(+), 248 deletions(-)

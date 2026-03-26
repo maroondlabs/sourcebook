@@ -49,4 +49,6 @@ export interface ProjectScan {
   findings: Finding[];
   /** Files ranked by PageRank importance in the import graph */
   rankedFiles?: { file: string; score: number }[];
+  /** Detected repo mode for context prioritization */
+  repoMode?: "app" | "library" | "monorepo";
 }

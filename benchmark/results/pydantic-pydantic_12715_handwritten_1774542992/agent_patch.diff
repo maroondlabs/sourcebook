@@ -1,0 +1,83 @@
+diff --git a/pydantic/_internal/_validators.py b/pydantic/_internal/_validators.py
+index 3ad6c92..cd73624 100644
+--- a/pydantic/_internal/_validators.py
++++ b/pydantic/_internal/_validators.py
+@@ -65,12 +65,22 @@ def sequence_validator(
+         return value_type(v_list)  # type: ignore[call-arg]
+ 
+ 
++def _is_internal_import_error(error: ImportError) -> bool:
++    """Check if an ImportError is from internal module issues rather than path issues."""
++    return hasattr(error, '_is_internal_import_error')
++
++
+ def import_string(value: Any) -> Any:
+     if isinstance(value, str):
+         try:
+             return _import_string_logic(value)
+         except ImportError as e:
+-            raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
++            # Check if this is a path-related error vs an internal module error
++            # Internal module errors should preserve the original message
++            if _is_internal_import_error(e):
++                raise PydanticCustomError('import_error', '{error}', {'error': str(e)}) from e
++            else:
++                raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
+     else:
+         # otherwise we just return the value and let the next validator do the rest of the work
+         return value
+@@ -108,16 +118,24 @@ def _import_string_logic(dotted_path: str) -> Any:
+ 
+     try:
+         module = import_module(module_path)
+-    except ModuleNotFoundError:
+-        if attribute is None and '.' in module_path:
+-            # Try interpreting the final dotted segment as an attribute, not a submodule
+-            maybe_module_path, maybe_attribute = module_path.rsplit('.', 1)
+-
+-            try:
+-                return _import_string_logic(f'{maybe_module_path}:{maybe_attribute}')
+-            except ImportError:
+-                pass
+-        raise
++    except ImportError as e:
++        if isinstance(e, ModuleNotFoundError):
++            if attribute is None and '.' in module_path:
++                # Try interpreting the final dotted segment as an attribute, not a submodule
++                maybe_module_path, maybe_attribute = module_path.rsplit('.', 1)
++
++                try:
++                    return _import_string_logic(f'{maybe_module_path}:{maybe_attribute}')
++                except ImportError:
++                    pass
++            raise
++        else:
++            # This is an ImportError from within the module (e.g., missing dependencies)
++            # Mark it as an internal error so it can be handled differently
++            internal_error = ImportError(str(e))
++            internal_error.__cause__ = e
++            setattr(internal_error, '_is_internal_import_error', True)
++            raise internal_error
+ 
+     if attribute is not None:
+         try:
+diff --git a/tests/test_types.py b/tests/test_types.py
+index 21faeab..0726e39 100644
+--- a/tests/test_types.py
++++ b/tests/test_types.py
+@@ -6517,6 +6517,15 @@ def test_importstring_reports_internal_import_error(tmp_path, monkeypatch):
+         adapter.validate_python('my_module.MyClass')
+ 
+ 
++def test_importstring_still_reports_invalid_path_errors():
++    """Ensure that actual invalid import paths still get 'Invalid python path' prefix."""
++    adapter = TypeAdapter(ImportString)
++
++    # Test with a module that doesn't exist - should still get "Invalid python path" message
++    with pytest.raises(ValidationError, match=r"Invalid python path: No module named 'definitely_nonexistent_module_xyz'"):
++        adapter.validate_python('definitely_nonexistent_module_xyz.SomeClass')
++
++
+ def test_import_string_explicit_colon_does_not_try_dot_fallback():
+     # Regression test: if the input already contains ':attr', we should NOT try
+     # to reinterpret dots as module/attribute splits (which could accidentally

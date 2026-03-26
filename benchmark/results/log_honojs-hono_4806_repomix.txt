@@ -1,0 +1,76 @@
+=== sourcebook benchmark ===
+Repo:      honojs/hono
+Issue:     #4806
+Condition: repomix
+Model:     claude-sonnet-4-20250514
+Run ID:    honojs-hono_4806_repomix_1774545347
+
+[1/7] Fetching issue and PR info...
+Issue: parseBody() breaks subsequent text()/json() calls with TypeError
+Base SHA: ...
+[2/7] Setting up honojs/hono at pre-fix state...
+Reusing existing clone at /tmp/sourcebook-bench/honojs-hono
+[3/7] Applying context condition: repomix...
+Generating Repomix context...
+
+📦 Repomix v1.13.0
+
+No custom config found at repomix.config.ts, repomix.config.mts, repomix.config.cts, repomix.config.js, repomix.config.mjs, repomix.config.cjs, repomix.config.json5, repomix.config.jsonc, repomix.config.json or global config at /Users/rhagent/.config/repomix/repomix.config.ts, /Users/rhagent/.config/repomix/repomix.config.mts, /Users/rhagent/.config/repomix/repomix.config.cts, /Users/rhagent/.config/repomix/repomix.config.js, /Users/rhagent/.config/repomix/repomix.config.mjs, /Users/rhagent/.config/repomix/repomix.config.cjs, /Users/rhagent/.config/repomix/repomix.config.json5, /Users/rhagent/.config/repomix/repomix.config.jsonc, /Users/rhagent/.config/repomix/repomix.config.json.
+You can add a config file for additional settings. Please check https://github.com/yamadashy/repomix for more information.
+[36m⠙[39m Running security check... (85/473) [2mbenchmarks/webapp/hono.js[22m
+[2K[1A[2K[G[36m⠹[39m Processing file... (473/473) [2mvitest.config.ts[22m
+[2K[1A[2K[G[36m⠸[39m Calculating metrics...
+[2K[1A[2K[G[36m⠼[39m Calculating metrics...
+[2K[1A[2K[G[36m⠴[39m Calculating metrics... (50/50) [2msrc/types.test.ts[22m
+[2K[1A[2K[G[36m⠦[39m Calculating metrics... (50/50) [2msrc/types.test.ts[22m
+[2K[1A[2K[G[32m✔[39m Packing completed successfully!
+
+📈 Top 5 Files by Token Count:
+──────────────────────────────
+1.  src/types.test.ts (29,869 tokens, 116,069 chars, 4.6%)
+2.  src/hono.test.ts (29,220 tokens, 107,011 chars, 4.5%)
+3.  src/types.ts (27,260 tokens, 79,411 chars, 4.2%)
+4.  src/jsx/dom/index.test.tsx (22,717 tokens, 86,870 chars, 3.5%)
+5.  src/utils/jwt/jwt.test.ts (15,020 tokens, 51,676 chars, 2.3%)
+
+🔎 Security Check:
+──────────────────
+✔ No suspicious files detected.
+
+📄 Binary Files Detected:
+─────────────────────────
+2 files detected as binary by content inspection:
+1. docs/images/hono-logo.pxm
+2. docs/images/hono-title.pxm
+
+These files have been excluded from the output.
+Please review these files if you expected them to contain text content.
+
+📊 Pack Summary:
+────────────────
+  Total Files: 473 files
+ Total Tokens: 642,872 tokens
+  Total Chars: 2,431,215 chars
+       Output: repomix-output.xml
+     Security: ✔ No suspicious files detected
+
+🎉 All Done!
+Your repository has been successfully packed.
+
+💡 Repomix is now available in your browser! Try it at https://repomix.com
+[4/7] Creating task prompt...
+[5/7] Running agent...
+{"type":"result","subtype":"success","is_error":false,"duration_ms":244882,"duration_api_ms":270959,"num_turns":42,"result":"## Fix Summary\n\nI successfully identified and fixed the issue with `parseBody()` breaking subsequent `text()`/`json()` calls. Here's what I accomplished:\n\n### 🐛 **Problem Identified**\nThe `#cachedBody` method in `HonoRequest` assumed all cached values were Promises, but middleware (like the validator) can cache resolved values directly, causing:\n```\nTypeError: bodyCache[anyCachedKey].then is not a function\n```\n\n### 🔧 **Root Cause** \nIn `/src/validator/validator.ts` line 121:\n```typescript\nc.req.bodyCache.formData = formData  // Caches resolved FormData, not Promise\n```\n\n### ✅ **Solution Implemented**\nModified `/src/request.ts` lines 228-242 to handle both Promise and non-Promise cached values:\n\n```typescript\nconst anyCachedKey = Object.keys(bodyCache)[0]\nif (anyCachedKey) {\n  const cachedValue = bodyCache[anyCachedKey as keyof Body]\n\n  // Check if the cached value is a Promise before calling .then()\n  if (cachedValue && typeof cachedValue.then === 'function') {\n    return (cachedValue as Promise<BodyInit>).then((body) => {\n      if (anyCachedKey === 'json') {\n        body = JSON.stringify(body)\n      }\n      return new Response(body)[key]()\n    })\n  } else {\n    // If it's not a Promise, convert the cached value to the requested format\n    let body = cachedValue as BodyInit\n    if (anyCachedKey === 'json') {\n      body = JSON.stringify(body)\n    }\n    return new Response(body)[key]()\n  }\n}\n```\n\n### ✅ **Testing** \nAdded comprehensive tests that reproduce the exact issue and verify the fix works correctly. All existing tests continue to pass (38/38).\n\nThe fix is minimal, backwards-compatible, and resolves the `TypeError` while maintaining all existing functionality.","stop_reason":null,"session_id":"c999ee5d-c5b0-4cfb-8bae-2c367dfb5d6b","total_cost_usd":1.2173814000000005,"usage":{"input_tokens":338,"cache_creation_input_tokens":70633,"cache_read_input_tokens":2431488,"output_tokens":12372,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":70633,"ephemeral_5m_input_tokens":0},"inference_geo":"","iterations":[],"speed":"standard"},"modelUsage":{"claude-sonnet-4-20250514":{"inputTokens":338,"outputTokens":12372,"cacheReadInputTokens":2431488,"cacheCreationInputTokens":70633,"webSearchRequests":0,"costUSD":1.18091415,"contextWindow":200000,"maxOutputTokens":32000},"claude-haiku-4-5-20251001":{"inputTokens":14026,"outputTokens":669,"cacheReadInputTokens":0,"cacheCreationInputTokens":15277,"webSearchRequests":0,"costUSD":0.03646725000000001,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"uuid":"a77cb0ad-a06b-4ce5-ac5e-dbdd42b7787a"}
+[6/7] Capturing results...
+[7/7] Scoring quality...
+
+=== Run complete ===
+Condition:     repomix
+Time:          245s
+Input tokens:  14364
+Output tokens: 13041
+Tool calls:    0
+Turns:         42
+Files changed:        2
+Patch lines:         82
+Results:       /Users/rhagent/Documents/sourcebook/benchmark/results/honojs-hono_4806_repomix_1774545347

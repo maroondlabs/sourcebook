@@ -1,0 +1,7 @@
+ AGENTS.md                                          | 244 ---------------------
+ CLAUDE.md                                          |  76 ++++++-
+ apps/web/modules/signup-view.tsx                   |   5 +
+ .../components/EventTypeAppCardInterface.tsx       |   2 +-
+ .../components/EventTypeAppSettingsInterface.tsx   |   6 +-
+ packages/i18n/locales/en/common.json               |   1 +
+ 6 files changed, 85 insertions(+), 249 deletions(-)

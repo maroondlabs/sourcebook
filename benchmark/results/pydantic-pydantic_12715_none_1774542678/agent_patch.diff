@@ -1,0 +1,99 @@
+diff --git a/pydantic/_internal/_validators.py b/pydantic/_internal/_validators.py
+index 3ad6c92..5c63da9 100644
+--- a/pydantic/_internal/_validators.py
++++ b/pydantic/_internal/_validators.py
+@@ -70,12 +70,66 @@ def import_string(value: Any) -> Any:
+         try:
+             return _import_string_logic(value)
+         except ImportError as e:
+-            raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
++            # Check if this is a path validation error or an internal module error
++            if _is_path_validation_error(value, e):
++                raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
++            else:
++                # This is an error from within the module itself, preserve the original error
++                raise PydanticCustomError('import_error', '{error}', {'error': str(e)}) from e
+     else:
+         # otherwise we just return the value and let the next validator do the rest of the work
+         return value
+ 
+ 
++def _is_path_validation_error(dotted_path: str, error: ImportError) -> bool:
++    """Determine if an ImportError represents a path validation issue or an internal module error.
++
++    Returns True if the error is due to an invalid import path.
++    Returns False if the error is from within a valid module (e.g., missing dependencies).
++    """
++    import os
++    import sys
++    from importlib import util
++
++    # Parse the dotted path to get the module path (same logic as _import_string_logic)
++    components = dotted_path.strip().split(':')
++    module_path = components[0]
++
++    if not module_path:
++        return True  # Empty module name is always a path error
++
++    # If no colon and the path contains dots, we need to consider that the final
++    # part might be an attribute, so we should check multiple possible module paths
++    possible_module_paths = [module_path]
++    if len(components) == 1 and '.' in module_path:
++        # Also try the path with the last segment as an attribute
++        maybe_module_path, _ = module_path.rsplit('.', 1)
++        possible_module_paths.append(maybe_module_path)
++
++    # Handle ModuleNotFoundError specifically
++    if isinstance(error, ModuleNotFoundError):
++        error_msg = str(error)
++        # Check if the error is about any of the possible module paths
++        for mp in possible_module_paths:
++            if f"No module named '{mp}'" in error_msg:
++                return True  # The target module itself doesn't exist
++        # If the error mentions a different module name, it's likely a dependency issue
++        return False
++
++    # For other ImportErrors, try to find the module spec for any possible path
++    for mp in possible_module_paths:
++        try:
++            spec = util.find_spec(mp)
++            if spec is not None and spec.origin:
++                # Module exists but has import issues - internal error
++                return False
++        except (ImportError, ModuleNotFoundError, ValueError):
++            continue
++
++    # If no module spec found for any path, treat as path error
++    return True
++
++
+ def _import_string_logic(dotted_path: str) -> Any:
+     """Inspired by uvicorn — dotted paths should include a colon before the final item if that item is not a module.
+     (This is necessary to distinguish between a submodule and an attribute when there is a conflict.).
+@@ -108,15 +162,17 @@ def _import_string_logic(dotted_path: str) -> Any:
+ 
+     try:
+         module = import_module(module_path)
+-    except ModuleNotFoundError:
+-        if attribute is None and '.' in module_path:
+-            # Try interpreting the final dotted segment as an attribute, not a submodule
+-            maybe_module_path, maybe_attribute = module_path.rsplit('.', 1)
+-
+-            try:
+-                return _import_string_logic(f'{maybe_module_path}:{maybe_attribute}')
+-            except ImportError:
+-                pass
++    except ImportError as e:
++        # For ModuleNotFoundError, attempt fallback logic
++        if isinstance(e, ModuleNotFoundError):
++            if attribute is None and '.' in module_path:
++                # Try interpreting the final dotted segment as an attribute, not a submodule
++                maybe_module_path, maybe_attribute = module_path.rsplit('.', 1)
++
++                try:
++                    return _import_string_logic(f'{maybe_module_path}:{maybe_attribute}')
++                except ImportError:
++                    pass
+         raise
+ 
+     if attribute is not None:

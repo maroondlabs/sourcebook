@@ -1,0 +1,1 @@
+{"body":"Fix the OAuth flow when the user needs to sign up first. At the moment, when a user signs up, they’re removed from the OAuth flow. Sign-in works and redirects back to the consent screen.","title":"Fix OAuth flow if sign up is required"}

@@ -1,0 +1,57 @@
+=== sourcebook benchmark ===
+Repo:      honojs/hono
+Issue:     #4806
+Condition: sourcebook
+Model:     claude-sonnet-4-20250514
+Run ID:    honojs-hono_4806_sourcebook_1774545594
+
+[1/7] Fetching issue and PR info...
+Issue: parseBody() breaks subsequent text()/json() calls with TypeError
+Base SHA: ...
+[2/7] Setting up honojs/hono at pre-fix state...
+Reusing existing clone at /tmp/sourcebook-bench/honojs-hono
+[3/7] Applying context condition: sourcebook...
+Generating sourcebook context...
+
+sourcebook
+Extracting repo truths...
+
+✓ Scanned project structure
+  482 files, 3 frameworks detected
+✓ Extracted 10 findings
+
+  ● Testing: Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.
+  ● Import conventions: Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.
+    evidence: 11 barrel export files found
+  ● Export conventions: Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.
+    evidence: 39 named vs 2 default exports in sampled files
+  ● Anti-patterns: Tried and reverted: "fix(etag): fallback if `res.clone()` is not supported (#4198)". This approach was explicitly rejected.
+  ● Active development: Most active areas in the last 30 days: src/ (64 changes), runtime-tests/ (14 changes). Expect ongoing changes here.
+  ● Fragile code: Files that required many rapid edits (hard to get right): package.json (6 edits in one week)
+  ● Commit conventions: Uses Conventional Commits (feat/fix/docs/etc). Common scopes: types, client, jwt, jsx, context. Follow this pattern for new commits.
+  ● Core modules: Hub files (most depended on): src/context.ts (imported by 72 files); src/hono.ts (imported by 68 files); src/types.ts (imported by 54 files); src/utils/html.ts (imported by 29 files); src/router.ts (imported by 28 files). Changes here have the widest blast radius.
+  ● Circular dependencies: Circular import chains detected: request.ts → body.ts → request.ts; types.ts → hono-base.ts → compose.ts → types.ts; types.ts → jws.ts → types.ts. Avoid adding to these cycles.
+  ● Dead code candidates: 14 source files have no import connections (potential dead code): perf-measures/type-check/scripts/process-results.ts, perf-measures/bundle-check/scripts/check-bundle-size.ts, benchmarks/webapp/sunder.js, benchmarks/webapp/itty-router.js, benchmarks/webapp/hono.js, ...
+
+✓ Wrote CLAUDE.md
+
+Review the generated files and edit to add context only you know.
+The best repo truths come from human + machine together.
+
+sourcebook: 642 tokens, 1243ms
+[4/7] Creating task prompt...
+[5/7] Running agent...
+{"type":"result","subtype":"success","is_error":false,"duration_ms":273766,"duration_api_ms":292301,"num_turns":40,"result":"Perfect! The fix is working correctly. Let me provide a summary of what I accomplished:\n\n## ✅ Issue Fixed Successfully\n\nI've successfully resolved the **parseBody() breaking subsequent text()/json() calls** issue. Here's what was done:\n\n### **Problem Identified**\nThe bug was in the `#cachedBody` method in `src/request.ts` at line 230, where it assumed all cached values were Promises and called `.then()` without checking, causing:\n```\nTypeError: bodyCache[anyCachedKey].then is not a function\n```\n\n### **Root Cause**\nWhen non-Promise values get cached in `bodyCache` (like plain objects), the caching mechanism fails because it tries to call `.then()` on non-Promise values.\n\n### **Solution Implemented**\nModified `src/request.ts:220-247` to check if cached values are Promises before calling `.then()`:\n- **If Promise**: Handle as before with `.then()`\n- **If not Promise**: Fall back to reading from raw request\n\n### **Testing Added**\nAdded comprehensive test cases in `src/request.test.ts`:\n- Tests that simulate the exact bug scenario\n- Verification that `text()` and `json()` work with non-Promise cached values\n- All existing tests continue to pass (13/13 parseBody tests passing)\n\n### **Key Changes**\n1. **Fixed**: `src/request.ts` - Added Promise type checking in `#cachedBody` method\n2. **Added**: Regression tests in `src/request.test.ts` \n3. **Verified**: All existing functionality remains intact\n\nThe fix is minimal, safe, and maintains backward compatibility while handling the edge case gracefully. The issue has been resolved and protected against future regression.","stop_reason":null,"session_id":"c67ceb73-e890-4c0f-9af6-5ba0a43d2a20","total_cost_usd":1.3941938499999995,"usage":{"input_tokens":322,"cache_creation_input_tokens":94182,"cache_read_input_tokens":2482892,"output_tokens":13458,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":94182,"ephemeral_5m_input_tokens":0},"inference_geo":"","iterations":[],"speed":"standard"},"modelUsage":{"claude-sonnet-4-20250514":{"inputTokens":322,"outputTokens":13458,"cacheReadInputTokens":2482892,"cacheCreationInputTokens":94182,"webSearchRequests":0,"costUSD":1.3008860999999998,"contextWindow":200000,"maxOutputTokens":32000},"claude-haiku-4-5-20251001":{"inputTokens":13359,"outputTokens":837,"cacheReadInputTokens":0,"cacheCreationInputTokens":60611,"webSearchRequests":0,"costUSD":0.09330775000000001,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"uuid":"329ef5ed-ea79-47ae-83d6-96b7b11e797d"}
+[6/7] Capturing results...
+[7/7] Scoring quality...
+
+=== Run complete ===
+Condition:     sourcebook
+Time:          274s
+Input tokens:  13681
+Output tokens: 14295
+Tool calls:    0
+Turns:         40
+Files changed:        2
+Patch lines:         82
+Results:       /Users/rhagent/Documents/sourcebook/benchmark/results/honojs-hono_4806_sourcebook_1774545594

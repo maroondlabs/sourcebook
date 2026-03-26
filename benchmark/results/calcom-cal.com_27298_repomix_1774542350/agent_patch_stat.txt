@@ -1,0 +1,4 @@
+ AGENTS.md                        | 244 ---------------------------------------
+ CLAUDE.md                        |   1 -
+ apps/web/modules/signup-view.tsx |  13 ++-
+ 3 files changed, 12 insertions(+), 246 deletions(-)
