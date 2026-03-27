@@ -1,58 +1,72 @@
-# Show HN Draft
+# HN Launch Post — Final Draft
 
-## Title Options (pick one)
-
-**1. Mechanism-forward (recommended for HN)**
-> Show HN: sourcebook – Generate CLAUDE.md from import graph PageRank and git forensics
-
-**2. Problem-forward (broadest reach)**
-> Show HN: sourcebook – Auto-generated AI context files that don't make agents worse
-
-**3. Output-forward (most concrete)**
-> Show HN: sourcebook – Generate CLAUDE.md, .cursorrules, and copilot-instructions from codebase analysis
-
-**4. Inversion angle**
-> Show HN: sourcebook – CLI that generates AI context files by filtering out what AI already knows
+**Title:** Show HN: sourcebook – give your AI agents the project knowledge they keep missing
 
 ---
 
-## Link
+AI can read your code. It still doesn't know how your project works.
+
+I built sourcebook because I kept watching coding agents make the same mistakes — wrong conventions, touching fragile files, suggesting approaches that were already tried and reverted. The agents weren't dumb. They just didn't have the project knowledge my team carries around in our heads.
+
+Most context tools solve this by dumping the entire repo into one big file. sourcebook takes the opposite approach: it captures only what the agent can't figure out by reading the code alone.
+
+`npx sourcebook init` analyzes your codebase across four dimensions:
+
+- **Import graph + PageRank** — identifies the hub files with the widest blast radius (not just the biggest files)
+- **Git forensics** — reverted commits ("don't do this" signals), co-change coupling (files that always change together but have no import relationship), fragile files (code that was hard to get right)
+- **Convention + pattern detection** — naming patterns, export style, dominant i18n hooks, auth middleware, router patterns, database/ORM usage, styling approach
+- **Context-rot-aware formatting** — critical constraints at the top and bottom (where LLMs pay the most attention), reference info in the middle
+
+Outputs to CLAUDE.md, .cursorrules, copilot-instructions.md, and AGENTS.md.
+
+We benchmarked it on real GitHub issues across cal.com (10K+ files), pydantic, and hono. Honest results: handwritten developer briefs were the strongest baseline. sourcebook is now within ~6% of handwritten speed on convention-heavy app repos while producing broader fixes. On one task it was actually faster than the handwritten brief. On library repos it improved significantly between versions but still has ground to cover.
+
+The key insight from the benchmark: structural intelligence (hub files, circular deps) is necessary but not sufficient. Agents also need dominant usage patterns — "use `useLocale()` for i18n, add keys in `common.json`, integrations live under `packages/app-store/`." That's what humans naturally encode in handoff notes, and what sourcebook now detects automatically.
+
+No API keys. No LLM dependency. Everything runs locally in under 3 seconds. BSL-1.1 licensed (free CLI, paid update/serve/team features).
 
 https://github.com/maroondlabs/sourcebook
 
----
-
-## Maker Comment
-
-Built this because I kept manually maintaining CLAUDE.md files that went stale the moment I merged a new feature. Every automated alternative I tried either dumped the directory tree (which agents already know) or restated the tech stack (which agents already know).
-
-The tool that finally unblocked me was aider's repo-map — it uses PageRank on the import graph to find structurally important files. I added git forensics on top: reverted commits are literal "don't do this again" signals, co-change coupling exposes invisible dependencies, rapid re-edit churn tells you which code was hard to get right. None of that is in the code — it's only in the history.
-
-The filter that makes it actually useful: before writing any finding to the output, sourcebook asks "can an agent figure this out by reading the files?" If yes, it's dropped. This is grounded in a 2025 ETH Zurich study (arxiv 2502.09601) that found auto-generated obvious context degrades agent performance by 2-3%. The only context that helps is what agents keep missing.
-
-No API keys. No LLM in the pipeline. Everything is deterministic and runs locally. One command:
-
-    npx sourcebook init
-
-Outputs CLAUDE.md, .cursorrules, or copilot-instructions.md depending on your editor. Tested on cal.com (10K files — found circular deps, a file imported by 183 others, and 1.9K dead code candidates in ~3 seconds).
-
-Curious whether the discoverability filter holds up on codebases I haven't tested. Would love edge cases — especially monorepos and legacy Python.
+https://sourcebook.run
 
 ---
 
-## Posting Strategy
+# X Launch Thread
 
-- **When:** Sunday 11:00-16:00 UTC (highest breakout rate per Myriade data) OR Tuesday 8:30-10:00 ET (conventional wisdom)
-- **Be in comments for 6+ hours** answering questions
-- **Have ready answers for:**
-  - "Why not just use Repomix?" → Different job. Repomix packs your codebase for LLM consumption. sourcebook generates persistent instruction files about implicit rules. Like comparing a zip file to a style guide.
-  - "Why not just use Claude Code's /init?" → /init output is generic and goes stale. sourcebook does actual code analysis — import graphs, git history, convention detection.
-  - "Does this use AI?" → No. Everything is deterministic. No API keys, no network calls. Optional --ai flag planned but core analysis is pure static analysis + git.
-  - "What about Python/Go/Rust?" → TypeScript/JavaScript first. Python and Go are on the roadmap. The graph and git analysis already work on any language; the convention detection is what needs per-language support.
-  - "How is this different from ContextPilot?" → ContextPilot detects your stack and generates generic rules. sourcebook does deep analysis — PageRank on imports, git forensics, convention inference from code patterns.
+**Tweet 1 (hook):**
+repomix gives the model your codebase.
+sourcebook gives it your project knowledge.
 
-## Notes
+one command. captures the conventions, patterns, traps, and history your coding agents keep missing.
 
-- Do NOT re-pitch the product in replies. Answer the question, share a detail, move on.
-- Acknowledge limitations honestly. "That's a fair point" > "actually you're wrong"
-- If someone finds a bug, thank them and fix it live. HN loves seeing responsiveness.
+npx sourcebook init
+
+sourcebook.run
+
+**Tweet 2 (what it does):**
+what sourcebook actually finds:
+- hub files that break everything when touched
+- reverted commits (approaches that were tried and failed)
+- files that always change together (invisible dependencies)
+- dominant patterns: "use this hook, put keys here, don't edit that file"
+
+~800 tokens of what matters. not 15M tokens of everything.
+
+**Tweet 3 (benchmark):**
+we benchmarked it honestly.
+
+handwritten developer briefs won at first. so we used the benchmark to improve:
+- v0.3: structural intelligence
+- v0.4: added dominant pattern detection
+- v0.5: within 6% of handwritten speed, 36% broader fixes
+
+the product gets better because the benchmark tells us where it's weak.
+
+**Tweet 4 (CTA):**
+free cli. works with claude code, cursor, copilot, and codex.
+
+generates CLAUDE.md, .cursorrules, copilot-instructions.md, and AGENTS.md from one command.
+
+no api keys. no llm. runs locally in under 3 seconds.
+
+github.com/maroondlabs/sourcebook

@@ -4,25 +4,27 @@
 
 # sourcebook
 
-Generate AI context files from your codebase's actual conventions. Not what agents already know — what they keep missing.
+**AI can read your code. It still doesn't know how your project works.**
+
+sourcebook captures the project knowledge your team carries in its head — conventions, patterns, traps, and where things actually go — and turns it into context your coding agent can use.
 
 ```bash
 npx sourcebook init
 ```
 
-One command. Analyzes your codebase. Outputs a `CLAUDE.md` tuned for how your project actually works.
-
 <p align="center">
   <img src="demo.svg" alt="sourcebook demo" width="820" />
 </p>
 
+> Tools like Repomix give AI your entire codebase. sourcebook gives it your project knowledge.
+
 ## Why
 
-AI coding agents spend most of their context window just orienting — reading files to build a mental model before doing real work. Developers manually write context files (`CLAUDE.md`, `.cursorrules`, `copilot-instructions.md`), but most are generic and go stale fast.
+AI coding agents spend most of their context window orienting — reading files to build a mental model before doing real work. Most context files (`CLAUDE.md`, `.cursorrules`) are generic and go stale fast.
 
-Research shows auto-generated context that restates obvious information (tech stack, directory structure) actually makes agents [worse by 2-3%](https://arxiv.org/abs/2502.09601). The only context that helps is **non-discoverable information** — things agents can't figure out by reading the code alone.
+Research shows auto-generated context that restates obvious information actually makes agents [worse by 2-3%](https://arxiv.org/abs/2502.09601). The only context that helps is **non-discoverable information** — the project knowledge agents can't figure out by reading code alone.
 
-sourcebook inverts the typical approach: instead of dumping everything, it extracts only what agents keep missing, filtered through a discoverability test.
+sourcebook extracts only what agents keep missing: the conventions, hidden dependencies, fragile areas, and dominant patterns that live in your team's heads — not in the code.
 
 ## What It Finds
 
