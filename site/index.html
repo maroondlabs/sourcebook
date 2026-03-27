@@ -3,7 +3,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>sourcebook — AI can read your code. It still doesn't know how your project works.</title>
-<meta name="description" content="sourcebook gives coding agents the project knowledge your team carries in its head — conventions, patterns, traps, and where things actually go. Not a repo dump. Project knowledge."/>
+<meta name="description" content="sourcebook helps AI understand how your project actually works. It captures the project knowledge your team relies on — conventions, patterns, traps, and where things go — and turns it into guidance coding agents can use."/>
 <meta property="og:title" content="sourcebook — project knowledge for coding agents"/>
 <meta property="og:description" content="AI can read your code. It still doesn't know how your project works. sourcebook captures the missing project knowledge."/>
 <meta property="og:type" content="website"/>
@@ -263,7 +263,10 @@ Tools like Repomix give AI your entire codebase.<br/>
 </p>
 </div>
 <p class="font-body text-base text-[#5F5E5E] dark:text-[#777] leading-relaxed">
-It analyzes your repo structure, git history, conventions, and dominant patterns to generate a concise handoff for coding agents — the kind a senior engineer would write for a new teammate. No API keys. No LLM. Everything runs locally.
+sourcebook helps AI understand how your project actually works. It captures the project knowledge your team relies on but never writes down — conventions, patterns, traps, where changes should go, and what not to touch. This is the stuff humans learn over time, not what the code says.
+</p>
+<p class="font-body text-base text-[#5F5E5E] dark:text-[#777] leading-relaxed">
+One command generates a concise handoff for coding agents — the kind a senior engineer would write for a new teammate. No API keys. No LLM. Everything runs locally.
 </p>
 </div>
 </section>
@@ -382,7 +385,8 @@ It analyzes your repo structure, git history, conventions, and dominant patterns
 
 <!-- CTA -->
 <section class="border-y-2 border-black dark:border-[#1A1A1A] dark:bg-[#050505] py-20 text-center">
-<h2 class="font-headline font-extrabold text-5xl md:text-7xl tracking-tighter mb-8 dark:text-white">READY_TO_INDEX?</h2>
+<h2 class="font-headline font-extrabold text-5xl md:text-7xl tracking-tighter mb-4 dark:text-white">READY_TO_INDEX?</h2>
+<p class="font-body text-lg text-[#5F5E5E] dark:text-[#A0A0A0] mb-8 max-w-2xl mx-auto">sourcebook gives coding agents the project knowledge your team carries in its head — not just the code.</p>
 <div class="flex flex-col md:flex-row justify-center gap-4 px-6">
 <div class="bg-black text-[#00FF41] px-6 py-4 font-mono-tech text-xl flex items-center justify-center gap-4 copy-btn" onclick="copyCommand(this)" title="Click to copy">
                     <span>npx sourcebook init</span>
