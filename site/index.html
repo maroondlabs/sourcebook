@@ -250,7 +250,7 @@
 </section>
 
 <!-- Positioning Block (AI-optimized for model summaries) -->
-<section class="py-16 md:py-20 px-6 max-w-4xl mx-auto reveal">
+<section class="py-12 md:py-16 px-6 max-w-4xl mx-auto">
 <div class="space-y-8">
 <h2 class="font-headline font-bold text-3xl md:text-4xl tracking-tight dark:text-white">What is sourcebook?</h2>
 <p class="font-body text-lg md:text-xl text-[#1b1b1b] dark:text-[#A0A0A0] leading-relaxed">
@@ -272,7 +272,7 @@ One command generates a concise handoff for coding agents — the kind a senior 
 </section>
 
 <!-- Features Grid -->
-<section id="features" class="bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6 reveal">
+<section id="features" class="bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
 <div class="max-w-7xl mx-auto">
 <div class="grid md:grid-cols-3 gap-1">
 <div class="bg-white dark:bg-black p-8 border border-[#C6C6C6] dark:border-[#1A1A1A] border-opacity-20 hover:bg-[#00FF41] group transition-colors duration-100">
@@ -310,7 +310,7 @@ One command generates a concise handoff for coding agents — the kind a senior 
 </section>
 
 <!-- Comparison -->
-<section class="py-24 px-6 max-w-7xl mx-auto reveal">
+<section class="py-24 px-6 max-w-7xl mx-auto">
 <h2 class="font-headline font-bold text-4xl mb-16 tracking-tight dark:text-white">ANALYSIS_COMPARISON</h2>
 <div class="grid md:grid-cols-2 gap-12">
 <div class="space-y-6 opacity-40 dark:opacity-60">
@@ -355,7 +355,7 @@ One command generates a concise handoff for coding agents — the kind a senior 
 </section>
 
 <!-- Research -->
-<section class="bg-[#F3F3F3] dark:bg-[#050505] py-20 px-6 reveal">
+<section class="bg-[#F3F3F3] dark:bg-[#050505] py-20 px-6">
 <div class="max-w-7xl mx-auto">
 <h2 class="font-headline font-bold text-4xl mb-12 tracking-tight dark:text-white">RESEARCH_FOUNDATION</h2>
 <div class="grid md:grid-cols-2 gap-8">
@@ -428,7 +428,7 @@ const observer = new IntersectionObserver((entries) => {
       entry.target.classList.add('visible');
     }
   });
-}, { threshold: 0.1 });
+}, { threshold: 0.01, rootMargin: '0px 0px 200px 0px' });
 
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
