@@ -265,9 +265,9 @@ export async function detectFrameworks(
 
         const paths = tsconfig?.compilerOptions?.paths;
         if (paths) {
-          const aliases = Object.keys(paths)
-            .map((k) => k.replace("/*", ""))
-            .join(", ");
+          const aliases = [...new Set(
+            Object.keys(paths).map((k) => k.replace("/*", ""))
+          )].join(", ");
           findings.push({
             category: "TypeScript imports",
             description: `Path aliases configured: ${aliases}. Use these instead of relative imports.`,

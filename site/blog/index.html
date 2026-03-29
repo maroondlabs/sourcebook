@@ -53,7 +53,7 @@
 <img src="../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
 <span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
 </a>
-<div class="hidden md:flex gap-8 items-center">
+<div class="hidden md:flex gap-8 items-center ml-12">
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook#readme">DOCS</a>
@@ -80,6 +80,23 @@
 <!-- Post List -->
 <section class="max-w-screen-xl mx-auto px-6 py-16">
 
+<a href="/blog/we-benchmarked-ai-context-files" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
+<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+<div class="flex-1">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">BENCHMARK · MARCH 2026</span>
+<h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 dark:text-white group-hover:text-electric-green transition-colors">
+We Benchmarked AI Context Files on Real GitHub Issues. Handwritten Briefs Won. Then We Caught Up.
+</h2>
+<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-base max-w-2xl">
+We tested four context strategies on real codebases — no context, handwritten briefs, repo dumps, and sourcebook. Here's what happened when we measured real patches on real issues.
+</p>
+</div>
+<div class="font-headline text-xs tracking-widest text-[#5F5E5E] uppercase mt-2 md:mt-8 whitespace-nowrap">
+READ →
+</div>
+</div>
+</a>
+
 <a href="/blog/why-auto-generated-context-makes-agents-worse" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 <div class="flex-1">
@@ -102,7 +119,7 @@ READ →
 </main>
 
 <!-- Footer -->
-<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12">
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
 <div class="flex items-center space-x-4 mb-8 md:mb-0">
 <a href="/" class="flex items-center gap-2">
 <img src="../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
@@ -114,7 +131,7 @@ READ →
 <span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
 </div>
 </div>
-<div class="flex space-x-12 mb-8 md:mb-0">
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
 <a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
 <a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
 <a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>

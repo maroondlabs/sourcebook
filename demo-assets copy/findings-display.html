@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"/>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0D0D0D; color: #fff; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; }
+
+  .terminal {
+    background: #0D0D0D;
+    padding: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .terminal-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 30px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green { background: #28c840; }
+
+  .prompt { color: #777; }
+  .cmd { color: #fff; font-weight: bold; }
+  .success { color: #00FF41; }
+  .label { color: #00FF41; font-weight: bold; }
+  .muted { color: #777; }
+  .white { color: #fff; }
+  .bold { font-weight: bold; }
+  .warning { color: #FF6B6B; }
+
+  .line {
+    font-size: 16px;
+    line-height: 2;
+    padding: 2px 0;
+  }
+
+  .finding {
+    margin: 16px 0;
+    padding: 16px 20px;
+    border-left: 3px solid #00FF41;
+    background: #111;
+  }
+
+  .finding-title { color: #fff; font-weight: bold; font-size: 15px; }
+  .finding-detail { color: #00FF41; font-size: 14px; margin-top: 4px; }
+  .finding-evidence { color: #777; font-size: 13px; margin-top: 4px; font-style: italic; }
+
+  .section-break {
+    border-top: 1px solid #1a1a1a;
+    margin: 30px 0;
+    padding-top: 20px;
+  }
+
+  .section-label {
+    color: #777;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+
+  /* Individual finding pages for screenshots */
+  .page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+  }
+
+  .page-content {
+    max-width: 800px;
+    width: 100%;
+  }
+
+  .big-finding {
+    padding: 40px;
+    border: 2px solid #00FF41;
+    background: #0a0a0a;
+  }
+
+  .big-finding-label {
+    color: #00FF41;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+  }
+
+  .big-finding-title {
+    color: #fff;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  .big-finding-detail {
+    color: #00FF41;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+
+  .big-finding-evidence {
+    color: #777;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: Terminal command output -->
+<div class="page" id="terminal">
+<div class="page-content">
+<div class="terminal">
+  <div class="terminal-header">
+    <div class="dot dot-red"></div>
+    <div class="dot dot-yellow"></div>
+    <div class="dot dot-green"></div>
+  </div>
+  <div class="line"><span class="prompt">$</span> <span class="cmd">npx sourcebook init --format all</span></div>
+  <div class="line" style="margin-top: 16px;"><span class="white" style="font-size: 20px; font-weight: bold;">sourcebook</span></div>
+  <div class="line"><span class="muted">Extracting repo truths...</span></div>
+  <div class="line" style="margin-top: 12px;"><span class="success">&#10003;</span> <span class="white">Scanned project structure</span></div>
+  <div class="line"><span class="muted">  10,453 files, 3 frameworks detected</span></div>
+  <div class="line"><span class="success">&#10003;</span> <span class="white">Extracted 22 findings</span></div>
+  <div class="line" style="margin-top: 20px;">
+    <span class="success">&#9679;</span> <span class="bold">Core modules:</span> types.ts imported by <span class="success">183 files</span>
+  </div>
+  <div class="line">
+    <span class="success">&#9679;</span> <span class="bold">Circular deps:</span> bookingScenario.ts &#8596; getMockRequestData.ts
+  </div>
+  <div class="line">
+    <span class="success">&#9679;</span> <span class="bold">Co-change:</span> auth/provider.ts &#8596; middleware/session.ts (88%)
+  </div>
+  <div class="line">
+    <span class="success">&#9679;</span> <span class="bold">Dead code:</span> 1,907 orphan files detected
+  </div>
+  <div class="line">
+    <span class="success">&#9679;</span> <span class="bold">Generated files:</span> 14 files — do NOT edit directly
+  </div>
+  <div class="line">
+    <span class="success">&#9679;</span> <span class="bold">Fragile:</span> openapi.json — 5 edits in one week
+  </div>
+  <div class="line" style="margin-top: 20px; border-top: 1px solid #1a1a1a; padding-top: 16px;">
+    <span style="background: #00FF41; color: #000; padding: 2px 8px; font-weight: bold;">DONE</span>
+    <span class="white"> Wrote CLAUDE.md, .cursorrules, AGENTS.md, copilot-instructions.md</span>
+  </div>
+  <div class="line"><span class="muted">3.1s — only non-discoverable information.</span></div>
+</div>
+</div>
+</div>
+
+<!-- PAGE 2: i18n Finding -->
+<div class="page" id="finding-i18n">
+<div class="page-content">
+<div class="big-finding">
+  <div class="big-finding-label">Dominant Pattern Detected</div>
+  <div class="big-finding-title">User-facing strings use useLocale() + t("key")</div>
+  <div class="big-finding-detail">
+    Add new translation keys in<br/>
+    packages/i18n/locales/en/common.json
+  </div>
+  <div class="big-finding-evidence">evidence: 24 files use t("key")</div>
+</div>
+</div>
+</div>
+
+<!-- PAGE 3: Hub File -->
+<div class="page" id="finding-hub">
+<div class="page-content">
+<div class="big-finding">
+  <div class="big-finding-label">Core Module &mdash; Highest Blast Radius</div>
+  <div class="big-finding-title">packages/trpc/server/types.ts</div>
+  <div class="big-finding-detail">
+    Imported by <span style="font-size: 32px; font-weight: bold;">183</span> files
+  </div>
+  <div class="big-finding-evidence">Changes here have the widest blast radius. Modify with extreme care.</div>
+</div>
+</div>
+</div>
+
+<!-- PAGE 4: Generated File Trap -->
+<div class="page" id="finding-generated">
+<div class="page-content">
+<div class="big-finding" style="border-color: #FF6B6B;">
+  <div class="big-finding-label" style="color: #FF6B6B;">Critical Constraint</div>
+  <div class="big-finding-title">14 generated files detected</div>
+  <div class="big-finding-detail" style="color: #FF6B6B;">
+    Do NOT edit these directly.<br/>
+    Modify the source/schema they are generated from.
+  </div>
+  <div class="big-finding-evidence">tailwind.generated.css, video.adapters.generated.ts, redirect-apps.generated.ts, payment.services.generated.ts, crm.apps.generated.ts...</div>
+</div>
+</div>
+</div>
+
+<!-- PAGE 5: Fragile File -->
+<div class="page" id="finding-fragile">
+<div class="page-content">
+<div class="big-finding" style="border-color: #FFB347;">
+  <div class="big-finding-label" style="color: #FFB347;">Fragile Code</div>
+  <div class="big-finding-title">docs/api-reference/v2/openapi.json</div>
+  <div class="big-finding-detail" style="color: #FFB347;">
+    5 edits in one week
+  </div>
+  <div class="big-finding-evidence">Files that required many rapid edits — code that was hard to get right. Be careful here.</div>
+</div>
+</div>
+</div>
+
+<!-- PAGE 6: Circular Dependency -->
+<div class="page" id="finding-circular">
+<div class="page-content">
+<div class="big-finding" style="border-color: #FF6B6B;">
+  <div class="big-finding-label" style="color: #FF6B6B;">Circular Dependency Detected</div>
+  <div class="big-finding-title" style="font-size: 18px;">
+    bookingScenario.ts &rarr; getMockRequestDataForBooking.ts &rarr; bookingScenario.ts
+  </div>
+  <div class="big-finding-detail" style="color: #FF6B6B;">
+    Avoid adding to this cycle.
+  </div>
+  <div class="big-finding-evidence">3 circular import chains detected in this codebase.</div>
+</div>
+</div>
+</div>
+
+<!-- PAGE 7: Co-change Coupling -->
+<div class="page" id="finding-cochange">
+<div class="page-content">
+<div class="big-finding">
+  <div class="big-finding-label">Hidden Dependency &mdash; Co-Change Coupling</div>
+  <div class="big-finding-title">auth/provider.ts &#8596; middleware/session.ts</div>
+  <div class="big-finding-detail">
+    88% correlation &mdash; these files always change together
+  </div>
+  <div class="big-finding-evidence">No import relationship. Invisible coupling detected from git history.</div>
+</div>
+</div>
+</div>
+
+</body></html>

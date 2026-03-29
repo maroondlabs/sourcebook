@@ -67,10 +67,16 @@ module.exports = async function handler(req, res) {
       if (expectedHash === keyHash) {
         // Get tier from Stripe metadata, not from the key format
         const actualTier = sub.metadata?.tier || "pro";
+        let expiresAt;
+        try {
+          expiresAt = new Date(sub.current_period_end * 1000).toISOString().split("T")[0];
+        } catch {
+          expiresAt = "2099-12-31";
+        }
         return res.status(200).json({
           valid: true,
           tier: actualTier,
-          expiresAt: new Date(sub.current_period_end * 1000).toISOString().split("T")[0],
+          expiresAt,
         });
       }
     }

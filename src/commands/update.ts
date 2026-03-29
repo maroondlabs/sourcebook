@@ -35,6 +35,8 @@ const SOURCEBOOK_HEADERS = new Set([
   "High-Impact Files",
   "Code Conventions",
   "Constraints",
+  "Quick Reference",
+  "Dominant Patterns",
 ]);
 
 /**

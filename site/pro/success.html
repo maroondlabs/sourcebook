@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
 <script>
     tailwind.config = {
+        darkMode: "class",
         theme: {
             extend: {
                 colors: { "electric-green": "#00FF41", "terminal-black": "#0D0D0D" },
@@ -19,38 +20,99 @@
 </script>
 <style>
     body { font-family: 'Inter', sans-serif; background: #fff; color: #000; }
+    html.dark body { background: #000; color: #fff; }
 </style>
 </head>
-<body class="antialiased selection:bg-electric-green selection:text-black">
+<body class="antialiased selection:bg-electric-green selection:text-black dark:bg-black dark:text-white">
 
 <main class="min-h-screen flex items-center justify-center px-6">
 <div class="max-w-xl text-center">
 
 <div class="bg-electric-green text-black px-4 py-2 font-['Space_Grotesk'] font-bold text-xs tracking-widest uppercase inline-block mb-8">ACTIVATED</div>
 
-<h1 class="font-['Space_Grotesk'] font-bold text-5xl tracking-tighter mb-6">Welcome to<br/>sourcebook Pro</h1>
+<h1 class="font-['Space_Grotesk'] font-bold text-5xl tracking-tighter mb-6 dark:text-white">Welcome to<br/>sourcebook Pro</h1>
 
-<p class="font-body text-lg text-[#5F5E5E] mb-10">
-Your license key has been sent to your email. Activate it with:
+<p class="font-body text-lg text-[#5F5E5E] mb-6" id="status-text">
+Retrieving your license key...
 </p>
 
+<!-- License key display (hidden until loaded) -->
+<div id="key-display" class="hidden mb-10">
+<div class="bg-terminal-black p-4 font-mono text-sm text-center select-all cursor-pointer border-2 border-electric-green mb-3" onclick="copyKey()">
+<span class="text-electric-green text-lg font-bold" id="license-key"></span>
+</div>
+<p class="text-xs text-[#5F5E5E]" id="copy-hint">Click to copy</p>
+</div>
+
 <div class="bg-terminal-black p-6 font-mono text-sm mb-10 text-left">
-<p class="text-[#5F5E5E] mb-2"># Copy your key from the email, then:</p>
-<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook activate</span> <span class="text-electric-green">sb_pro_your_key_here</span></p>
+<p class="text-[#5F5E5E] mb-2"># Activate your key:</p>
+<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook activate</span> <span class="text-electric-green" id="key-inline">sb_pro_...</span></p>
 <p class="text-electric-green mt-4">✓ License activated — pro tier</p>
 <p class="text-[#5F5E5E] mt-4"># Now you can use:</p>
 <p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook update</span> <span class="text-[#5F5E5E]"># preserve manual edits</span></p>
-<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook serve</span> <span class="text-[#5F5E5E]"># MCP server mode</span></p>
-<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook watch</span> <span class="text-[#5F5E5E]"># auto-regenerate</span></p>
+<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook serve</span> <span class="text-[#5F5E5E]"># MCP server mode (coming soon)</span></p>
+<p><span class="text-[#5F5E5E]">$</span> <span class="text-white">sourcebook watch</span> <span class="text-[#5F5E5E]"># auto-regenerate (coming soon)</span></p>
 </div>
 
 <p class="font-body text-sm text-[#5F5E5E] mb-4">
-Questions? <a href="mailto:roy@maroond.ai" class="underline hover:text-electric-green">roy@maroond.ai</a>
+Save this key somewhere safe. Questions? <a href="mailto:roy@maroond.ai" class="underline hover:text-electric-green">roy@maroond.ai</a>
 </p>
 
-<a href="/" class="font-['Space_Grotesk'] text-sm tracking-widest text-black hover:text-electric-green uppercase">← BACK_TO_HOME</a>
+<a href="/" class="font-['Space_Grotesk'] text-sm tracking-widest text-black dark:text-white hover:text-electric-green uppercase">← BACK_TO_HOME</a>
 
 </div>
 </main>
+
+<script>
+// Apply saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+  }
+})();
+
+// Fetch license key from session
+async function fetchKey() {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+
+  if (!sessionId) {
+    document.getElementById('status-text').textContent = 'Your license key will be available shortly. Check your Stripe account or contact roy@maroond.ai.';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/session?session_id=${sessionId}`);
+    const data = await res.json();
+
+    if (data.key) {
+      document.getElementById('license-key').textContent = data.key;
+      document.getElementById('key-inline').textContent = data.key;
+      document.getElementById('key-display').classList.remove('hidden');
+      document.getElementById('status-text').textContent = 'Here is your license key:';
+    } else {
+      // Webhook might not have fired yet — retry in 3s
+      setTimeout(fetchKey, 3000);
+      document.getElementById('status-text').textContent = 'Processing payment... this may take a few seconds.';
+    }
+  } catch (err) {
+    document.getElementById('status-text').textContent = 'Could not retrieve key. Contact roy@maroond.ai with your receipt.';
+  }
+}
+
+function copyKey() {
+  const key = document.getElementById('license-key').textContent;
+  navigator.clipboard.writeText(key).then(() => {
+    document.getElementById('copy-hint').textContent = 'Copied!';
+    setTimeout(() => {
+      document.getElementById('copy-hint').textContent = 'Click to copy';
+    }, 2000);
+  });
+}
+
+fetchKey();
+</script>
 
 </body></html>

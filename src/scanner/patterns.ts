@@ -89,9 +89,12 @@ function sampleFiles(files: string[], maxCount: number): string[] {
   );
 
   const rest = files.filter((f) => !priority.includes(f));
-  const shuffled = rest.sort(() => Math.random() - 0.5);
+  // Deterministic sampling: sort by path, take evenly spaced files
+  const sorted = rest.sort();
+  const step = Math.max(1, Math.floor(sorted.length / Math.max(1, maxCount - priority.length)));
+  const sampled = sorted.filter((_, i) => i % step === 0);
 
-  return [...priority, ...shuffled].slice(0, maxCount);
+  return [...priority, ...sampled].slice(0, maxCount);
 }
 
 function detectBarrelExports(
@@ -403,7 +406,25 @@ function detectDominantPatterns(
     }
   }
 
-  const dominantI18n = i18nPatterns.filter((p) => p.count >= 3).sort((a, b) => b.count - a.count);
+  // Filter: if only t() matched, require corroborating evidence (i18n files or packages)
+  const hasI18nFiles = files.some(
+    (f) => f.includes("locale") || f.includes("i18n") || f.includes("translations") || f.includes("messages/")
+  );
+  let hasI18nPackage = false;
+  for (const [f, c] of allContents) {
+    if (f.endsWith("package.json") && (c.includes("i18next") || c.includes("react-intl") || c.includes("next-intl") || c.includes("@lingui"))) {
+      hasI18nPackage = true;
+      break;
+    }
+  }
+  const dominantI18n = i18nPatterns
+    .filter((p) => {
+      if (p.count < 3) return false;
+      // t() alone is too generic — require corroborating evidence
+      if (p.hook === 't("key")' && !hasI18nFiles && !hasI18nPackage) return false;
+      return true;
+    })
+    .sort((a, b) => b.count - a.count);
   if (dominantI18n.length > 0) {
     const primary = dominantI18n[0];
     let desc = `User-facing strings use ${primary.hook} for internationalization.`;
@@ -436,10 +457,10 @@ function detectDominantPatterns(
   // 2. ROUTING / API PATTERNS
   // ========================================
   const routerPatterns: { pattern: string; name: string; count: number }[] = [
-    { pattern: "trpc\\.router|createTRPCRouter|t\\.router", name: "tRPC routers", count: 0 },
+    { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0 },
     { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0 },
     { pattern: "app\\.get\\(|app\\.post\\(|app\\.put\\(", name: "Express app routes", count: 0 },
-    { pattern: "Hono|app\\.route\\(|c\\.json\\(", name: "Hono routes", count: 0 },
+    { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0 },
     { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0 },
     { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0 },
     { pattern: "gin\\.Engine|r\\.GET|r\\.POST", name: "Gin routes", count: 0 },
@@ -471,7 +492,7 @@ function detectDominantPatterns(
   // ========================================
   const schemaPatterns: { pattern: string; name: string; usage: string; count: number }[] = [
     { pattern: "z\\.object|z\\.string|z\\.number", name: "Zod", usage: "Use Zod schemas for validation", count: 0 },
-    { pattern: "BaseModel|Field\\(", name: "Pydantic", usage: "Use Pydantic BaseModel for data classes", count: 0 },
+    { pattern: "class\\s+\\w+\\(BaseModel\\)|from pydantic", name: "Pydantic", usage: "Use Pydantic BaseModel for data classes", count: 0 },
     { pattern: "Joi\\.object|Joi\\.string", name: "Joi", usage: "Use Joi schemas for validation", count: 0 },
     { pattern: "yup\\.object|yup\\.string", name: "Yup", usage: "Use Yup schemas for validation", count: 0 },
     { pattern: "class.*Serializer.*:|serializers\\.Serializer", name: "Django serializers", usage: "Use Django REST serializers for API data", count: 0 },
@@ -533,7 +554,7 @@ function detectDominantPatterns(
   // 5. TESTING PATTERNS
   // ========================================
   const testPatterns: { pattern: string; name: string; count: number }[] = [
-    { pattern: "describe\\(|it\\(|test\\(", name: "Jest/Vitest", count: 0 },
+    { pattern: "describe\\(|it\\(|test\\(", name: "_generic_test", count: 0 },
     { pattern: "def test_|class Test|pytest", name: "pytest", count: 0 },
     { pattern: "func Test.*\\(t \\*testing\\.T\\)", name: "Go testing", count: 0 },
     { pattern: "expect\\(.*\\)\\.to", name: "Chai/expect", count: 0 },
@@ -571,7 +592,39 @@ function detectDominantPatterns(
 
   const dominantTest = testPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
   if (dominantTest.length > 0) {
-    const primary = dominantTest[0];
+    let primary = dominantTest[0];
+
+    // Disambiguate generic test pattern by checking package.json devDependencies
+    if (primary.name === "_generic_test") {
+      let pkgContent = allContents.get("package.json") || "";
+      if (!pkgContent) {
+        const pkgPath = safePath(dir, "package.json");
+        if (pkgPath) {
+          try { pkgContent = fs.readFileSync(pkgPath, "utf-8"); } catch { /* skip */ }
+        }
+      }
+      if (pkgContent.includes('"vitest"')) {
+        primary = { ...primary, name: "Vitest" };
+      } else if (pkgContent.includes('"jest"') || pkgContent.includes('"@jest/')) {
+        primary = { ...primary, name: "Jest" };
+      } else if (pkgContent.includes('"mocha"')) {
+        primary = { ...primary, name: "Mocha" };
+      } else if (pkgContent.includes('"jasmine"')) {
+        primary = { ...primary, name: "Jasmine" };
+      } else {
+        // Check for Deno (deno.json/deno.jsonc) or Bun (bun.lockb)
+        const hasDeno = files.some(f => f === "deno.json" || f === "deno.jsonc" || f === "deno.lock");
+        const hasBun = files.some(f => f === "bun.lockb" || f === "bunfig.toml");
+        if (hasDeno) {
+          primary = { ...primary, name: "Deno test" };
+        } else if (hasBun) {
+          primary = { ...primary, name: "Bun test" };
+        } else {
+          primary = { ...primary, name: "Jest" }; // default for JS/TS projects
+        }
+      }
+    }
+
     // Also detect common test utilities/helpers
     const testHelperFiles = files.filter(
       (f) =>
@@ -648,9 +701,9 @@ function detectDominantPatterns(
   // 7. STYLING CONVENTIONS
   // ========================================
   const stylePatterns: { pattern: string; name: string; desc: string; count: number }[] = [
-    { pattern: "className=|class=.*tw-", name: "Tailwind CSS", desc: "Styling uses Tailwind CSS utility classes", count: 0 },
-    { pattern: "styled\\.|styled\\(|css`", name: "styled-components/Emotion", desc: "Styling uses CSS-in-JS (styled-components or Emotion)", count: 0 },
-    { pattern: "styles\\.\\w+|from.*\\.module\\.(css|scss)", name: "CSS Modules", desc: "Styling uses CSS Modules (*.module.css)", count: 0 },
+    { pattern: "class=.*tw-|className=[\"'](?:flex |grid |p-|m-|text-|bg-|border-|rounded-|shadow-|w-|h-)", name: "Tailwind CSS", desc: "Styling uses Tailwind CSS utility classes", count: 0 },
+    { pattern: "from ['\"]styled-components|from ['\"]@emotion|styled\\.|styled\\(", name: "styled-components/Emotion", desc: "Styling uses CSS-in-JS (styled-components or Emotion)", count: 0 },
+    { pattern: "from.*\\.module\\.(css|scss)", name: "CSS Modules", desc: "Styling uses CSS Modules (*.module.css)", count: 0 },
   ];
 
   for (const [f, content] of allContents) {
@@ -784,14 +837,16 @@ function detectDominantPatterns(
       .filter(
         (f) =>
           (f.includes("routes") || f.includes("routers") || f.includes("api/") || f.includes("app/api/")) &&
-          !f.includes("node_modules") && !f.includes(".test.") &&
+          !f.includes("node_modules") && !f.includes(".test.") && !f.includes(".spec.") &&
+          !f.includes("test/") && !f.includes("tests/") && !f.includes("__test") &&
+          !f.includes("fixture") && !f.includes("mock") &&
           (f.endsWith(".ts") || f.endsWith(".js") || f.endsWith(".py") || f.endsWith(".go"))
       )
       .map((f) => {
         const parts = f.split("/");
-        // Get the directory containing route files
         return parts.slice(0, -1).join("/");
       })
+      .filter((v) => v && v !== "." && v.length > 0) // filter empty/root paths
       .filter((v, i, a) => a.indexOf(v) === i)
       .slice(0, 3);
 

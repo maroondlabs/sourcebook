@@ -1,0 +1,22 @@
+{
+  "name": "sourcebook-launch-video",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx remotion studio",
+    "render": "npx remotion render SourcebookLaunch out/launch.mp4",
+    "gif": "ffmpeg -y -i out/launch.mp4 -vf 'fps=15,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse' -loop 0 out/launch.gif"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.441",
+    "@remotion/player": "^4.0.441",
+    "@remotion/transitions": "^4.0.441",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.441"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.2"
+  }
+}

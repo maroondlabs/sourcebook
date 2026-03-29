@@ -103,3 +103,53 @@ Repomix added 25 stars overnight. Aider added 42 — both growing steadily. sour
 
 ---
 
+## 2026-03-28
+
+### GitHub Stars
+
+| Repo | Stars | Forks |
+|---|---|---|
+| maroondlabs/sourcebook | 0 | 0 |
+| yamadashy/repomix | 22,690 (+5) | 1,056 (+1) |
+| Aider-AI/aider | 42,467 (+27) | 4,086 (+7) |
+
+Repomix and Aider both growing at normal pace. sourcebook repo is 3 days old — star gap expected.
+
+### New Repos (Last 24h)
+
+**`claude-md` topic (1 new repo):**
+- `Samarth0211/claude-md-examples` — "Real-world CLAUDE.md examples for Next.js, FastAPI, Django, Go, React Native." Links to `clskills.in/claude-md-generator` as a free generator. 2 stars at time of scan. Example repo, not a generator itself — but the external generator link is worth checking. Demand signal continues.
+
+**`cursor-rules` topic:** 0 new repos.
+
+**`ai-context` topic (1 new repo):**
+- `micilini/AITokenSaver` — "Windows desktop app that indexes your codebase and builds optimized AI context — so you send exactly what the model needs." C# / WPF / .NET 8. Desktop-native, Windows-only. Different distribution model than sourcebook's CLI/npm approach. Niche overlap.
+
+**`codebase-context` topic:** 0 new repos.
+
+**Signal:** Quiet day for new repos — lower volume than the prior two days. The `claude-md` ecosystem is consolidating around examples/templates rather than new tooling. Generator tooling remains thin.
+
+### npm (Last 24h)
+
+- **@anthropic-ai/claude-agent-sdk 0.2.86** (2026-03-27) — Bumped from 0.2.85. SDK continues daily version cadence. More agentic infra shipping = more potential sourcebook users.
+- **gitnexus 1.4.10** — No new bump since yesterday (same version). May have stabilized after the rapid 1.4.8 → 1.4.10 run.
+- **@probelabs/probe 0.6.0-rc312** (2026-03-27) — "Node.js wrapper for the probe code search tool." RC still, active shipping.
+- **cursor-rules-generator-mcp 3.4.0** — Last published December 2025, not new. Still ranking in search.
+
+### Platform Announcements
+
+- **Cursor Glass (March 2026):** Unified workspace for agents, repos, and cloud tasks. **Context Engine** introduced — claims to process codebases with 400K+ files via semantic dependency analysis. This is Cursor moving directly into structured context territory. If it automates context extraction, that's a potential moat challenge. Watch how it handles convention inference vs. raw file indexing.
+- **Cursor Composer 2 (~March 21):** Code-only model, 61.3 on CursorBench. Positioned as a model-layer play, not directly competitive with sourcebook — but more capable agents need better context, which is tailwind.
+- **Anthropic:** No new codebase intelligence announcements. SDK version bumps only.
+- **OpenAI:** No new announcements isolated today.
+
+### Flags for Founder
+
+⚠️ **Cursor Context Engine** — "Processes codebases with 400K+ files via semantic dependency analysis" is the most significant competitive signal this week. If Cursor Glass ships automated convention extraction, they could subsume part of sourcebook's value prop for Cursor users. Key question: does it generate structured context files (like CLAUDE.md) or just do live retrieval? Needs investigation before next sourcebook marketing push.
+
+🔍 **clskills.in/claude-md-generator** — Linked from a new GitHub examples repo. Unknown product, free tier, targeting the same user. Worth a 5-minute look to understand scope and quality vs. sourcebook.
+
+✅ **Ecosystem quiet day** — No new direct generators shipped. The generator angle remains relatively uncluttered. Good window to push sourcebook marketing and capture organic search before the space fills in further.
+
+---
+

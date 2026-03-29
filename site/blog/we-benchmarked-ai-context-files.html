@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>We Explored Why AI Agents Fail on Real Codebases. The Biggest Problem Happens Before Execution. — sourcebook</title>
+<meta name="description" content="We explored the AI agent stack looking for what actually breaks in production. The obvious answers were infrastructure. The surprising answer was orientation — agents fail before they even start."/>
+<meta property="og:title" content="We Explored Why AI Agents Fail on Real Codebases. The Biggest Problem Happens Before Execution."/>
+<meta property="og:description" content="We looked at the agent stack and found the highest-leverage layer isn't tooling or reliability — it's project knowledge."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/blog/we-benchmarked-ai-context-files"/>
+<meta property="article:published_time" content="2026-03-28"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="We Explored Why AI Agents Fail on Real Codebases. The Biggest Problem Happens Before Execution."/>
+<link rel="canonical" href="https://sourcebook.run/blog/we-benchmarked-ai-context-files.html"/>
+<link rel="icon" type="image/png" href="../logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "electric-green": "#00FF41",
+                    "terminal-black": "#0D0D0D",
+                    "error": "#ba1a1a",
+                },
+                fontFamily: {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .benchmark-table { width: 100%; border-collapse: collapse; font-family: 'Space Grotesk', monospace; font-size: 13px; }
+    .benchmark-table th { background: #0D0D0D; color: #00FF41; padding: 12px 10px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table td { background: #141414; color: #E0E0E0; padding: 10px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table tr:hover td { background: #1A1A1A; }
+    .benchmark-table .task-label { color: #00FF41; font-weight: 600; }
+    .benchmark-table .metric-val { font-family: 'Space Grotesk', monospace; }
+    .benchmark-table .best { color: #00FF41; font-weight: 700; }
+    html:not(.dark) .benchmark-table th { background: #1a1a1a; }
+    html:not(.dark) .benchmark-table td { background: #141414; color: #E0E0E0; }
+</style>
+</head>
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
+
+<!-- Nav -->
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="../logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook#readme">DOCS</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook/releases">CHANGELOG</a>
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main>
+
+<!-- Article Header -->
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">RESEARCH · MARCH 2026</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+We Explored Why AI Agents Fail on Real Codebases. The Biggest Problem Happens Before Execution.
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">We investigated the agent stack looking for the highest-leverage failure point. It wasn't tooling. It wasn't reliability. It was orientation.</p>
+</div>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
+
+<!-- Article Body -->
+<article class="max-w-[720px] mx-auto px-6 py-16">
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We started by trying to figure out why AI agents feel unreliable in production.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The obvious problems are infrastructure: auth, permissions, observability, reliability. At 85% per-action accuracy, a 10-step workflow succeeds roughly 20% of the time. Those are real problems and they're being worked on by good teams.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+But what we kept seeing, across different agents and different codebases, was something simpler: <strong>agents fail before they even start.</strong>
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Point an AI coding agent at a 10,000-file monorepo and tell it to fix a bug. It will read files. Lots of files. It will trace imports, scan directory trees, and build a mental model from raw source. Then it will produce a patch that technically compiles but misses the project's i18n conventions, edits a generated file that gets overwritten on build, and ignores the co-change coupling between two files that always need to move together.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The agent had access to every file. It still didn't know how the project works.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+That led us to a different question: what if the biggest lever isn't execution reliability, but orientation? What if the reason agents feel dumb on real codebases is that they start with the wrong understanding of the project?
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We built <a href="https://sourcebook.run" class="underline hover:text-electric-green">sourcebook</a> to test that hypothesis — and the results were interesting enough to write up properly.
+</p>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">The orientation tax</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+AI coding agents spend most of their token budget on orientation. Reading files, understanding structure, figuring out where things live. By the time they start reasoning about the actual task, the context window is already crowded with file contents that don't help.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+This isn't a model problem. It's a knowledge problem. There's a difference between code (what exists in the repo) and project knowledge (how the repo actually works). Conventions. Dominant patterns. Which files are fragile. Where changes tend to go. What was tried and reverted. Which files always change together even though they live in different directories.
+</p>
+
+<!-- CHART 3: Stack Diagram -->
+<div class="w-full my-12">
+<div class="bg-terminal-black p-8 relative">
+<div class="flex items-center justify-between mb-6 border-b border-[#5F5E5E]/30 pb-2">
+<span class="text-[#5F5E5E] font-mono text-sm">THE KNOWLEDGE STACK</span>
+</div>
+<div class="flex flex-col gap-0">
+<!-- Top layer - green -->
+<div class="relative border-2 border-[#00FF41] bg-[#00FF41]/10 p-6 flex flex-col items-center justify-center text-center">
+<span class="font-headline font-bold text-[#00FF41] text-lg uppercase tracking-wider">Project Knowledge</span>
+<span class="font-mono text-[#A0A0A0] text-xs mt-1">conventions, patterns, constraints, workflow rules</span>
+<div class="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-full hidden md:flex items-center gap-2">
+<div class="w-8 h-px bg-[#00FF41]"></div>
+<span class="font-headline text-[#00FF41] text-xs tracking-widest uppercase whitespace-nowrap">The missing layer</span>
+</div>
+</div>
+<!-- Middle layer - grey -->
+<div class="border border-[#333] bg-[#1A1A1A] p-6 flex flex-col items-center justify-center text-center">
+<span class="font-headline font-bold text-[#A0A0A0] text-lg uppercase tracking-wider">Runtime Tools</span>
+<span class="font-mono text-[#5F5E5E] text-xs mt-1">MCP, function calling, dynamic file access</span>
+</div>
+<!-- Bottom layer - grey -->
+<div class="border border-[#333] bg-[#1A1A1A] p-6 flex flex-col items-center justify-center text-center">
+<span class="font-headline font-bold text-[#A0A0A0] text-lg uppercase tracking-wider">Code</span>
+<span class="font-mono text-[#5F5E5E] text-xs mt-1">repo dumps, file concatenation, raw source</span>
+</div>
+</div>
+<!-- Mobile label -->
+<div class="md:hidden mt-4 text-center">
+<span class="font-headline text-[#00FF41] text-xs tracking-widest uppercase">^ The missing layer</span>
+</div>
+</div>
+</div>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">"More context" is not "better context"</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The intuitive solution is to give the agent more information. Dump the whole repo. Concatenate everything. Let the model sort it out.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+This actively makes things worse. The ETH Zurich AGENTS.md study (February 2025) tested auto-generated context files on real agent benchmarks and found that files restating obvious information degraded agent performance by 2-3% compared to no context at all. The mechanism is straightforward: obvious context competes for attention with task-relevant information. Every token spent confirming that the project uses TypeScript is a token not available for understanding the i18n conventions the agent actually needs.
+</p>
+
+<div class="w-full bg-terminal-black p-8 mb-12">
+<p class="font-mono text-electric-green text-lg text-center uppercase tracking-widest">
+The strongest context is not the biggest context.
+</p>
+</div>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">The experiment</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We wanted to know what actually helps. Not in theory. On real issues, with real patches, measured against real outcomes.
+</p>
+
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">Setup</h3>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
+We pulled closed GitHub issues with merged PRs from three repos:
+</p>
+
+<ul class="space-y-3 mb-8">
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>cal.com</strong> — TypeScript monorepo, 10,453 files. Enterprise scheduling platform.</span>
+</li>
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>pydantic</strong> — Python library. Core data validation.</span>
+</li>
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>hono</strong> — TypeScript web framework. Minimal, fast.</span>
+</li>
+</ul>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
+We tested four context conditions:
+</p>
+
+<ol class="space-y-3 mb-8 pl-6 list-decimal">
+<li class="font-body text-[17px] leading-relaxed"><strong>None</strong> — no context file at all. Just the agent, the issue description, and the codebase.</li>
+<li class="font-body text-[17px] leading-relaxed"><strong>Handwritten</strong> — a CLAUDE.md written by a human who understands the project.</li>
+<li class="font-body text-[17px] leading-relaxed"><strong>Repomix</strong> — the repo concatenated into a single file. The current market default at 22K GitHub stars.</li>
+<li class="font-body text-[17px] leading-relaxed"><strong>sourcebook</strong> — our tool, tested at v0.3 and v0.5.</li>
+</ol>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Same model (Claude Sonnet) for every run. Same prompt template. Same maximum turn count. We measured wall-clock time, files touched, and lines changed — then manually reviewed each patch for correctness and completeness.
+</p>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">What happened</h2>
+
+<!-- CHART 1: Outcome Matrix Table -->
+<div class="w-full my-12 overflow-x-auto">
+<div class="bg-terminal-black p-6">
+<div class="flex items-center justify-between mb-4 border-b border-[#5F5E5E]/30 pb-2">
+<span class="text-[#5F5E5E] font-mono text-sm">BENCHMARK OUTCOME MATRIX</span>
+<span class="bg-electric-green text-black px-2 py-0.5 font-bold text-[10px] font-mono">4 TASKS / 5 CONDITIONS</span>
+</div>
+<table class="benchmark-table">
+<thead>
+<tr>
+<th style="min-width:160px;">Task</th>
+<th>None</th>
+<th>Handwritten</th>
+<th>Repomix</th>
+<th>sb v0.3</th>
+<th>sb v0.5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="task-label">cal.com #27298<br><span class="text-[#5F5E5E] text-[11px] font-normal">OAuth i18n strings</span></td>
+<td class="metric-val">241s / 5f / 381L</td>
+<td class="metric-val best">120s / 3f / 321L</td>
+<td class="metric-val">176s / 3f / 283L</td>
+<td class="metric-val">140s / 3f / 350L</td>
+<td class="metric-val">136s / 6f / 469L</td>
+</tr>
+<tr>
+<td class="task-label">cal.com #27907<br><span class="text-[#5F5E5E] text-[11px] font-normal">PayPal i18n strings</span></td>
+<td class="metric-val best">94s / 5f / 314L</td>
+<td class="metric-val">115s / 5f / 362L</td>
+<td class="metric-val" style="color:#5F5E5E">—</td>
+<td class="metric-val">103s / 5f / 390L</td>
+<td class="metric-val">113s / 6f / 458L</td>
+</tr>
+<tr>
+<td class="task-label">hono #4806<br><span class="text-[#5F5E5E] text-[11px] font-normal">Request body caching</span></td>
+<td class="metric-val best">253s / 1f / 31L</td>
+<td class="metric-val">323s / 2f / 86L</td>
+<td class="metric-val" style="color:#5F5E5E">—</td>
+<td class="metric-val" style="color:#5F5E5E">—</td>
+<td class="metric-val">267s / 2f / 101L</td>
+</tr>
+<tr>
+<td class="task-label">pydantic #12715<br><span class="text-[#5F5E5E] text-[11px] font-normal">JSON schema fix</span></td>
+<td class="metric-val">312s / 1f / 99L</td>
+<td class="metric-val best">180s / 2f / 83L</td>
+<td class="metric-val" style="color:#5F5E5E">—</td>
+<td class="metric-val" style="color:#5F5E5E">—</td>
+<td class="metric-val">308s / 2f / 117L</td>
+</tr>
+</tbody>
+</table>
+<div class="mt-3 flex gap-6 text-[11px] font-mono text-[#5F5E5E]">
+<span>s = seconds</span><span>f = files touched</span><span>L = lines changed</span><span class="text-[#00FF41]">green = best speed</span>
+</div>
+</div>
+</div>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Handwritten was fastest on cal.com #27298 by a wide margin. The human brief encoded the exact i18n workflow: use <code class="bg-terminal-black text-electric-green px-1 font-mono">useLocale()</code>, call <code class="bg-terminal-black text-electric-green px-1 font-mono">t("key")</code>, add translation keys to the common locale file. The agent didn't have to discover any of this — it was handed the recipe.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+sourcebook v0.5 was 3% slower than v0.3 on time but touched 6 files and produced 469 lines — a 36% broader patch than the handwritten condition. It found instances the handwritten brief didn't flag.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+On cal.com #27907, no context was actually fastest. The task was straightforward enough that orientation overhead was low. But more notably: sourcebook v0.5 (113s) was faster than the handwritten brief (115s). First time we saw that. And it produced a broader patch — 6 files, 458 lines vs. 5 files, 362 lines.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+On hono and pydantic, different dynamics emerged. The handwritten brief was slowest on hono — the extra context sent the agent down a more thorough path, which took longer but produced a more complete fix. sourcebook split the difference: faster than handwritten, more complete than no-context.
+</p>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">Why handwritten briefs won (at first)</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Handwritten briefs are a monster baseline. A human who understands a project encodes something remarkably dense in a few hundred words: not just what the code looks like, but how the project works. The workflow. The conventions. The knowledge that takes weeks to absorb from code alone.
+</p>
+
+<!-- CHART 4: Handwritten vs Sourcebook Comparison -->
+<div class="w-full my-12">
+<div class="bg-terminal-black p-6">
+<div class="flex items-center justify-between mb-4 border-b border-[#5F5E5E]/30 pb-2">
+<span class="text-[#5F5E5E] font-mono text-sm">INSIGHT COMPARISON</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+<!-- Handwritten column -->
+<div class="border border-[#3B82F6]/40 p-6">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-3 h-3 bg-[#3B82F6]"></div>
+<span class="font-headline text-[#3B82F6] text-sm uppercase tracking-widest font-bold">Handwritten Brief</span>
+</div>
+<ul class="space-y-3 text-sm font-mono">
+<li class="text-[#E0E0E0]"><span class="text-[#3B82F6] mr-2">></span><code>useLocale()</code> + <code>t("key")</code> for all strings</li>
+<li class="text-[#E0E0E0]"><span class="text-[#3B82F6] mr-2">></span>Keys in <code>packages/i18n/locales/en/common.json</code></li>
+<li class="text-[#E0E0E0]"><span class="text-[#3B82F6] mr-2">></span><code>paypal_setup_*</code> naming convention</li>
+<li class="text-[#E0E0E0]"><span class="text-[#3B82F6] mr-2">></span>Auth flow touches two specific directories</li>
+<li class="text-[#E0E0E0]"><span class="text-[#3B82F6] mr-2">></span>Don't edit prisma files directly</li>
+</ul>
+<div class="mt-4 pt-3 border-t border-[#3B82F6]/20">
+<span class="text-[#5F5E5E] text-xs font-mono uppercase">Workflow recipes</span>
+</div>
+</div>
+<!-- Sourcebook column -->
+<div class="border border-[#00FF41]/40 p-6">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-3 h-3 bg-[#00FF41]"></div>
+<span class="font-headline text-[#00FF41] text-sm uppercase tracking-widest font-bold">sourcebook v0.3</span>
+</div>
+<ul class="space-y-3 text-sm font-mono">
+<li class="text-[#E0E0E0]"><span class="text-[#00FF41] mr-2">></span>Hub: <code>types.ts</code> imported by 183 files</li>
+<li class="text-[#E0E0E0]"><span class="text-[#00FF41] mr-2">></span>14 generated files — do NOT edit</li>
+<li class="text-[#E0E0E0]"><span class="text-[#00FF41] mr-2">></span>Circular dep: bookingScenario / getMockRequestData</li>
+<li class="text-[#E0E0E0]"><span class="text-[#00FF41] mr-2">></span>Co-change: auth/provider ↔ middleware (88%)</li>
+<li class="text-[#E0E0E0]"><span class="text-[#00FF41] mr-2">></span>1,907 dead code candidates</li>
+</ul>
+<div class="mt-4 pt-3 border-t border-[#00FF41]/20">
+<span class="text-[#5F5E5E] text-xs font-mono uppercase">Structural intelligence</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The handwritten brief had workflow recipes. sourcebook had structural intelligence. The workflow recipes were more immediately useful for these specific tasks. Repo dumps show the code. Handoffs explain the project.
+</p>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">What sourcebook was missing</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+sourcebook v0.3 was good at telling agents what NOT to touch and where the structural risks were. It was bad at telling agents what TO DO and how to do it.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Structural intelligence matters — knowing the hub files, the circular deps, the generated file traps. But it's not enough. An agent that knows which files are important still needs to know: when the project needs i18n, you use this exact pattern. When you add a new API route, these are the files that need to change together.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+This is the difference between a map and directions. sourcebook got better by losing first.
+</p>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">What changed: v0.4.1 and v0.5</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We added three capabilities based directly on what the benchmarks exposed:
+</p>
+
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">1. Dominant pattern detection (v0.4.1)</h3>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
+sourcebook now scans for the recurring code patterns that define how a project works. Not framework detection — dominant patterns are the project-specific conventions that sit on top of frameworks:
+</p>
+
+<ul class="space-y-3 mb-8">
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>i18n pattern:</strong> uses <code class="bg-terminal-black text-electric-green px-1 font-mono">useLocale()</code> + <code class="bg-terminal-black text-electric-green px-1 font-mono">t("key")</code>, translation keys in common.json</span>
+</li>
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>Auth pattern:</strong> session handling via packages/auth/, middleware chain</span>
+</li>
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>Validation pattern:</strong> Zod schemas co-located with route handlers</span>
+</li>
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>Database pattern:</strong> Prisma queries in packages/db/queries/, never raw SQL in routes</span>
+</li>
+</ul>
+
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">2. Repo-mode detection (v0.5)</h3>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
+Not every repo is the same kind of project. v0.5 detects the repo mode and adjusts what it surfaces:
+</p>
+
+<ul class="space-y-3 mb-8">
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>App mode:</strong> emphasizes routes, pages, workflows, env vars</span>
+</li>
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>Library mode:</strong> emphasizes public API surface, test patterns, backwards compatibility</span>
+</li>
+<li class="flex items-start">
+<span class="text-electric-green mr-3 mt-1 font-bold">&#9679;</span>
+<span class="font-body text-[17px] leading-relaxed"><strong>Monorepo mode:</strong> emphasizes package boundaries, shared deps, cross-package coupling</span>
+</li>
+</ul>
+
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">3. Quick reference (v0.5)</h3>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+A new section at the top of the generated file: a 30-second handoff covering the absolute essentials. Stack. Key commands. The one thing most likely to go wrong. Designed for the first 10 seconds of agent orientation.
+</p>
+
+<!-- CHART 2: Progression Bar Chart -->
+<div class="w-full my-12">
+<div class="bg-terminal-black p-6">
+<div class="flex items-center justify-between mb-4 border-b border-[#5F5E5E]/30 pb-2">
+<span class="text-[#5F5E5E] font-mono text-sm">PROGRESSION: cal.com AVG — TIME (s) AND PATCH LINES</span>
+</div>
+<div style="position:relative; height:320px;">
+<canvas id="progressionChart"></canvas>
+</div>
+</div>
+</div>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">The numbers after the changes</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+On cal.com #27298: sourcebook v0.5 closed to within 6% of handwritten speed (136s vs. 120s) while producing a 46% broader fix (469 lines vs. 321 lines). The fix touched more files because it found untranslated strings the handwritten brief didn't mention.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+On cal.com #27907: sourcebook v0.5 beat handwritten on speed (113s vs. 115s). First time. Small margin, but directionally meaningful.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Across the board, sourcebook v0.5 consistently produced broader patches — finding more instances of issues than any other condition.
+</p>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">What we learned</h2>
+
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">1. Handwritten briefs encode workflow knowledge that tools struggle to match</h3>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+A human who understands the project doesn't describe the code — they describe how to work with the code. This is a fundamentally different kind of information. Tools are getting closer but there is still a gap, especially on project-specific workflows with no standard pattern.
+</p>
+
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">2. Structural intelligence and workflow intelligence are complementary</h3>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+sourcebook's structural analysis (hub files, co-change coupling, generated file traps) caught things handwritten briefs missed entirely. The 14 generated files in cal.com? The handwritten brief didn't mention those. The 88% co-change coupling? Not in the brief. The 1,907 dead code candidates? Invisible to a human writing from memory. The ideal context file encodes both.
+</p>
+
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">3. The discoverability filter is real</h3>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The ETH Zurich finding held up in our tests. Repomix (full repo dump) performed worse than a targeted handwritten brief and sometimes worse than no context at all. Agents don't need more code to read. They need the non-obvious things the code doesn't tell them.
+</p>
+
+<h3 class="font-headline font-bold text-lg mt-8 mb-3 dark:text-white">4. Benchmarking agent context is genuinely hard</h3>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+One of our pydantic tasks was a scoring artifact — sourcebook correctly identified a no-op and we initially scored that as failure. Patch size is not quality. Speed is not correctness. We're still iterating on evaluation methodology, and we think anyone claiming clean benchmark numbers on agent context should show their scoring rubric.
+</p>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">Implications for coding agents</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Project knowledge should be a first-class input.</strong> Not an afterthought, not a nice-to-have. It should be loaded alongside the task description, before the agent starts reading files. The difference between 241s and 120s on the OAuth task was entirely explained by project knowledge.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Concise beats comprehensive.</strong> sourcebook's output for cal.com (10,453 files) is 858 tokens. That's not a compromise — it's the point. Every finding passed a discoverability filter. The 19,680x reduction vs. Repomix is a feature, not a limitation.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Humans should still edit the output.</strong> sourcebook generates a starting point, not a finished product. The best context files we've seen are machine-generated, human-reviewed.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Static analysis and git forensics reveal things humans forget.</strong> Nobody remembers all 14 generated files. Nobody manually tracks co-change coupling percentages. Nobody counts dead code candidates. The structural layer is where automation has a genuine edge over handwritten briefs.
+</p>
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-12 uppercase tracking-tight dark:text-white">Limitations and open questions</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We want to be upfront about what this is and isn't.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Small benchmark sample.</strong> Four tasks across three repos is enough to see patterns but not enough to make statistical claims. We're expanding the benchmark suite and the full data is in the repo. We'd welcome others reproducing these results.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Correctness scoring is still evolving.</strong> Evaluating whether a patch is "right" is harder than measuring whether it's fast or big. We're working on better correctness rubrics, but this is an open problem across the field.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Language coverage is early.</strong> TypeScript, Python, and Go are supported. Rust, Java, Ruby, PHP are not yet analyzed for dominant patterns.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>We built the tool and ran the benchmark.</strong> That's a conflict of interest and we know it. The benchmark code is open. The issues and PRs are all public. We've tried to present the results honestly, including the cases where we lost.
+</p>
+
+</article>
+
+<!-- CTA Section -->
+<section class="w-full bg-white dark:bg-[#050505] border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-24 px-6 text-center">
+<div class="max-w-2xl mx-auto">
+<h2 class="font-headline font-extrabold text-4xl mb-10 tracking-tight uppercase dark:text-white">TRY_IT_YOURSELF</h2>
+<div class="bg-terminal-black py-6 px-8 inline-block mb-10">
+<code class="font-mono text-electric-green text-xl">npx sourcebook init</code>
+</div>
+<div class="flex flex-col items-center gap-6">
+<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black dark:border-white dark:text-white px-12 py-4 font-headline font-bold text-sm tracking-[0.2em] hover:bg-black hover:text-white dark:hover:bg-[#00FF41] dark:hover:text-black dark:hover:border-[#00FF41] uppercase">
+VIEW_SOURCE
+</a>
+<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-sm tracking-wide">
+No API keys. No LLM. Everything runs locally. BSL-1.1 licensed.
+</p>
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- Footer -->
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="../logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+BSL-1.1 © 2026
+</div>
+</footer>
+
+<script>
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+  // Re-render chart with new theme
+  renderProgressionChart();
+}
+// Apply saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
+  }
+})();
+
+// Chart.js - Progression Chart
+let progressionChartInstance = null;
+function renderProgressionChart() {
+  const ctx = document.getElementById('progressionChart').getContext('2d');
+  if (progressionChartInstance) progressionChartInstance.destroy();
+
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#E0E0E0' : '#E0E0E0'; // always light text on dark chart bg
+  const gridColor = '#1A1A1A';
+
+  progressionChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['v0.3', 'v0.4.1 (est.)', 'v0.5', 'Handwritten'],
+      datasets: [
+        {
+          label: 'Avg Time (s)',
+          data: [121.5, 130, 124.5, 117.5],
+          backgroundColor: ['#1a5c1a', '#2d8a2d', '#00FF41', '#3B82F6'],
+          borderColor: ['#1a5c1a', '#2d8a2d', '#00FF41', '#3B82F6'],
+          borderWidth: 1,
+          yAxisID: 'y',
+          barPercentage: 0.7,
+          categoryPercentage: 0.6,
+        },
+        {
+          label: 'Avg Patch Lines',
+          data: [370, 420, 463.5, 341.5],
+          backgroundColor: ['rgba(26,92,26,0.4)', 'rgba(45,138,45,0.4)', 'rgba(0,255,65,0.4)', 'rgba(59,130,246,0.4)'],
+          borderColor: ['#1a5c1a', '#2d8a2d', '#00FF41', '#3B82F6'],
+          borderWidth: 1,
+          borderDash: [4,2],
+          yAxisID: 'y1',
+          barPercentage: 0.7,
+          categoryPercentage: 0.6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: textColor, font: { family: 'Space Grotesk', size: 11 } },
+          position: 'top',
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: textColor, font: { family: 'Space Grotesk', size: 11 } },
+          grid: { color: gridColor },
+        },
+        y: {
+          position: 'left',
+          title: { display: true, text: 'Time (seconds)', color: textColor, font: { family: 'Space Grotesk', size: 11 } },
+          ticks: { color: textColor, font: { family: 'Space Grotesk', size: 10 } },
+          grid: { color: gridColor },
+          min: 80,
+          max: 160,
+        },
+        y1: {
+          position: 'right',
+          title: { display: true, text: 'Patch Lines', color: textColor, font: { family: 'Space Grotesk', size: 11 } },
+          ticks: { color: textColor, font: { family: 'Space Grotesk', size: 10 } },
+          grid: { drawOnChartArea: false },
+          min: 200,
+          max: 550,
+        }
+      }
+    }
+  });
+}
+
+// Initialize chart after page loads
+document.addEventListener('DOMContentLoaded', renderProgressionChart);
+</script>
+</body></html>

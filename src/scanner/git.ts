@@ -94,9 +94,14 @@ function detectRevertedPatterns(
   if (reverts.length >= 2) {
     // Extract what was reverted
     const revertDescriptions: string[] = [];
+    const REVERT_NOISE = [
+      /\.yml$/i, /\.yaml$/i, /scorecard/i, /dependabot/i,
+      /^update /i, /^bump /i, /^deps/i, /^ci:/i, /^build:/i,
+      /^chore\(deps\)/i, /^chore\(release\)/i,
+    ];
     for (const line of reverts.slice(0, 10)) {
       const match = line.match(/^[a-f0-9]+ Revert "(.+)"/);
-      if (match) {
+      if (match && !REVERT_NOISE.some(n => n.test(match[1]))) {
         revertDescriptions.push(match[1]);
         revertedPatterns.push(match[1]);
       }
@@ -140,8 +145,16 @@ function detectAntiPatterns(dir: string): Finding[] {
       }
     }
 
-    if (antiPatterns.length > 0) {
-      for (const pattern of antiPatterns.slice(0, 5)) {
+    // Filter out noise: CI config, deps, version bumps
+    const REVERT_NOISE = [
+      /\.yml$/i, /\.yaml$/i, /scorecard/i, /dependabot/i,
+      /^update /i, /^bump /i, /^deps/i, /^ci:/i, /^build:/i,
+      /^chore\(deps\)/i, /^chore\(release\)/i,
+    ];
+    const meaningful = antiPatterns.filter(p => !REVERT_NOISE.some(n => n.test(p)));
+
+    if (meaningful.length > 0) {
+      for (const pattern of meaningful.slice(0, 5)) {
         findings.push({
           category: "Anti-patterns",
           description: `Tried and reverted: "${pattern}". This approach was explicitly rejected.`,
@@ -181,8 +194,23 @@ function detectAntiPatterns(dir: string): Finding[] {
       deletionBatches.push({ message: currentMessage, files: currentFiles });
     }
 
+    // Filter out release/changeset/version commits and revert-of-revert noise
+    const NOISE_PATTERNS = [
+      /^chore\(release\)/i,
+      /^\[ci\] release/i,
+      /^version packages/i,
+      /^changeset/i,
+      /^bump/i,
+      /^release/i,
+      /^Revert "Revert/i,
+      /^merge/i,
+      /^ci:/i,
+      /^build:/i,
+      /^Revert /i,
+    ];
+
     // Only report significant deletions (3+ files in one commit = abandoned feature)
-    for (const batch of deletionBatches.slice(0, 3)) {
+    for (const batch of deletionBatches.filter(b => !NOISE_PATTERNS.some(p => p.test(b.message))).slice(0, 3)) {
       if (batch.files.length >= 3) {
         const fileList = batch.files.slice(0, 3).map((f) => path.basename(f)).join(", ");
         findings.push({
@@ -405,8 +433,16 @@ function detectRapidReEdits(dir: string): Finding[] {
   // Find files edited 5+ times within a 7-day window
   const churnyFiles: { file: string; edits: number; window: string }[] = [];
 
+  // Filter out non-source files that naturally churn
+  const NON_SOURCE_PATTERNS = [
+    /\.md$/i, /\.mdx$/i, /\.rst$/i, /\.txt$/i, /\.json$/i, /\.ya?ml$/i, /\.lock$/i, /\.log$/i,
+    /CHANGELOG/i, /\.env/, /\.generated\./, /\.config\./,
+    /\.github\//, /\.claude\//, /dashboard\//, /ops\//,
+  ];
+
   for (const [file, dates] of fileEdits) {
     if (dates.length < 5) continue;
+    if (NON_SOURCE_PATTERNS.some((p) => p.test(file))) continue;
 
     // Sort dates
     dates.sort((a, b) => a.getTime() - b.getTime());
@@ -487,7 +523,7 @@ function detectCommitPatterns(dir: string): Finding[] {
 
     findings.push({
       category: "Commit conventions",
-      description: `Uses Conventional Commits (feat/fix/docs/etc). ${topScopes.length > 0 ? `Common scopes: ${topScopes.join(", ")}` : ""}. Follow this pattern for new commits.`,
+      description: `Uses Conventional Commits (feat/fix/docs/etc).${topScopes.length > 0 ? ` Common scopes: ${topScopes.join(", ")}.` : ""} Follow this pattern for new commits.`,
       confidence: "high",
       discoverable: false,
     });
