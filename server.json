@@ -1,0 +1,61 @@
+{
+  "$schema": "https://registry.modelcontextprotocol.io/schema/server.json",
+  "id": "io.github.maroondlabs/sourcebook",
+  "name": "sourcebook",
+  "description": "Live codebase intelligence for AI coding agents. Extracts conventions, blast radius, import graphs, and git insights from your project — so agents know how your codebase actually works, not just what the code looks like.",
+  "version": "0.6.0",
+  "homepage": "https://sourcebook.run",
+  "repository": "https://github.com/maroondlabs/sourcebook",
+  "license": "BSL-1.1",
+  "author": {
+    "name": "maroondlabs",
+    "url": "https://maroond.com"
+  },
+  "transport": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["-y", "sourcebook", "serve"]
+  },
+  "installation": {
+    "npm": {
+      "package": "sourcebook",
+      "command": "npx -y sourcebook serve"
+    }
+  },
+  "tools": [
+    {
+      "name": "analyze_codebase",
+      "description": "Run a full sourcebook analysis on the codebase. Returns the complete ProjectScan including detected languages, frameworks, build commands, project structure, architectural findings, file importance rankings, and repo mode. Use this for a comprehensive overview before making changes."
+    },
+    {
+      "name": "get_file_context",
+      "description": "Get context for a specific file: its importance score (PageRank), what imports it, what it imports, which conventions apply to it, and whether it appears in co-change clusters. Use this before editing a file to understand its role and impact."
+    },
+    {
+      "name": "get_blast_radius",
+      "description": "Determine what could break if you edit a given file. Returns direct dependents (files that import it), co-change partners (files historically modified together), and whether the file is a hub module. Use this to assess risk before modifying critical code."
+    },
+    {
+      "name": "query_conventions",
+      "description": "Return all detected conventions and patterns in the codebase: import styles, error handling, naming conventions, framework-specific patterns, and commit conventions. Use this to ensure new code follows established project patterns."
+    },
+    {
+      "name": "get_import_graph",
+      "description": "Get import relationship data: hub files (most depended-on), circular dependencies, dead code candidates, and file importance rankings from PageRank analysis. Use this to understand the dependency architecture."
+    },
+    {
+      "name": "get_git_insights",
+      "description": "Get insights mined from git history: fragile files (high churn), reverted commits (failed approaches to avoid), active development areas, co-change coupling (invisible dependencies), and commit conventions. Use this to avoid repeating past mistakes."
+    },
+    {
+      "name": "get_pressing_questions",
+      "description": "Get the most important things to know before editing a specific file or area of the codebase. Combines blast radius, conventions, git history, and structural context into prioritized guidance. This is the 'what should I know?' briefing."
+    },
+    {
+      "name": "search_codebase_context",
+      "description": "Search across all analyzed context (findings, conventions, structure, frameworks) by keyword. Returns matching findings with their category, confidence, and rationale. Use this when looking for specific architectural knowledge."
+    }
+  ],
+  "categories": ["development", "code-analysis", "ai-context"],
+  "keywords": ["codebase", "context", "conventions", "blast-radius", "import-graph", "git", "ai-coding", "claude", "cursor", "copilot"]
+}

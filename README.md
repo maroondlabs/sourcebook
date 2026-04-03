@@ -145,41 +145,42 @@ Then applies a **discoverability filter**: for every finding, asks "can an agent
 
 Output is formatted for **context-rot resistance** — critical constraints go at the top and bottom of the file (where LLMs pay the most attention), lightweight reference info goes in the middle.
 
-## MCP Server Mode
+## MCP Server
 
 > **Pro feature** — requires a sourcebook Pro license.
 
-`sourcebook serve` starts a local MCP (Model Context Protocol) server that exposes live codebase intelligence to any MCP-compatible AI client — Claude Desktop, Cursor, and others.
+`sourcebook serve` starts a local MCP (Model Context Protocol) server that exposes live codebase intelligence to any MCP-compatible AI client — Claude Code, Claude Desktop, Cursor, and others.
 
 Instead of a static context file, your AI agent can query your project's architecture on demand: look up blast radius before editing, check conventions before writing code, mine git history for anti-patterns.
 
-### Setup
+### Installation
 
-**Claude Desktop** — add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "sourcebook": {
-      "command": "npx",
-      "args": ["sourcebook", "serve", "--dir", "/path/to/your/project"]
-    }
-  }
-}
-```
-
-**Cursor** — add to `.cursor/mcp.json` in your project or `~/.cursor/mcp.json` globally:
+Add sourcebook to your MCP client config:
 
 ```json
 {
   "mcpServers": {
     "sourcebook": {
       "command": "npx",
-      "args": ["sourcebook", "serve", "--dir", "/path/to/your/project"]
+      "args": ["-y", "sourcebook", "serve", "--dir", "/path/to/your/project"]
     }
   }
 }
 ```
+
+**Claude Code** — run in your terminal:
+
+```bash
+claude mcp add sourcebook -- npx -y sourcebook serve --dir /path/to/your/project
+```
+
+Or add manually to `~/.claude/claude_desktop_config.json`.
+
+**Claude Desktop** — add to `~/Library/Application Support/Claude/claude_desktop_config.json`.
+
+**Cursor** — add to `.cursor/mcp.json` in your project or `~/.cursor/mcp.json` globally.
+
+**Other MCP clients** — any client that supports STDIO transport works with the same config block above.
 
 Restart your client after updating the config.
 
