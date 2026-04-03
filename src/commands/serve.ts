@@ -1,9 +1,9 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Server } from "@modelcontextprotocol/sdk/server";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
+} from "@modelcontextprotocol/sdk/types";
 import path from "node:path";
 import chalk from "chalk";
 import { requirePro } from "../auth/license.js";
@@ -647,7 +647,7 @@ export async function serve(options: ServeOptions): Promise<void> {
   const server = new Server(
     {
       name: "sourcebook",
-      version: "0.5.2",
+      version: "0.6.0",
     },
     {
       capabilities: {

@@ -64,6 +64,7 @@ npx sourcebook init --budget 1000
 | `sourcebook init` | Analyze codebase and generate context files |
 | `sourcebook update` | Re-analyze while preserving sections you added manually |
 | `sourcebook diff` | Show what would change without writing files (exit code 1 if changes found — useful for CI) |
+| `sourcebook serve` | Start an MCP server exposing live codebase intelligence (Pro) |
 
 ### Options
 
@@ -144,6 +145,59 @@ Then applies a **discoverability filter**: for every finding, asks "can an agent
 
 Output is formatted for **context-rot resistance** — critical constraints go at the top and bottom of the file (where LLMs pay the most attention), lightweight reference info goes in the middle.
 
+## MCP Server Mode
+
+> **Pro feature** — requires a sourcebook Pro license.
+
+`sourcebook serve` starts a local MCP (Model Context Protocol) server that exposes live codebase intelligence to any MCP-compatible AI client — Claude Desktop, Cursor, and others.
+
+Instead of a static context file, your AI agent can query your project's architecture on demand: look up blast radius before editing, check conventions before writing code, mine git history for anti-patterns.
+
+### Setup
+
+**Claude Desktop** — add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "sourcebook": {
+      "command": "npx",
+      "args": ["sourcebook", "serve", "--dir", "/path/to/your/project"]
+    }
+  }
+}
+```
+
+**Cursor** — add to `.cursor/mcp.json` in your project or `~/.cursor/mcp.json` globally:
+
+```json
+{
+  "mcpServers": {
+    "sourcebook": {
+      "command": "npx",
+      "args": ["sourcebook", "serve", "--dir", "/path/to/your/project"]
+    }
+  }
+}
+```
+
+Restart your client after updating the config.
+
+### Available Tools
+
+| Tool | What it does |
+|------|-------------|
+| `analyze_codebase` | Full analysis: languages, frameworks, findings, top files by PageRank importance |
+| `get_file_context` | File-level context: importance score, hub status, co-change partners, applicable conventions |
+| `get_blast_radius` | Risk assessment for editing a file: dependents, co-change coupling, fragility, circular deps |
+| `query_conventions` | All detected project conventions: import style, error handling, naming, commit format |
+| `get_import_graph` | Dependency architecture: hub files, circular deps, dead code, PageRank rankings |
+| `get_git_insights` | Git history mining: fragile files, reverted commits, anti-patterns, active dev areas |
+| `get_pressing_questions` | Pre-edit briefing: everything important to know before touching a specific file |
+| `search_codebase_context` | Keyword search across all findings, conventions, structure, and frameworks |
+
+The server caches the scan in memory — subsequent tool calls are fast. Pass `refresh: true` to `analyze_codebase` to force a re-scan.
+
 ## Roadmap
 
 - [x] `.cursor/rules/sourcebook.mdc` + legacy `.cursorrules` output
@@ -155,9 +209,9 @@ Output is formatted for **context-rot resistance** — critical constraints go a
 - [x] Python support (Django, FastAPI, Flask, pytest)
 - [x] Go support (Gin, Echo, Fiber, module layout)
 - [x] GitHub Action for CI
+- [x] `sourcebook serve` — MCP server mode
 - [ ] Framework knowledge packs (community-contributed)
 - [ ] Tree-sitter AST parsing for deeper convention detection
-- [ ] `sourcebook serve` — MCP server mode
 - [ ] Hosted dashboard with context quality scores
 
 ## Research Foundation
