@@ -1,11 +1,14 @@
 {
-  "$schema": "https://registry.modelcontextprotocol.io/schema/server.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "id": "io.github.maroondlabs/sourcebook",
-  "name": "sourcebook",
-  "description": "Live codebase intelligence for AI coding agents. Extracts conventions, blast radius, import graphs, and git insights from your project — so agents know how your codebase actually works, not just what the code looks like.",
+  "name": "io.github.maroondlabs/sourcebook",
+  "description": "Live codebase intelligence for AI agents: conventions, blast radius, import graphs, git insights.",
   "version": "0.6.0",
   "homepage": "https://sourcebook.run",
-  "repository": "https://github.com/maroondlabs/sourcebook",
+  "repository": {
+    "url": "https://github.com/maroondlabs/sourcebook",
+    "source": "github"
+  },
   "license": "BSL-1.1",
   "author": {
     "name": "maroondlabs",
