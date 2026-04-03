@@ -5,6 +5,7 @@ import { init } from "./commands/init.js";
 import { update } from "./commands/update.js";
 import { diff } from "./commands/diff.js";
 import { activate } from "./commands/activate.js";
+import { serve } from "./commands/serve.js";
 
 const program = new Command();
 
@@ -68,5 +69,11 @@ program
   .command("activate <key>")
   .description("Activate a Pro or Team license key")
   .action(activate);
+
+program
+  .command("serve")
+  .description("Start an MCP server over STDIO for AI tool integration")
+  .option("-d, --dir <path>", "Target directory to analyze", ".")
+  .action(serve);
 
 program.parse();
