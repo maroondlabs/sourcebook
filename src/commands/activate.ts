@@ -35,7 +35,6 @@ export async function activate(key: string) {
     console.log("");
     console.log(chalk.dim("  You now have access to:"));
     console.log(chalk.dim("  · sourcebook update"));
-    console.log(chalk.dim("  · sourcebook serve"));
     console.log(chalk.dim("  · sourcebook watch"));
     console.log("");
   } else {

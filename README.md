@@ -64,7 +64,7 @@ npx sourcebook init --budget 1000
 | `sourcebook init` | Analyze codebase and generate context files |
 | `sourcebook update` | Re-analyze while preserving sections you added manually |
 | `sourcebook diff` | Show what would change without writing files (exit code 1 if changes found — useful for CI) |
-| `sourcebook serve` | Start an MCP server exposing live codebase intelligence (Pro) |
+| `sourcebook serve` | Start an MCP server exposing live codebase intelligence |
 
 ### Options
 
@@ -146,8 +146,6 @@ Then applies a **discoverability filter**: for every finding, asks "can an agent
 Output is formatted for **context-rot resistance** — critical constraints go at the top and bottom of the file (where LLMs pay the most attention), lightweight reference info goes in the middle.
 
 ## MCP Server Mode
-
-> **Pro feature** — requires a sourcebook Pro license.
 
 `sourcebook serve` starts a local MCP (Model Context Protocol) server that exposes live codebase intelligence to any MCP-compatible AI client — Claude Desktop, Cursor, and others.
 
