@@ -10,7 +10,7 @@ function safePath(dir: string, file: string): string | null {
   return resolved;
 }
 
-interface ImportEdge {
+export interface ImportEdge {
   from: string;
   to: string;
 }
@@ -20,6 +20,8 @@ interface GraphAnalysis {
   rankedFiles: { file: string; score: number }[];
   /** Findings about architecture from the graph */
   findings: Finding[];
+  /** All resolved import edges in the project */
+  edges: ImportEdge[];
 }
 
 /**
@@ -39,7 +41,7 @@ export async function analyzeImportGraph(
   );
 
   if (sourceFiles.length < 5) {
-    return { rankedFiles: [], findings };
+    return { rankedFiles: [], findings, edges: [] };
   }
 
   // Extract imports from each file
@@ -67,7 +69,7 @@ export async function analyzeImportGraph(
   }
 
   if (edges.length < 5) {
-    return { rankedFiles: [], findings };
+    return { rankedFiles: [], findings, edges };
   }
 
   // Run PageRank
@@ -78,10 +80,13 @@ export async function analyzeImportGraph(
     .sort((a, b) => b[1] - a[1])
     .map(([file, score]) => ({ file, score }));
 
-  // Find hub files (high fan-in -- many files import them)
+  // Find hub files (high fan-in -- many production files import them)
+  // Exclude test/spec files from the fan-in count so test helpers don't appear as hubs
   const fanIn = new Map<string, number>();
   for (const edge of edges) {
-    fanIn.set(edge.to, (fanIn.get(edge.to) || 0) + 1);
+    if (!isTestFile(edge.from)) {
+      fanIn.set(edge.to, (fanIn.get(edge.to) || 0) + 1);
+    }
   }
 
   const hubs = [...fanIn.entries()]
@@ -103,8 +108,9 @@ export async function analyzeImportGraph(
     });
   }
 
-  // Detect potential circular dependencies
-  const cycles = detectCycles(edges, sourceFiles);
+  // Detect potential circular dependencies (test files excluded to reduce noise)
+  const prodEdges = edges.filter((e) => !isTestFile(e.from) && !isTestFile(e.to));
+  const cycles = detectCycles(prodEdges, sourceFiles.filter((f) => !isTestFile(f)));
   if (cycles.length > 0) {
     const cycleDescriptions = cycles
       .slice(0, 3)
@@ -129,13 +135,17 @@ export async function analyzeImportGraph(
   const orphans = sourceFiles.filter(
     (f) =>
       !connectedFiles.has(f) &&
-      !f.includes("test") &&
-      !f.includes("spec") &&
+      !isTestFile(f) &&
+      !isEntryPointFile(f) &&
       !f.includes(".config") &&
       !f.endsWith(".d.ts")
   );
 
-  if (orphans.length >= 3 && orphans.length < sourceFiles.length * 0.3) {
+  // Only surface dead code when the count is small enough to be actionable.
+  // Large monorepos have many files connected only through package imports (not
+  // relative paths), so a high orphan count means the graph is incomplete —
+  // not that the files are actually dead.
+  if (orphans.length >= 3 && orphans.length <= 100) {
     findings.push({
       category: "Dead code candidates",
       description: `${orphans.length} source files have no import connections (potential dead code): ${orphans.slice(0, 5).join(", ")}${orphans.length > 5 ? ", ..." : ""}`,
@@ -144,7 +154,22 @@ export async function analyzeImportGraph(
     });
   }
 
-  return { rankedFiles, findings };
+  return { rankedFiles, findings, edges };
+}
+
+const TEST_FILE_RE = /(?:^|\/)(?:test|__tests__|e2e|playwright|cypress)\//i;
+const TEST_EXT_RE = /\.(test|spec)\.[^.]+$/;
+
+function isTestFile(file: string): boolean {
+  return TEST_FILE_RE.test(file) || TEST_EXT_RE.test(file);
+}
+
+const ENTRY_POINT_RE =
+  /(?:^|\/)(?:pages|app|apps|scripts|migrations|e2e|playwright|cypress)\//i;
+const ENTRY_EXT_RE = /\.(?:config|setup|workspace)\.[^.]+$/;
+
+function isEntryPointFile(file: string): boolean {
+  return ENTRY_POINT_RE.test(file) || ENTRY_EXT_RE.test(file);
 }
 
 /**
@@ -152,10 +177,14 @@ export async function analyzeImportGraph(
  * Not as robust as Tree-sitter but fast and sufficient for graph building.
  */
 function extractImports(content: string): string[] {
+  // Strip block comments (including JSDoc) to avoid matching import() inside
+  // annotations like /** @type {import('./types').Foo} */
+  const stripped = content.replace(/\/\*[\s\S]*?\*\//g, "");
+
   const imports: string[] = [];
 
   // ES imports: import ... from "path"
-  const esImports = content.matchAll(
+  const esImports = stripped.matchAll(
     /(?:import|export)\s+.*?\s+from\s+['"]([^'"]+)['"]/g
   );
   for (const match of esImports) {
@@ -163,13 +192,13 @@ function extractImports(content: string): string[] {
   }
 
   // Dynamic imports: import("path")
-  const dynamicImports = content.matchAll(/import\s*\(\s*['"]([^'"]+)['"]\s*\)/g);
+  const dynamicImports = stripped.matchAll(/import\s*\(\s*['"]([^'"]+)['"]\s*\)/g);
   for (const match of dynamicImports) {
     imports.push(match[1]);
   }
 
   // require: require("path")
-  const requires = content.matchAll(/require\s*\(\s*['"]([^'"]+)['"]\s*\)/g);
+  const requires = stripped.matchAll(/require\s*\(\s*['"]([^'"]+)['"]\s*\)/g);
   for (const match of requires) {
     imports.push(match[1]);
   }
@@ -199,13 +228,21 @@ function resolveImport(
     );
   }
 
+  // Strip .js extension — TypeScript projects use import "./foo.js" that resolves to foo.ts
+  const withoutJsExt = resolved.replace(/\.js$/, "");
+
   // Try exact match, then with extensions, then as directory index
   const candidates = [
     resolved,
+    withoutJsExt,
+    `${withoutJsExt}.ts`,
+    `${withoutJsExt}.tsx`,
     `${resolved}.ts`,
     `${resolved}.tsx`,
     `${resolved}.js`,
     `${resolved}.jsx`,
+    `${withoutJsExt}/index.ts`,
+    `${withoutJsExt}/index.tsx`,
     `${resolved}/index.ts`,
     `${resolved}/index.tsx`,
     `${resolved}/index.js`,
@@ -295,21 +332,21 @@ function detectCycles(
     }
   }
 
-  const cycles: string[][] = [];
+  const rawCycles: string[][] = [];
   const visited = new Set<string>();
   const stack = new Set<string>();
-  const path: string[] = [];
+  const currentPath: string[] = [];
 
   function dfs(node: string): void {
-    if (cycles.length >= 5) return;
+    if (rawCycles.length >= 20) return;
     if (stack.has(node)) {
       // Found a cycle
-      const cycleStart = path.indexOf(node);
+      const cycleStart = currentPath.indexOf(node);
       if (cycleStart !== -1) {
-        const cycle = [...path.slice(cycleStart), node];
+        const cycle = currentPath.slice(cycleStart);
         if (cycle.length <= 5) {
           // Only report short cycles
-          cycles.push(cycle);
+          rawCycles.push(cycle);
         }
       }
       return;
@@ -318,18 +355,33 @@ function detectCycles(
 
     visited.add(node);
     stack.add(node);
-    path.push(node);
+    currentPath.push(node);
 
     for (const neighbor of adj.get(node) || []) {
       dfs(neighbor);
     }
 
     stack.delete(node);
-    path.pop();
+    currentPath.pop();
   }
 
   for (const file of files) {
     if (!visited.has(file)) dfs(file);
+    if (rawCycles.length >= 20) break;
+  }
+
+  // Normalize each cycle to a canonical form (rotate to start with
+  // the lexicographically smallest node) and deduplicate
+  const seen = new Set<string>();
+  const cycles: string[][] = [];
+  for (const cycle of rawCycles) {
+    const minIdx = cycle.indexOf(cycle.slice().sort()[0]);
+    const normalized = [...cycle.slice(minIdx), ...cycle.slice(0, minIdx)];
+    const key = normalized.join("\0");
+    if (!seen.has(key)) {
+      seen.add(key);
+      cycles.push(normalized);
+    }
     if (cycles.length >= 5) break;
   }
 

@@ -368,8 +368,10 @@ function detectDominantPatterns(
       !f.includes("node_modules") && !f.includes(".test.") && !f.includes(".spec.")
   );
 
-  // Read up to 100 additional files for pattern counts
-  const extraSample = allSource.sort(() => Math.random() - 0.5).slice(0, 100);
+  // Read up to 100 additional files for pattern counts (deterministic sample)
+  const sorted = allSource.slice().sort();
+  const step = Math.max(1, Math.floor(sorted.length / 100));
+  const extraSample = sorted.filter((_, i) => i % step === 0).slice(0, 100);
   const allContents = new Map(contents);
   for (const file of extraSample) {
     if (!allContents.has(file)) {
