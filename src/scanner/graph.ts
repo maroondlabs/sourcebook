@@ -35,9 +35,9 @@ export async function analyzeImportGraph(
 ): Promise<GraphAnalysis> {
   const findings: Finding[] = [];
 
-  // Only analyze source files
+  // Only analyze source files (exclude .d.ts declaration files)
   const sourceFiles = files.filter((f) =>
-    /\.(ts|tsx|js|jsx)$/.test(f)
+    /\.(ts|tsx|js|jsx)$/.test(f) && !f.endsWith(".d.ts")
   );
 
   if (sourceFiles.length < 5) {

@@ -24,12 +24,14 @@ export async function detectPatterns(
   // Analyze source files (JS/TS + Python + Go)
   const sourceFiles = files.filter(
     (f) =>
-      f.endsWith(".ts") ||
+      (f.endsWith(".ts") ||
       f.endsWith(".tsx") ||
       f.endsWith(".js") ||
       f.endsWith(".jsx") ||
       f.endsWith(".py") ||
-      f.endsWith(".go")
+      f.endsWith(".go")) &&
+      !f.endsWith(".d.ts") &&
+      !/(?:^|\/)docs?\//i.test(f)
   );
 
   // Sample files for pattern detection (don't read everything)
@@ -40,7 +42,7 @@ export async function detectPatterns(
     const safe = safePath(dir, file);
     if (!safe) continue;
     try {
-      const content = fs.readFileSync(safe, "utf-8");
+      const content = stripComments(fs.readFileSync(safe, "utf-8"));
       fileContents.set(file, content);
     } catch {
       // skip unreadable files
@@ -75,11 +77,33 @@ export async function detectPatterns(
   return findings.filter((f) => !f.discoverable);
 }
 
+/**
+ * Strip comments from source code before pattern matching.
+ * Prevents false positives from commented-out code or documentation.
+ */
+function stripComments(content: string): string {
+  // HTML comments
+  content = content.replace(/<!--[\s\S]*?-->/g, "");
+  // Python triple-quoted docstrings
+  content = content.replace(/"""[\s\S]*?"""/g, '""');
+  content = content.replace(/'''[\s\S]*?'''/g, "''");
+  // Block and JSDoc comments (/* ... */ and /** ... */)
+  content = content.replace(/\/\*[\s\S]*?\*\//g, "");
+  // Single-line comments (// ...)
+  content = content.replace(/\/\/[^\n]*/g, "");
+  return content;
+}
+
 function sampleFiles(files: string[], maxCount: number): string[] {
-  if (files.length <= maxCount) return files;
+  // Exclude .d.ts declaration files and docs/ directory files
+  const filtered = files.filter(
+    (f) => !f.endsWith(".d.ts") && !/(?:^|\/)docs?\//i.test(f)
+  );
+
+  if (filtered.length <= maxCount) return filtered;
 
   // Prioritize: entry points, configs, then random sample
-  const priority = files.filter(
+  const priority = filtered.filter(
     (f) =>
       f.includes("index.") ||
       f.includes("config.") ||
@@ -88,7 +112,7 @@ function sampleFiles(files: string[], maxCount: number): string[] {
       f.includes("middleware.")
   );
 
-  const rest = files.filter((f) => !priority.includes(f));
+  const rest = filtered.filter((f) => !priority.includes(f));
   // Deterministic sampling: sort by path, take evenly spaced files
   const sorted = rest.sort();
   const step = Math.max(1, Math.floor(sorted.length / Math.max(1, maxCount - priority.length)));
@@ -365,6 +389,8 @@ function detectDominantPatterns(
     (f) =>
       (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".jsx") ||
        f.endsWith(".py") || f.endsWith(".go")) &&
+      !f.endsWith(".d.ts") &&
+      !/(?:^|\/)docs?\//i.test(f) &&
       !f.includes("node_modules") && !f.includes(".test.") && !f.includes(".spec.")
   );
 
@@ -378,7 +404,7 @@ function detectDominantPatterns(
       const safe = safePath(dir, file);
       if (!safe) continue;
       try {
-        const content = fs.readFileSync(safe, "utf-8");
+        const content = stripComments(fs.readFileSync(safe, "utf-8"));
         allContents.set(file, content);
       } catch { /* skip */ }
     }
@@ -576,7 +602,7 @@ function detectDominantPatterns(
       const safe = safePath(dir, file);
       if (!safe) continue;
       try {
-        const content = fs.readFileSync(safe, "utf-8");
+        const content = stripComments(fs.readFileSync(safe, "utf-8"));
         allContents.set(file, content);
       } catch { /* skip */ }
     }
@@ -753,7 +779,7 @@ function detectDominantPatterns(
     { pattern: "knex\\(|knex\\.schema", name: "Knex.js", entryHint: "knexfile", count: 0 },
     { pattern: "sequelize\\.define|Model\\.init", name: "Sequelize", entryHint: "models/", count: 0 },
     { pattern: "TypeORM|@Entity|getRepository", name: "TypeORM", entryHint: "entities/", count: 0 },
-    { pattern: "mongoose\\.model|Schema\\(\\{", name: "Mongoose", entryHint: "models/", count: 0 },
+    { pattern: "mongoose\\.model|mongoose\\.Schema|require\\(['\"]mongoose", name: "Mongoose", entryHint: "models/", count: 0 },
     { pattern: "from django\\.db|models\\.Model", name: "Django ORM", entryHint: "models.py", count: 0 },
     { pattern: "SQLAlchemy|declarative_base|sessionmaker", name: "SQLAlchemy", entryHint: "models/", count: 0 },
     { pattern: "from tortoise|tortoise\\.models", name: "Tortoise ORM", entryHint: "models/", count: 0 },
