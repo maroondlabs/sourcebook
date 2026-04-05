@@ -17,7 +17,8 @@ function safePath(dir: string, file: string): string | null {
 export async function detectPatterns(
   dir: string,
   files: string[],
-  frameworks: string[]
+  frameworks: string[],
+  repoMode: "app" | "library" | "monorepo" = "app"
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
@@ -62,7 +63,7 @@ export async function detectPatterns(
   findings.push(...detectErrorHandling(fileContents));
 
   // --- Export patterns ---
-  findings.push(...detectExportPatterns(fileContents));
+  findings.push(...detectExportPatterns(fileContents, repoMode));
 
   // --- Python conventions ---
   findings.push(...detectPythonConventions(files, fileContents));
@@ -391,7 +392,13 @@ function detectDominantPatterns(
        f.endsWith(".py") || f.endsWith(".go")) &&
       !f.endsWith(".d.ts") &&
       !/(?:^|\/)docs?\//i.test(f) &&
-      !f.includes("node_modules") && !f.includes(".test.") && !f.includes(".spec.")
+      !f.includes("node_modules") &&
+      // Exclude JS/TS test files (by extension)
+      !f.includes(".test.") && !f.includes(".spec.") &&
+      // Exclude files in test/ or tests/ directories (covers Python, Go, and JS repos like fastify)
+      !/(?:^|\/)tests?\//i.test(f) &&
+      // Exclude Python test files by naming convention
+      !/(?:^|\/)test_[^/]+\.py$/.test(f) && !/[^/]+_test\.py$/.test(f)
   );
 
   // Read up to 100 additional files for pattern counts (deterministic sample)
@@ -484,19 +491,26 @@ function detectDominantPatterns(
   // ========================================
   // 2. ROUTING / API PATTERNS
   // ========================================
-  const routerPatterns: { pattern: string; name: string; count: number }[] = [
-    { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0 },
-    { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0 },
-    { pattern: "app\\.get\\(|app\\.post\\(|app\\.put\\(", name: "Express app routes", count: 0 },
-    { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0 },
-    { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0 },
-    { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0 },
-    { pattern: "gin\\.Engine|r\\.GET|r\\.POST", name: "Gin routes", count: 0 },
-    { pattern: "fiber\\.App|app\\.Get|app\\.Post", name: "Fiber routes", count: 0 },
+  // lang field restricts which file types count toward this pattern
+  const routerPatterns: { pattern: string; name: string; count: number; lang?: "js" | "py" | "go" }[] = [
+    { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0, lang: "js" },
+    { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0, lang: "js" },
+    { pattern: "app\\.get\\(|app\\.post\\(|app\\.put\\(", name: "Express app routes", count: 0, lang: "js" },
+    { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0, lang: "js" },
+    { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0, lang: "py" },
+    { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0, lang: "py" },
+    { pattern: "gin\\.Engine|r\\.GET|r\\.POST", name: "Gin routes", count: 0, lang: "go" },
+    { pattern: "fiber\\.App|app\\.Get|app\\.Post", name: "Fiber routes", count: 0, lang: "go" },
   ];
 
-  for (const [, content] of allContents) {
+  for (const [file, content] of allContents) {
+    const isJs = file.endsWith(".ts") || file.endsWith(".tsx") || file.endsWith(".js") || file.endsWith(".jsx");
+    const isPy = file.endsWith(".py");
+    const isGo = file.endsWith(".go");
     for (const p of routerPatterns) {
+      if (p.lang === "js" && !isJs) continue;
+      if (p.lang === "py" && !isPy) continue;
+      if (p.lang === "go" && !isGo) continue;
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
       }
@@ -631,6 +645,11 @@ function detectDominantPatterns(
           try { pkgContent = fs.readFileSync(pkgPath, "utf-8"); } catch { /* skip */ }
         }
       }
+      // Check test file content for node:test imports (covers borp and direct node:test use)
+      const usesNodeTest = [...allContents.entries()].some(
+        ([f, c]) => (f.includes("test") || f.includes("spec")) &&
+          /require\(['"]node:test['"]\)|from\s+['"]node:test['"]/.test(c)
+      );
       if (pkgContent.includes('"vitest"')) {
         primary = { ...primary, name: "Vitest" };
       } else if (pkgContent.includes('"jest"') || pkgContent.includes('"@jest/')) {
@@ -639,6 +658,12 @@ function detectDominantPatterns(
         primary = { ...primary, name: "Mocha" };
       } else if (pkgContent.includes('"jasmine"')) {
         primary = { ...primary, name: "Jasmine" };
+      } else if (pkgContent.includes('"ava"')) {
+        primary = { ...primary, name: "AVA" };
+      } else if (pkgContent.includes('"tap"') || pkgContent.includes('"@tapjs/')) {
+        primary = { ...primary, name: "node-tap" };
+      } else if (pkgContent.includes('"borp"') || usesNodeTest) {
+        primary = { ...primary, name: "Node.js built-in test runner" };
       } else {
         // Check for Deno (deno.json/deno.jsonc) or Bun (bun.lockb)
         const hasDeno = files.some(f => f === "deno.json" || f === "deno.jsonc" || f === "deno.lock");
@@ -648,9 +673,12 @@ function detectDominantPatterns(
         } else if (hasBun) {
           primary = { ...primary, name: "Bun test" };
         } else {
-          primary = { ...primary, name: "Jest" }; // default for JS/TS projects
+          // No strong signal — skip rather than guess wrong
+          primary = { ...primary, name: "" };
         }
       }
+      // If we couldn't determine the runner, skip this finding
+      if (!primary.name) return findings;
     }
 
     // Also detect common test utilities/helpers
@@ -974,7 +1002,10 @@ function detectDominantPatterns(
   return findings;
 }
 
-function detectExportPatterns(contents: Map<string, string>): Finding[] {
+function detectExportPatterns(contents: Map<string, string>, repoMode: "app" | "library" | "monorepo" = "app"): Finding[] {
+  // Libraries define their own public API — don't second-guess the export style
+  if (repoMode === "library") return [];
+
   const findings: Finding[] = [];
   let defaultExports = 0;
   let namedExports = 0;

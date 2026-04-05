@@ -47,8 +47,11 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
   // Detect project structure patterns
   const structure = detectProjectStructure(dir, files);
 
+  // Detect repo mode early so it can inform pattern detection
+  const repoMode = detectRepoMode(dir, files, frameworks.map((f) => f.name));
+
   // Detect code patterns and conventions (the non-obvious stuff)
-  const patterns = await detectPatterns(dir, files, frameworks.map((fw) => fw.name));
+  const patterns = await detectPatterns(dir, files, frameworks.map((fw) => fw.name), repoMode);
 
   // Analyze git history for decision shadows and hidden dependencies
   const gitAnalysis = await analyzeGitHistory(dir);
@@ -64,9 +67,6 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
     ...gitAnalysis.findings,
     ...graphAnalysis.findings,
   ];
-
-  // Detect repo mode for prioritization
-  const repoMode = detectRepoMode(dir, files, frameworks.map((f) => f.name));
 
   return {
     dir,
