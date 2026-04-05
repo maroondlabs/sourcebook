@@ -461,7 +461,7 @@ function detectDominantPatterns(
   const routerPatterns: { pattern: string; name: string; count: number }[] = [
     { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0 },
     { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0 },
-    { pattern: "app\\.get\\(|app\\.post\\(|app\\.put\\(", name: "Express app routes", count: 0 },
+    { pattern: "require\\(['\"]express['\"]|from ['\"]express['\"]", name: "Express app routes", count: 0 },
     { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0 },
     { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0 },
     { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0 },
@@ -621,8 +621,12 @@ function detectDominantPatterns(
           primary = { ...primary, name: "Deno test" };
         } else if (hasBun) {
           primary = { ...primary, name: "Bun test" };
+        } else if (pkgContent.includes('"tap"') || pkgContent.includes('"@tap/') || pkgContent.includes('"borp"')) {
+          primary = { ...primary, name: "node:test" };
+        } else if (pkgContent.includes('"ava"')) {
+          primary = { ...primary, name: "Ava" };
         } else {
-          primary = { ...primary, name: "Jest" }; // default for JS/TS projects
+          primary = { ...primary, name: primary.name === "_generic_test" ? "unknown" : primary.name };
         }
       }
     }
@@ -753,7 +757,7 @@ function detectDominantPatterns(
     { pattern: "knex\\(|knex\\.schema", name: "Knex.js", entryHint: "knexfile", count: 0 },
     { pattern: "sequelize\\.define|Model\\.init", name: "Sequelize", entryHint: "models/", count: 0 },
     { pattern: "TypeORM|@Entity|getRepository", name: "TypeORM", entryHint: "entities/", count: 0 },
-    { pattern: "mongoose\\.model|Schema\\(\\{", name: "Mongoose", entryHint: "models/", count: 0 },
+    { pattern: "mongoose\\.model|require\\(['\"]mongoose['\"]|from ['\"]mongoose['\"]", name: "Mongoose", entryHint: "models/", count: 0 },
     { pattern: "from django\\.db|models\\.Model", name: "Django ORM", entryHint: "models.py", count: 0 },
     { pattern: "SQLAlchemy|declarative_base|sessionmaker", name: "SQLAlchemy", entryHint: "models/", count: 0 },
     { pattern: "from tortoise|tortoise\\.models", name: "Tortoise ORM", entryHint: "models/", count: 0 },
