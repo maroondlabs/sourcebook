@@ -4,7 +4,9 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types";
+import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import { requirePro } from "../auth/license.js";
 import { scanProject } from "../scanner/index.js";
@@ -13,6 +15,11 @@ import { analyzeImportGraph } from "../scanner/graph.js";
 import { detectPatterns } from "../scanner/patterns.js";
 import { detectFrameworks } from "../scanner/frameworks.js";
 import type { ProjectScan, Finding } from "../types.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pkgVersion = (
+  JSON.parse(fs.readFileSync(path.join(__dirname, "../../package.json"), "utf-8")) as { version: string }
+).version;
 
 interface ServeOptions {
   dir: string;
@@ -275,6 +282,13 @@ async function handleGetBlastRadius(
     scan.files
   );
 
+  // Files that directly import this file (top 10)
+  const directDependents = graphAnalysis.edges
+    .filter((e) => e.to === file)
+    .map((e) => e.from)
+    .filter((v, i, arr) => arr.indexOf(v) === i)
+    .slice(0, 10);
+
   // Find files that import this file (dependents)
   // We need to look at the graph findings for hub info
   const hubFinding = scan.findings.find(
@@ -310,6 +324,8 @@ async function handleGetBlastRadius(
     importance: fileRank
       ? Math.round(fileRank.score * 10000) / 10000
       : null,
+    directDependents,
+    directDependentCount: directDependents.length,
     isHub: !!hubFinding,
     hubDetail: hubFinding?.description || null,
     coChangePartners: coChangeFinding?.description || null,
@@ -647,7 +663,7 @@ export async function serve(options: ServeOptions): Promise<void> {
   const server = new Server(
     {
       name: "sourcebook",
-      version: "0.6.0",
+      version: pkgVersion,
     },
     {
       capabilities: {

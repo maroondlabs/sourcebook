@@ -28,6 +28,20 @@ export async function analyzeGitHistory(dir: string): Promise<GitAnalysis> {
     return { findings, activeAreas, revertedPatterns, coChangeClusters };
   }
 
+  // Check for shallow clone — git history will be truncated
+  if (isShallowClone(dir)) {
+    findings.push({
+      category: "Git history",
+      description:
+        "Limited git history available (shallow clone). Clone with full history for git insights.",
+      rationale:
+        "Shallow clones truncate commit history, which prevents git-based analysis from finding patterns, anti-patterns, and co-change coupling.",
+      confidence: "high",
+      discoverable: false,
+    });
+    return { findings, activeAreas, revertedPatterns, coChangeClusters };
+  }
+
   // 1. Reverted commits -- "don't do this" signals
   findings.push(...detectRevertedPatterns(dir, revertedPatterns));
 
@@ -59,6 +73,12 @@ function isGitRepo(dir: string): boolean {
   } catch {
     return false;
   }
+}
+
+function isShallowClone(dir: string): boolean {
+  // git rev-parse --is-shallow-repository outputs "true" or "false" (added in git 2.15)
+  const result = git(dir, ["rev-parse", "--is-shallow-repository"]).trim();
+  return result === "true";
 }
 
 function git(dir: string, args: string[]): string {
