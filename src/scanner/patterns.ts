@@ -816,7 +816,7 @@ function detectDominantPatterns(
     { pattern: "TypeORM|@Entity|getRepository", name: "TypeORM", entryHint: "entities/", count: 0 },
     { pattern: "mongoose\\.model|mongoose\\.Schema|require\\(['\"]mongoose['\"]|from ['\"]mongoose['\"]", name: "Mongoose", entryHint: "models/", count: 0 },
     { pattern: "from django\\.db|models\\.Model", name: "Django ORM", entryHint: "models.py", count: 0 },
-    { pattern: "SQLAlchemy|declarative_base|sessionmaker", name: "SQLAlchemy", entryHint: "models/", count: 0 },
+    { pattern: "from sqlalchemy|import sqlalchemy|SQLAlchemy\\(|declarative_base|sessionmaker", name: "SQLAlchemy", entryHint: "models/", count: 0 },
     { pattern: "from tortoise|tortoise\\.models", name: "Tortoise ORM", entryHint: "models/", count: 0 },
   ];
 

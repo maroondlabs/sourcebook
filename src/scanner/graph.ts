@@ -72,8 +72,10 @@ export async function analyzeImportGraph(
     return { rankedFiles: [], findings, edges };
   }
 
-  // Run PageRank
-  const scores = pageRank(sourceFiles, edges, 20, 0.85);
+  // Run PageRank — exclude test files so test helpers don't dominate
+  const prodSourceFiles = sourceFiles.filter((f) => !isTestFile(f));
+  const prodEdgesForRank = edges.filter((e) => !isTestFile(e.from) && !isTestFile(e.to));
+  const scores = pageRank(prodSourceFiles, prodEdgesForRank, 20, 0.85);
 
   // Sort by score descending, excluding test/spec files from the output
   const rankedFiles = [...scores.entries()]
@@ -159,10 +161,12 @@ export async function analyzeImportGraph(
 }
 
 const TEST_FILE_RE = /(?:^|\/)(?:test|__tests__|e2e|playwright|cypress)\//i;
-const TEST_EXT_RE = /\.(test|spec)\.[^.]+$/;
+const TEST_EXT_RE = /\.(test|spec|test-d)\.[^.]+$/;
+// Root-level test entry files common in small libraries (e.g. ora's test.js)
+const TEST_NAME_RE = /(?:^|\/)tests?\.[^.]+$/;
 
 function isTestFile(file: string): boolean {
-  return TEST_FILE_RE.test(file) || TEST_EXT_RE.test(file);
+  return TEST_FILE_RE.test(file) || TEST_EXT_RE.test(file) || TEST_NAME_RE.test(file);
 }
 
 const ENTRY_POINT_RE =
