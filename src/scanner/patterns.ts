@@ -17,19 +17,22 @@ function safePath(dir: string, file: string): string | null {
 export async function detectPatterns(
   dir: string,
   files: string[],
-  frameworks: string[]
+  frameworks: string[],
+  repoMode: "app" | "library" | "monorepo" = "app"
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   // Analyze source files (JS/TS + Python + Go)
   const sourceFiles = files.filter(
     (f) =>
-      f.endsWith(".ts") ||
+      (f.endsWith(".ts") ||
       f.endsWith(".tsx") ||
       f.endsWith(".js") ||
       f.endsWith(".jsx") ||
       f.endsWith(".py") ||
-      f.endsWith(".go")
+      f.endsWith(".go")) &&
+      !f.endsWith(".d.ts") &&
+      !/(?:^|\/)docs?\//i.test(f)
   );
 
   // Sample files for pattern detection (don't read everything)
@@ -40,7 +43,7 @@ export async function detectPatterns(
     const safe = safePath(dir, file);
     if (!safe) continue;
     try {
-      const content = fs.readFileSync(safe, "utf-8");
+      const content = stripComments(fs.readFileSync(safe, "utf-8"));
       fileContents.set(file, content);
     } catch {
       // skip unreadable files
@@ -60,7 +63,7 @@ export async function detectPatterns(
   findings.push(...detectErrorHandling(fileContents));
 
   // --- Export patterns ---
-  findings.push(...detectExportPatterns(fileContents));
+  findings.push(...detectExportPatterns(fileContents, repoMode));
 
   // --- Python conventions ---
   findings.push(...detectPythonConventions(files, fileContents));
@@ -75,11 +78,33 @@ export async function detectPatterns(
   return findings.filter((f) => !f.discoverable);
 }
 
+/**
+ * Strip comments from source code before pattern matching.
+ * Prevents false positives from commented-out code or documentation.
+ */
+function stripComments(content: string): string {
+  // HTML comments
+  content = content.replace(/<!--[\s\S]*?-->/g, "");
+  // Python triple-quoted docstrings
+  content = content.replace(/"""[\s\S]*?"""/g, '""');
+  content = content.replace(/'''[\s\S]*?'''/g, "''");
+  // Block and JSDoc comments (/* ... */ and /** ... */)
+  content = content.replace(/\/\*[\s\S]*?\*\//g, "");
+  // Single-line comments (// ...)
+  content = content.replace(/\/\/[^\n]*/g, "");
+  return content;
+}
+
 function sampleFiles(files: string[], maxCount: number): string[] {
-  if (files.length <= maxCount) return files;
+  // Exclude .d.ts declaration files and docs/ directory files
+  const filtered = files.filter(
+    (f) => !f.endsWith(".d.ts") && !/(?:^|\/)docs?\//i.test(f)
+  );
+
+  if (filtered.length <= maxCount) return filtered;
 
   // Prioritize: entry points, configs, then random sample
-  const priority = files.filter(
+  const priority = filtered.filter(
     (f) =>
       f.includes("index.") ||
       f.includes("config.") ||
@@ -88,7 +113,7 @@ function sampleFiles(files: string[], maxCount: number): string[] {
       f.includes("middleware.")
   );
 
-  const rest = files.filter((f) => !priority.includes(f));
+  const rest = filtered.filter((f) => !priority.includes(f));
   // Deterministic sampling: sort by path, take evenly spaced files
   const sorted = rest.sort();
   const step = Math.max(1, Math.floor(sorted.length / Math.max(1, maxCount - priority.length)));
@@ -365,7 +390,15 @@ function detectDominantPatterns(
     (f) =>
       (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".jsx") ||
        f.endsWith(".py") || f.endsWith(".go")) &&
-      !f.includes("node_modules") && !f.includes(".test.") && !f.includes(".spec.")
+      !f.endsWith(".d.ts") &&
+      !/(?:^|\/)docs?\//i.test(f) &&
+      !f.includes("node_modules") &&
+      // Exclude JS/TS test files (by extension)
+      !f.includes(".test.") && !f.includes(".spec.") &&
+      // Exclude files in test/ or tests/ directories (covers Python, Go, and JS repos like fastify)
+      !/(?:^|\/)tests?\//i.test(f) &&
+      // Exclude Python test files by naming convention
+      !/(?:^|\/)test_[^/]+\.py$/.test(f) && !/[^/]+_test\.py$/.test(f)
   );
 
   // Read up to 100 additional files for pattern counts (deterministic sample)
@@ -378,7 +411,7 @@ function detectDominantPatterns(
       const safe = safePath(dir, file);
       if (!safe) continue;
       try {
-        const content = fs.readFileSync(safe, "utf-8");
+        const content = stripComments(fs.readFileSync(safe, "utf-8"));
         allContents.set(file, content);
       } catch { /* skip */ }
     }
@@ -458,19 +491,26 @@ function detectDominantPatterns(
   // ========================================
   // 2. ROUTING / API PATTERNS
   // ========================================
-  const routerPatterns: { pattern: string; name: string; count: number }[] = [
-    { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0 },
-    { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0 },
-    { pattern: "require\\(['\"]express['\"]|from ['\"]express['\"]", name: "Express app routes", count: 0 },
-    { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0 },
-    { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0 },
-    { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0 },
-    { pattern: "gin\\.Engine|r\\.GET|r\\.POST", name: "Gin routes", count: 0 },
-    { pattern: "fiber\\.App|app\\.Get|app\\.Post", name: "Fiber routes", count: 0 },
+  // lang field restricts which file types count toward this pattern
+  const routerPatterns: { pattern: string; name: string; count: number; lang?: "js" | "py" | "go" }[] = [
+    { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0, lang: "js" },
+    { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0, lang: "js" },
+    { pattern: "app\\.get\\(|app\\.post\\(|app\\.put\\(", name: "Express app routes", count: 0, lang: "js" },
+    { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0, lang: "js" },
+    { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0, lang: "py" },
+    { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0, lang: "py" },
+    { pattern: "gin\\.Engine|r\\.GET|r\\.POST", name: "Gin routes", count: 0, lang: "go" },
+    { pattern: "fiber\\.App|app\\.Get|app\\.Post", name: "Fiber routes", count: 0, lang: "go" },
   ];
 
-  for (const [, content] of allContents) {
+  for (const [file, content] of allContents) {
+    const isJs = file.endsWith(".ts") || file.endsWith(".tsx") || file.endsWith(".js") || file.endsWith(".jsx");
+    const isPy = file.endsWith(".py");
+    const isGo = file.endsWith(".go");
     for (const p of routerPatterns) {
+      if (p.lang === "js" && !isJs) continue;
+      if (p.lang === "py" && !isPy) continue;
+      if (p.lang === "go" && !isGo) continue;
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
       }
@@ -576,7 +616,7 @@ function detectDominantPatterns(
       const safe = safePath(dir, file);
       if (!safe) continue;
       try {
-        const content = fs.readFileSync(safe, "utf-8");
+        const content = stripComments(fs.readFileSync(safe, "utf-8"));
         allContents.set(file, content);
       } catch { /* skip */ }
     }
@@ -605,6 +645,11 @@ function detectDominantPatterns(
           try { pkgContent = fs.readFileSync(pkgPath, "utf-8"); } catch { /* skip */ }
         }
       }
+      // Check test file content for node:test imports (covers borp and direct node:test use)
+      const usesNodeTest = [...allContents.entries()].some(
+        ([f, c]) => (f.includes("test") || f.includes("spec")) &&
+          /require\(['"]node:test['"]\)|from\s+['"]node:test['"]/.test(c)
+      );
       if (pkgContent.includes('"vitest"')) {
         primary = { ...primary, name: "Vitest" };
       } else if (pkgContent.includes('"jest"') || pkgContent.includes('"@jest/')) {
@@ -613,6 +658,12 @@ function detectDominantPatterns(
         primary = { ...primary, name: "Mocha" };
       } else if (pkgContent.includes('"jasmine"')) {
         primary = { ...primary, name: "Jasmine" };
+      } else if (pkgContent.includes('"ava"')) {
+        primary = { ...primary, name: "AVA" };
+      } else if (pkgContent.includes('"tap"') || pkgContent.includes('"@tapjs/')) {
+        primary = { ...primary, name: "node-tap" };
+      } else if (pkgContent.includes('"borp"') || usesNodeTest) {
+        primary = { ...primary, name: "Node.js built-in test runner" };
       } else {
         // Check for Deno (deno.json/deno.jsonc) or Bun (bun.lockb)
         const hasDeno = files.some(f => f === "deno.json" || f === "deno.jsonc" || f === "deno.lock");
@@ -626,9 +677,12 @@ function detectDominantPatterns(
         } else if (pkgContent.includes('"ava"')) {
           primary = { ...primary, name: "Ava" };
         } else {
-          primary = { ...primary, name: primary.name === "_generic_test" ? "unknown" : primary.name };
+          // No strong signal — skip rather than guess wrong
+          primary = { ...primary, name: "" };
         }
       }
+      // If we couldn't determine the runner, skip this finding
+      if (!primary.name) return findings;
     }
 
     // Also detect common test utilities/helpers
@@ -759,7 +813,7 @@ function detectDominantPatterns(
     { pattern: "knex\\(|knex\\.schema", name: "Knex.js", entryHint: "knexfile", count: 0 },
     { pattern: "sequelize\\.define|Model\\.init", name: "Sequelize", entryHint: "models/", count: 0 },
     { pattern: "TypeORM|@Entity|getRepository", name: "TypeORM", entryHint: "entities/", count: 0 },
-    { pattern: "mongoose\\.model|require\\(['\"]mongoose['\"]|from ['\"]mongoose['\"]", name: "Mongoose", entryHint: "models/", count: 0 },
+    { pattern: "mongoose\\.model|mongoose\\.Schema|require\\(['\"]mongoose['\"]|from ['\"]mongoose['\"]", name: "Mongoose", entryHint: "models/", count: 0 },
     { pattern: "from django\\.db|models\\.Model", name: "Django ORM", entryHint: "models.py", count: 0 },
     { pattern: "SQLAlchemy|declarative_base|sessionmaker", name: "SQLAlchemy", entryHint: "models/", count: 0 },
     { pattern: "from tortoise|tortoise\\.models", name: "Tortoise ORM", entryHint: "models/", count: 0 },
@@ -954,7 +1008,10 @@ function detectDominantPatterns(
   return findings;
 }
 
-function detectExportPatterns(contents: Map<string, string>): Finding[] {
+function detectExportPatterns(contents: Map<string, string>, repoMode: "app" | "library" | "monorepo" = "app"): Finding[] {
+  // Libraries define their own public API — don't second-guess the export style
+  if (repoMode === "library") return [];
+
   const findings: Finding[] = [];
   let defaultExports = 0;
   let namedExports = 0;

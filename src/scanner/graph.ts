@@ -35,9 +35,9 @@ export async function analyzeImportGraph(
 ): Promise<GraphAnalysis> {
   const findings: Finding[] = [];
 
-  // Only analyze source files
+  // Only analyze source files (exclude .d.ts declaration files)
   const sourceFiles = files.filter((f) =>
-    /\.(ts|tsx|js|jsx)$/.test(f)
+    /\.(ts|tsx|js|jsx)$/.test(f) && !f.endsWith(".d.ts")
   );
 
   if (sourceFiles.length < 5) {
@@ -75,8 +75,9 @@ export async function analyzeImportGraph(
   // Run PageRank
   const scores = pageRank(sourceFiles, edges, 20, 0.85);
 
-  // Sort by score descending
+  // Sort by score descending, excluding test/spec files from the output
   const rankedFiles = [...scores.entries()]
+    .filter(([file]) => !isTestFile(file))
     .sort((a, b) => b[1] - a[1])
     .map(([file, score]) => ({ file, score }));
 

@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { globSync } from "glob";
 import { detectFrameworks } from "./frameworks.js";
@@ -46,8 +47,11 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
   // Detect project structure patterns
   const structure = detectProjectStructure(dir, files);
 
+  // Detect repo mode early so it can inform pattern detection
+  const repoMode = detectRepoMode(dir, files, frameworks.map((f) => f.name));
+
   // Detect code patterns and conventions (the non-obvious stuff)
-  const patterns = await detectPatterns(dir, files, frameworks.map((fw) => fw.name));
+  const patterns = await detectPatterns(dir, files, frameworks.map((fw) => fw.name), repoMode);
 
   // Analyze git history for decision shadows and hidden dependencies
   const gitAnalysis = await analyzeGitHistory(dir);
@@ -64,9 +68,6 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
     ...graphAnalysis.findings,
   ];
 
-  // Detect repo mode for prioritization
-  const repoMode = detectRepoMode(dir, files, frameworks.map((f) => f.name));
-
   return {
     dir,
     files,
@@ -81,27 +82,66 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
 }
 
 function detectRepoMode(dir: string, files: string[], frameworks: string[]): "app" | "library" | "monorepo" {
-  // Monorepo detection
-  const hasWorkspaces = files.some(
-    (f) => f === "pnpm-workspace.yaml" || f === "lerna.json" || f === "nx.json"
+  // --- Monorepo detection ---
+  const hasMonorepoFile = files.some(
+    (f) => f === "pnpm-workspace.yaml" || f === "lerna.json" || f === "nx.json" || f === "turbo.json"
   );
-  if (hasWorkspaces) return "monorepo";
+  if (hasMonorepoFile) return "monorepo";
 
-  // Library detection
-  const hasPublishConfig = files.some((f) => f === "setup.py" || f === "pyproject.toml" || f === "setup.cfg");
-  const hasSrcLib = files.some((f) => f.startsWith("src/lib/") || f.startsWith("lib/"));
-  const hasExportsField = false; // would need to read package.json, but frameworks already detected
-  const isLibraryFramework = frameworks.some((f) =>
-    ["FastAPI", "Flask", "Django", "Hono", "Express"].includes(f)
-  );
-  // If it has a setup.py/pyproject.toml AND no app/ or pages/ → library
+  // Read root package.json for workspace/library signals
+  let pkg: Record<string, unknown> = {};
+  const pkgPath = path.join(dir, "package.json");
+  if (fs.existsSync(pkgPath)) {
+    try {
+      pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+    } catch {
+      // malformed, ignore
+    }
+  }
+
+  // workspaces field → monorepo
+  if (pkg.workspaces) return "monorepo";
+
+  // --- Library detection ---
   const hasAppDirs = files.some(
     (f) => f.startsWith("app/") || f.startsWith("pages/") || f.startsWith("src/app/") || f.startsWith("src/pages/")
   );
   const hasComponents = files.some((f) => f.includes("/components/"));
+  const isAppFramework = frameworks.some((f) =>
+    ["Next.js", "Remix", "Nuxt", "SvelteKit", "FastAPI", "Flask", "Django", "Rails"].includes(f)
+  );
 
+  // package.json "files" or "exports" field → library
+  const hasPkgFiles = Array.isArray(pkg.files) && (pkg.files as unknown[]).length > 0;
+  const hasPkgExports = pkg.exports !== undefined && pkg.exports !== null;
+  if ((hasPkgFiles || hasPkgExports) && !hasAppDirs && !isAppFramework) return "library";
+
+  // "type": "module" with no app framework → lean toward library
+  if (pkg.type === "module" && !hasAppDirs && !isAppFramework && !hasComponents) return "library";
+
+  // Python: pyproject.toml with src/ layout → library
+  const hasPyprojectToml = files.some((f) => f === "pyproject.toml");
+  const hasSrcLayout = files.some((f) => f.startsWith("src/") && f.endsWith(".py"));
+  if (hasPyprojectToml && hasSrcLayout && !hasAppDirs) {
+    // Confirm it has a [project] section by reading the file
+    const pyprojectPath = path.join(dir, "pyproject.toml");
+    try {
+      const pyprojectContent = fs.readFileSync(pyprojectPath, "utf-8");
+      if (pyprojectContent.includes("[project]") || pyprojectContent.includes("[tool.poetry]")) {
+        return "library";
+      }
+    } catch {
+      // unreadable, fall through
+    }
+  }
+
+  // Other Python publish configs without app dirs
+  const hasPublishConfig = files.some((f) => f === "setup.py" || f === "setup.cfg");
   if (hasPublishConfig && !hasAppDirs && !hasComponents) return "library";
-  if (hasSrcLib && !hasAppDirs && !hasComponents && !isLibraryFramework) return "library";
+
+  // src/lib/ or lib/ layout without app dirs
+  const hasSrcLib = files.some((f) => f.startsWith("src/lib/") || f.startsWith("lib/"));
+  if (hasSrcLib && !hasAppDirs && !hasComponents && !isAppFramework) return "library";
 
   // Default: app
   return "app";
