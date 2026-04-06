@@ -678,12 +678,14 @@ function detectDominantPatterns(
   const dominantAuth = authPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
   if (dominantAuth.length > 0) {
     const primary = dominantAuth[0];
-    // Find auth middleware/guard files
+    // Find auth middleware/guard files that actually match the winning pattern
+    const authPatternRe = new RegExp(primary.pattern);
     const authFiles = files.filter(
       (f) =>
         (f.includes("auth") || f.includes("middleware") || f.includes("guard") || f.includes("session")) &&
         !f.includes("node_modules") && !f.includes(".test.") &&
-        (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".py"))
+        (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".py")) &&
+        authPatternRe.test(allContents.get(f) ?? "")
     );
     const authEntrypoint = authFiles.find(
       (f) => f.includes("middleware") || f.includes("guard") || f.includes("auth/index")
