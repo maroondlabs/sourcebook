@@ -662,7 +662,8 @@ function detectDominantPatterns(
     { pattern: "jwt\\.verify|jwt\\.sign|jsonwebtoken", name: "JWT (jsonwebtoken)", count: 0 },
     { pattern: "@login_required|LoginRequiredMixin", name: "Django login_required", count: 0 },
     { pattern: "IsAuthenticated|AllowAny|BasePermission", name: "DRF permissions", count: 0 },
-    { pattern: "NextAuth|getServerSession", name: "NextAuth.js", count: 0 },
+    { pattern: "next-auth|NextAuth\\(|authOptions.*NextAuth", name: "NextAuth.js", count: 0 },
+    { pattern: "better-auth|betterAuth\\(|from ['\"]better-auth", name: "better-auth", count: 0 },
     { pattern: "supabase\\.auth|useSupabaseClient", name: "Supabase Auth", count: 0 },
     { pattern: "clerk|useClerk|ClerkProvider", name: "Clerk", count: 0 },
   ];
@@ -678,12 +679,14 @@ function detectDominantPatterns(
   const dominantAuth = authPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
   if (dominantAuth.length > 0) {
     const primary = dominantAuth[0];
-    // Find auth middleware/guard files
+    // Find auth files whose content actually matches the winning pattern
+    const winnerRegex = new RegExp(primary.pattern);
     const authFiles = files.filter(
       (f) =>
         (f.includes("auth") || f.includes("middleware") || f.includes("guard") || f.includes("session")) &&
         !f.includes("node_modules") && !f.includes(".test.") &&
-        (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".py"))
+        (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".py")) &&
+        winnerRegex.test(allContents.get(f) ?? "")
     );
     const authEntrypoint = authFiles.find(
       (f) => f.includes("middleware") || f.includes("guard") || f.includes("auth/index")
