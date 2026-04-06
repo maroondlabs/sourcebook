@@ -7,8 +7,6 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import chalk from "chalk";
-import { requirePro } from "../auth/license.js";
 import { scanProject } from "../scanner/index.js";
 import { analyzeGitHistory } from "../scanner/git.js";
 import { analyzeImportGraph } from "../scanner/graph.js";
@@ -650,8 +648,6 @@ async function handleSearchCodebaseContext(
 // --- Main ---
 
 export async function serve(options: ServeOptions): Promise<void> {
-  await requirePro("sourcebook serve");
-
   const dir = path.resolve(options.dir);
 
   // Suppress all console output — STDIO transport uses stdout for JSON-RPC
