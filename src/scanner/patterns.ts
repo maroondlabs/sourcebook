@@ -716,7 +716,8 @@ function detectDominantPatterns(
     { pattern: "jwt\\.verify|jwt\\.sign|jsonwebtoken", name: "JWT (jsonwebtoken)", count: 0 },
     { pattern: "@login_required|LoginRequiredMixin", name: "Django login_required", count: 0 },
     { pattern: "IsAuthenticated|AllowAny|BasePermission", name: "DRF permissions", count: 0 },
-    { pattern: "NextAuth|getServerSession", name: "NextAuth.js", count: 0 },
+    { pattern: "next-auth|NextAuth\\(|authOptions.*NextAuth", name: "NextAuth.js", count: 0 },
+    { pattern: "better-auth|betterAuth\\(|from ['\"]better-auth", name: "better-auth", count: 0 },
     { pattern: "supabase\\.auth|useSupabaseClient", name: "Supabase Auth", count: 0 },
     { pattern: "clerk|useClerk|ClerkProvider", name: "Clerk", count: 0 },
   ];
