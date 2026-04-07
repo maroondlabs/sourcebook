@@ -51,6 +51,8 @@ export interface ProjectScan {
   findings: Finding[];
   /** Files ranked by PageRank importance in the import graph */
   rankedFiles?: { file: string; score: number }[];
+  /** Import graph edges (from → to) for dependency analysis */
+  edges?: { from: string; to: string }[];
   /** Detected repo mode for context prioritization */
   repoMode?: "app" | "library" | "monorepo";
 }

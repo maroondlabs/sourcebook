@@ -8,10 +8,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { scanProject } from "../scanner/index.js";
-import { analyzeGitHistory } from "../scanner/git.js";
-import { analyzeImportGraph } from "../scanner/graph.js";
-import { detectPatterns } from "../scanner/patterns.js";
-import { detectFrameworks } from "../scanner/frameworks.js";
 import type { ProjectScan, Finding } from "../types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -24,22 +20,27 @@ interface ServeOptions {
 }
 
 // Cache the scan to avoid re-running on every tool call
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let cachedScan: ProjectScan | null = null;
 let cachedDir: string | null = null;
+let cachedAt = 0;
 
-async function getScan(dir: string): Promise<ProjectScan> {
+async function getScan(dir: string, refresh = false): Promise<ProjectScan> {
   const resolved = path.resolve(dir);
-  if (cachedScan && cachedDir === resolved) {
+  const isStale = Date.now() - cachedAt > CACHE_TTL_MS;
+  if (cachedScan && cachedDir === resolved && !refresh && !isStale) {
     return cachedScan;
   }
   cachedScan = await scanProject(resolved);
   cachedDir = resolved;
+  cachedAt = Date.now();
   return cachedScan;
 }
 
 function invalidateCache(): void {
   cachedScan = null;
   cachedDir = null;
+  cachedAt = 0;
 }
 
 const TOOLS = [
@@ -197,6 +198,19 @@ async function handleAnalyzeCodebase(
   };
 }
 
+/**
+ * Check if a finding is relevant to a specific file.
+ * Uses evidenceFiles for precise matching, falls back to description matching.
+ */
+function findingMatchesFile(f: Finding, file: string): boolean {
+  // Precise match via evidenceFiles (populated by pattern detection)
+  if (f.evidenceFiles && f.evidenceFiles.includes(file)) return true;
+  // Fall back to evidence/description string matching
+  if (f.evidence?.includes(file)) return true;
+  if (f.description.includes(file)) return true;
+  return false;
+}
+
 async function handleGetFileContext(
   dir: string,
   args: { file: string }
@@ -209,13 +223,8 @@ async function handleGetFileContext(
   const fileRank = ranked.find((r) => r.file === file);
   const rank = ranked.findIndex((r) => r.file === file);
 
-  // Find findings mentioning this file
-  const relevantFindings = scan.findings.filter(
-    (f) =>
-      f.evidence?.includes(file) ||
-      f.description.includes(file) ||
-      f.description.includes(path.basename(file))
-  );
+  // Find findings relevant to this file
+  const relevantFindings = scan.findings.filter((f) => findingMatchesFile(f, file));
 
   // Get conventions that apply (category-based)
   const conventionCategories = new Set([
@@ -236,10 +245,7 @@ async function handleGetFileContext(
 
   // Check co-change clusters
   const coChangeFinding = scan.findings.find(
-    (f) =>
-      f.category === "Hidden dependencies" &&
-      (f.description.includes(path.basename(file)) ||
-        f.description.includes(file))
+    (f) => f.category === "Hidden dependencies" && findingMatchesFile(f, file)
   );
 
   return {
@@ -274,43 +280,28 @@ async function handleGetBlastRadius(
   const scan = await getScan(dir);
   const file = args.file;
 
-  // Re-run import graph to get edge-level data
-  const graphAnalysis = await analyzeImportGraph(
-    path.resolve(dir),
-    scan.files
-  );
+  // Use cached edges from scan (no re-analysis needed)
+  const edges = scan.edges || [];
 
-  // Files that directly import this file (top 10)
-  const directDependents = graphAnalysis.edges
+  // Files that directly import this file (dependents)
+  const directDependents = edges
     .filter((e) => e.to === file)
     .map((e) => e.from)
     .filter((v, i, arr) => arr.indexOf(v) === i)
-    .slice(0, 10);
+    .slice(0, 20);
 
-  // Find files that import this file (dependents)
-  // We need to look at the graph findings for hub info
+  // Find relevant findings using precise matching
   const hubFinding = scan.findings.find(
-    (f) => f.category === "Core modules" && f.description.includes(file)
+    (f) => f.category === "Core modules" && findingMatchesFile(f, file)
   );
-
-  // Co-change partners from git analysis
   const coChangeFinding = scan.findings.find(
-    (f) =>
-      f.category === "Hidden dependencies" &&
-      (f.description.includes(path.basename(file)) ||
-        f.description.includes(file))
+    (f) => f.category === "Hidden dependencies" && findingMatchesFile(f, file)
   );
-
-  // Fragile code mentions
   const fragileFinding = scan.findings.find(
-    (f) => f.category === "Fragile code" && f.description.includes(file)
+    (f) => f.category === "Fragile code" && findingMatchesFile(f, file)
   );
-
-  // Circular dependency involvement
   const circularFinding = scan.findings.find(
-    (f) =>
-      f.category === "Circular dependencies" &&
-      f.description.includes(path.basename(file))
+    (f) => f.category === "Circular dependencies" && findingMatchesFile(f, file)
   );
 
   // Importance rank
@@ -331,11 +322,13 @@ async function handleGetBlastRadius(
     fragileDetail: fragileFinding?.description || null,
     inCircularDep: !!circularFinding,
     circularDetail: circularFinding?.description || null,
-    graphFindings: graphAnalysis.findings.map((f) => ({
-      category: f.category,
-      description: f.description,
-      confidence: f.confidence,
-    })),
+    graphFindings: scan.findings
+      .filter((f) => ["Core modules", "Circular dependencies", "Dead code candidates"].includes(f.category))
+      .map((f) => ({
+        category: f.category,
+        description: f.description,
+        confidence: f.confidence,
+      })),
     riskLevel: hubFinding
       ? "high"
       : circularFinding || fragileFinding
@@ -415,12 +408,27 @@ async function handleGetImportGraph(
 
   const ranked = scan.rankedFiles || [];
 
+  const edges = scan.edges || [];
+
   if (args.file) {
-    const fileRank = ranked.find((r) => r.file === args.file);
-    const rank = ranked.findIndex((r) => r.file === args.file);
+    const file = args.file;
+    const fileRank = ranked.find((r) => r.file === file);
+    const rank = ranked.findIndex((r) => r.file === file);
+
+    // Direct imports (what this file imports)
+    const imports = edges
+      .filter((e) => e.from === file)
+      .map((e) => e.to)
+      .filter((v, i, arr) => arr.indexOf(v) === i);
+
+    // Direct dependents (what imports this file)
+    const dependents = edges
+      .filter((e) => e.to === file)
+      .map((e) => e.from)
+      .filter((v, i, arr) => arr.indexOf(v) === i);
 
     return {
-      file: args.file,
+      file,
       importance: fileRank
         ? {
             score: Math.round(fileRank.score * 10000) / 10000,
@@ -428,12 +436,10 @@ async function handleGetImportGraph(
             totalFiles: ranked.length,
           }
         : null,
+      imports,
+      dependents,
       graphFindings: graphFindings
-        .filter(
-          (f) =>
-            f.description.includes(args.file!) ||
-            f.description.includes(path.basename(args.file!))
-        )
+        .filter((f) => findingMatchesFile(f, file))
         .map((f) => ({
           category: f.category,
           description: f.description,
@@ -443,6 +449,7 @@ async function handleGetImportGraph(
   }
 
   return {
+    totalEdges: edges.length,
     topFiles: ranked.slice(0, 20).map((f) => ({
       file: f.file,
       score: Math.round(f.score * 10000) / 10000,
@@ -487,14 +494,13 @@ async function handleGetPressingQuestions(
 ): Promise<object> {
   const scan = await getScan(dir);
   const file = args.file;
-  const basename = path.basename(file);
 
   const questions: { priority: number; question: string; detail: string }[] =
     [];
 
   // Check if it's a hub file
   const hubFinding = scan.findings.find(
-    (f) => f.category === "Core modules" && f.description.includes(file)
+    (f) => f.category === "Core modules" && findingMatchesFile(f, file)
   );
   if (hubFinding) {
     questions.push({
@@ -506,9 +512,7 @@ async function handleGetPressingQuestions(
 
   // Check circular dependencies
   const circularFinding = scan.findings.find(
-    (f) =>
-      f.category === "Circular dependencies" &&
-      f.description.includes(basename)
+    (f) => f.category === "Circular dependencies" && findingMatchesFile(f, file)
   );
   if (circularFinding) {
     questions.push({
@@ -520,7 +524,7 @@ async function handleGetPressingQuestions(
 
   // Check fragile code
   const fragileFinding = scan.findings.find(
-    (f) => f.category === "Fragile code" && f.description.includes(file)
+    (f) => f.category === "Fragile code" && findingMatchesFile(f, file)
   );
   if (fragileFinding) {
     questions.push({
@@ -532,9 +536,7 @@ async function handleGetPressingQuestions(
 
   // Check co-change coupling
   const coChangeFinding = scan.findings.find(
-    (f) =>
-      f.category === "Hidden dependencies" &&
-      (f.description.includes(basename) || f.description.includes(file))
+    (f) => f.category === "Hidden dependencies" && findingMatchesFile(f, file)
   );
   if (coChangeFinding) {
     questions.push({

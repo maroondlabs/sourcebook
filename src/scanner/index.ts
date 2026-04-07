@@ -94,6 +94,7 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
     structure,
     findings,
     rankedFiles: graphAnalysis.rankedFiles,
+    edges: graphAnalysis.edges,
     repoMode,
   };
 }
