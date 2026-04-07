@@ -73,8 +73,8 @@ export async function analyzeImportGraph(
   }
 
   // Run PageRank — exclude test files so test helpers don't dominate
-  const prodSourceFiles = sourceFiles.filter((f) => !isTestFile(f));
-  const prodEdgesForRank = edges.filter((e) => !isTestFile(e.from) && !isTestFile(e.to));
+  const prodSourceFiles = sourceFiles.filter((f) => !isNonProductionFile(f));
+  const prodEdgesForRank = edges.filter((e) => !isNonProductionFile(e.from) && !isNonProductionFile(e.to));
   const scores = pageRank(prodSourceFiles, prodEdgesForRank, 20, 0.85);
 
   // Sort by score descending, excluding test/spec files from the output
@@ -112,8 +112,8 @@ export async function analyzeImportGraph(
   }
 
   // Detect potential circular dependencies (test files excluded to reduce noise)
-  const prodEdges = edges.filter((e) => !isTestFile(e.from) && !isTestFile(e.to));
-  const cycles = detectCycles(prodEdges, sourceFiles.filter((f) => !isTestFile(f)));
+  const prodEdges = edges.filter((e) => !isNonProductionFile(e.from) && !isNonProductionFile(e.to));
+  const cycles = detectCycles(prodEdges, sourceFiles.filter((f) => !isNonProductionFile(f)));
   if (cycles.length > 0) {
     const cycleDescriptions = cycles
       .slice(0, 3)
@@ -138,7 +138,7 @@ export async function analyzeImportGraph(
   const orphans = sourceFiles.filter(
     (f) =>
       !connectedFiles.has(f) &&
-      !isTestFile(f) &&
+      !isNonProductionFile(f) &&
       !isEntryPointFile(f) &&
       !f.includes(".config") &&
       !f.endsWith(".d.ts")
@@ -175,6 +175,19 @@ const ENTRY_EXT_RE = /\.(?:config|setup|workspace)\.[^.]+$/;
 
 function isEntryPointFile(file: string): boolean {
   return ENTRY_POINT_RE.test(file) || ENTRY_EXT_RE.test(file);
+}
+
+const EXAMPLE_FILE_RE =
+  /(?:^|\/)(?:examples?|demos?|samples?)\//i;
+const EXAMPLE_NAME_RE =
+  /(?:^|\/)example[^/]*\.[^.]+$/i;
+
+function isExampleFile(file: string): boolean {
+  return EXAMPLE_FILE_RE.test(file) || EXAMPLE_NAME_RE.test(file);
+}
+
+function isNonProductionFile(file: string): boolean {
+  return isTestFile(file) || isExampleFile(file);
 }
 
 /**
