@@ -165,7 +165,6 @@ export async function requirePro(feature: string): Promise<void> {
     chalk.dim("  sourcebook Pro includes:")
   );
   console.log(chalk.dim("  · sourcebook update (preserve manual edits)"));
-  console.log(chalk.dim("  · sourcebook watch (auto-regenerate on changes)"));
   console.log(chalk.dim("  · Web demo (shareable analysis links)"));
   console.log(chalk.dim("  · Priority language support"));
   console.log("");

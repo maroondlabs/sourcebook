@@ -7,6 +7,7 @@ import path from "node:path";
 import { init } from "./commands/init.js";
 import { update } from "./commands/update.js";
 import { diff } from "./commands/diff.js";
+import { watch } from "./commands/watch.js";
 import { activate } from "./commands/activate.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -82,6 +83,26 @@ program
   .action((pathArg, options) => {
     if (pathArg) options.dir = pathArg;
     return diff(options);
+  });
+
+program
+  .command("watch")
+  .description("Watch for source file changes and auto-update context files")
+  .argument("[path]", "Target directory to watch (same as --dir)")
+  .option("-d, --dir <path>", "Target directory to watch", ".")
+  .option(
+    "-f, --format <formats>",
+    "Output formats (claude,cursor,copilot,agents,all)",
+    "claude"
+  )
+  .option(
+    "--budget <tokens>",
+    "Max token budget for generated context",
+    "4000"
+  )
+  .action((pathArg, options) => {
+    if (pathArg) options.dir = pathArg;
+    return watch(options);
   });
 
 program
