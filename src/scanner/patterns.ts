@@ -18,7 +18,8 @@ export async function detectPatterns(
   dir: string,
   files: string[],
   frameworks: string[],
-  repoMode: "app" | "library" | "monorepo" = "app"
+  repoMode: "app" | "library" | "monorepo" = "app",
+  importanceHints?: { highImportFiles: string[]; highChurnFiles: string[] }
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
@@ -36,7 +37,7 @@ export async function detectPatterns(
   );
 
   // Sample files for pattern detection (don't read everything)
-  const sampled = sampleFiles(sourceFiles, 50);
+  const sampled = sampleFiles(sourceFiles, 50, importanceHints);
   const fileContents = new Map<string, string>();
 
   for (const file of sampled) {
@@ -95,7 +96,11 @@ function stripComments(content: string): string {
   return content;
 }
 
-function sampleFiles(files: string[], maxCount: number): string[] {
+function sampleFiles(
+  files: string[],
+  maxCount: number,
+  importanceHints?: { highImportFiles: string[]; highChurnFiles: string[] }
+): string[] {
   // Exclude .d.ts declaration files and docs/ directory files
   const filtered = files.filter(
     (f) => !f.endsWith(".d.ts") && !/(?:^|\/)docs?\//i.test(f)
@@ -103,23 +108,58 @@ function sampleFiles(files: string[], maxCount: number): string[] {
 
   if (filtered.length <= maxCount) return filtered;
 
-  // Prioritize: entry points, configs, then random sample
-  const priority = filtered.filter(
-    (f) =>
+  const filteredSet = new Set(filtered);
+  const selected = new Set<string>();
+
+  // Tier 1: Entry points and configs (guaranteed)
+  for (const f of filtered) {
+    if (
       f.includes("index.") ||
       f.includes("config.") ||
       f.includes("app.") ||
       f.includes("layout.") ||
       f.includes("middleware.")
-  );
+    ) {
+      selected.add(f);
+    }
+  }
 
-  const rest = filtered.filter((f) => !priority.includes(f));
-  // Deterministic sampling: sort by path, take evenly spaced files
-  const sorted = rest.sort();
-  const step = Math.max(1, Math.floor(sorted.length / Math.max(1, maxCount - priority.length)));
-  const sampled = sorted.filter((_, i) => i % step === 0);
+  // Tier 2: High-import files (up to 10, from importance hints)
+  if (importanceHints?.highImportFiles) {
+    let added = 0;
+    for (const f of importanceHints.highImportFiles) {
+      if (added >= 10) break;
+      if (filteredSet.has(f) && !selected.has(f)) {
+        selected.add(f);
+        added++;
+      }
+    }
+  }
 
-  return [...priority, ...sampled].slice(0, maxCount);
+  // Tier 3: High-churn files (up to 5, from importance hints)
+  if (importanceHints?.highChurnFiles) {
+    let added = 0;
+    for (const f of importanceHints.highChurnFiles) {
+      if (added >= 5) break;
+      if (filteredSet.has(f) && !selected.has(f)) {
+        selected.add(f);
+        added++;
+      }
+    }
+  }
+
+  // Tier 4: Stratified fill from remaining files
+  const remaining = filtered.filter((f) => !selected.has(f));
+  const sorted = remaining.sort();
+  const slotsLeft = maxCount - selected.size;
+  if (slotsLeft > 0 && sorted.length > 0) {
+    const step = Math.max(1, Math.floor(sorted.length / slotsLeft));
+    for (let i = 0; i < sorted.length && selected.size < maxCount; i += step) {
+      selected.add(sorted[i]);
+    }
+  }
+
+  return [...selected].slice(0, maxCount);
 }
 
 function detectBarrelExports(
@@ -485,6 +525,7 @@ function detectDominantPatterns(
       evidence: `${primary.count} files use ${primary.hook}`,
       confidence: "high",
       discoverable: false,
+      evidenceFiles: primary.files.slice(0, 20),
     });
   }
 
@@ -492,15 +533,15 @@ function detectDominantPatterns(
   // 2. ROUTING / API PATTERNS
   // ========================================
   // lang field restricts which file types count toward this pattern
-  const routerPatterns: { pattern: string; name: string; count: number; lang?: "js" | "py" | "go" }[] = [
-    { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0, lang: "js" },
-    { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0, lang: "js" },
-    { pattern: "app\\.get\\(|app\\.post\\(|app\\.put\\(", name: "Express app routes", count: 0, lang: "js" },
-    { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0, lang: "js" },
-    { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0, lang: "py" },
-    { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0, lang: "py" },
-    { pattern: "gin\\.Engine|r\\.GET|r\\.POST", name: "Gin routes", count: 0, lang: "go" },
-    { pattern: "fiber\\.App|app\\.Get|app\\.Post", name: "Fiber routes", count: 0, lang: "go" },
+  const routerPatterns: { pattern: string; name: string; count: number; files: string[]; lang?: "js" | "py" | "go" }[] = [
+    { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0, files: [], lang: "js" },
+    { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0, files: [], lang: "js" },
+    { pattern: "app\\.get\\(|app\\.post\\(|app\\.put\\(", name: "Express app routes", count: 0, files: [], lang: "js" },
+    { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0, files: [], lang: "js" },
+    { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0, files: [], lang: "py" },
+    { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0, files: [], lang: "py" },
+    { pattern: "gin\\.Engine|r\\.GET|r\\.POST", name: "Gin routes", count: 0, files: [], lang: "go" },
+    { pattern: "fiber\\.App|app\\.Get|app\\.Post", name: "Fiber routes", count: 0, files: [], lang: "go" },
   ];
 
   for (const [file, content] of allContents) {
@@ -513,6 +554,7 @@ function detectDominantPatterns(
       if (p.lang === "go" && !isGo) continue;
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
+        p.files.push(file);
       }
     }
   }
@@ -526,25 +568,27 @@ function detectDominantPatterns(
       evidence: `${primary.count} files use ${primary.name}`,
       confidence: "high",
       discoverable: false,
+      evidenceFiles: primary.files.slice(0, 20),
     });
   }
 
   // ========================================
   // 3. VALIDATION / SCHEMA PATTERNS
   // ========================================
-  const schemaPatterns: { pattern: string; name: string; usage: string; count: number }[] = [
-    { pattern: "z\\.object|z\\.string|z\\.number", name: "Zod", usage: "Use Zod schemas for validation", count: 0 },
-    { pattern: "class\\s+\\w+\\(BaseModel\\)|from pydantic", name: "Pydantic", usage: "Use Pydantic BaseModel for data classes", count: 0 },
-    { pattern: "Joi\\.object|Joi\\.string", name: "Joi", usage: "Use Joi schemas for validation", count: 0 },
-    { pattern: "yup\\.object|yup\\.string", name: "Yup", usage: "Use Yup schemas for validation", count: 0 },
-    { pattern: "class.*Serializer.*:|serializers\\.Serializer", name: "Django serializers", usage: "Use Django REST serializers for API data", count: 0 },
-    { pattern: "@dataclass", name: "dataclasses", usage: "Use @dataclass for data structures", count: 0 },
+  const schemaPatterns: { pattern: string; name: string; usage: string; count: number; files: string[] }[] = [
+    { pattern: "z\\.object|z\\.string|z\\.number", name: "Zod", usage: "Use Zod schemas for validation", count: 0, files: [] },
+    { pattern: "class\\s+\\w+\\(BaseModel\\)|from pydantic", name: "Pydantic", usage: "Use Pydantic BaseModel for data classes", count: 0, files: [] },
+    { pattern: "Joi\\.object|Joi\\.string", name: "Joi", usage: "Use Joi schemas for validation", count: 0, files: [] },
+    { pattern: "yup\\.object|yup\\.string", name: "Yup", usage: "Use Yup schemas for validation", count: 0, files: [] },
+    { pattern: "class.*Serializer.*:|serializers\\.Serializer", name: "Django serializers", usage: "Use Django REST serializers for API data", count: 0, files: [] },
+    { pattern: "@dataclass", name: "dataclasses", usage: "Use @dataclass for data structures", count: 0, files: [] },
   ];
 
-  for (const [, content] of allContents) {
+  for (const [file, content] of allContents) {
     for (const p of schemaPatterns) {
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
+        p.files.push(file);
       }
     }
   }
@@ -558,24 +602,26 @@ function detectDominantPatterns(
       evidence: `${primary.count} files use ${primary.name}`,
       confidence: "high",
       discoverable: false,
+      evidenceFiles: primary.files.slice(0, 20),
     });
   }
 
   // ========================================
   // 4. STATE MANAGEMENT / DATA FETCHING
   // ========================================
-  const statePatterns: { pattern: string; name: string; desc: string; count: number }[] = [
-    { pattern: "useQuery|useMutation|QueryClient", name: "React Query/TanStack Query", desc: "Data fetching uses React Query (useQuery/useMutation)", count: 0 },
-    { pattern: "useSWR|mutate\\(", name: "SWR", desc: "Data fetching uses SWR (useSWR)", count: 0 },
-    { pattern: "createSlice|configureStore", name: "Redux Toolkit", desc: "State management uses Redux Toolkit (createSlice)", count: 0 },
-    { pattern: "create\\(.*set.*get|useStore", name: "Zustand", desc: "State management uses Zustand", count: 0 },
-    { pattern: "atom\\(|useAtom", name: "Jotai", desc: "State management uses Jotai atoms", count: 0 },
+  const statePatterns: { pattern: string; name: string; desc: string; count: number; files: string[] }[] = [
+    { pattern: "useQuery|useMutation|QueryClient", name: "React Query/TanStack Query", desc: "Data fetching uses React Query (useQuery/useMutation)", count: 0, files: [] },
+    { pattern: "useSWR|mutate\\(", name: "SWR", desc: "Data fetching uses SWR (useSWR)", count: 0, files: [] },
+    { pattern: "createSlice|configureStore", name: "Redux Toolkit", desc: "State management uses Redux Toolkit (createSlice)", count: 0, files: [] },
+    { pattern: "create\\(.*set.*get|useStore", name: "Zustand", desc: "State management uses Zustand", count: 0, files: [] },
+    { pattern: "atom\\(|useAtom", name: "Jotai", desc: "State management uses Jotai atoms", count: 0, files: [] },
   ];
 
-  for (const [, content] of allContents) {
+  for (const [file, content] of allContents) {
     for (const p of statePatterns) {
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
+        p.files.push(file);
       }
     }
   }
@@ -589,6 +635,7 @@ function detectDominantPatterns(
       evidence: `${primary.count} files`,
       confidence: "high",
       discoverable: false,
+      evidenceFiles: primary.files.slice(0, 20),
     });
   }
 
@@ -709,23 +756,24 @@ function detectDominantPatterns(
   // ========================================
   // 6. AUTH PATTERNS
   // ========================================
-  const authPatterns: { pattern: string; name: string; count: number }[] = [
-    { pattern: "useAuth|useSession|useUser", name: "auth hooks (useAuth/useSession/useUser)", count: 0 },
-    { pattern: "withAuth|authMiddleware|requireAuth", name: "auth middleware", count: 0 },
-    { pattern: "passport\\.authenticate", name: "Passport.js", count: 0 },
-    { pattern: "jwt\\.verify|jwt\\.sign|jsonwebtoken", name: "JWT (jsonwebtoken)", count: 0 },
-    { pattern: "@login_required|LoginRequiredMixin", name: "Django login_required", count: 0 },
-    { pattern: "IsAuthenticated|AllowAny|BasePermission", name: "DRF permissions", count: 0 },
-    { pattern: "next-auth|NextAuth\\(|authOptions.*NextAuth", name: "NextAuth.js", count: 0 },
-    { pattern: "better-auth|betterAuth\\(|from ['\"]better-auth", name: "better-auth", count: 0 },
-    { pattern: "supabase\\.auth|useSupabaseClient", name: "Supabase Auth", count: 0 },
-    { pattern: "clerk|useClerk|ClerkProvider", name: "Clerk", count: 0 },
+  const authPatterns: { pattern: string; name: string; count: number; files: string[] }[] = [
+    { pattern: "useAuth|useSession|useUser", name: "auth hooks (useAuth/useSession/useUser)", count: 0, files: [] },
+    { pattern: "withAuth|authMiddleware|requireAuth", name: "auth middleware", count: 0, files: [] },
+    { pattern: "passport\\.authenticate", name: "Passport.js", count: 0, files: [] },
+    { pattern: "jwt\\.verify|jwt\\.sign|jsonwebtoken", name: "JWT (jsonwebtoken)", count: 0, files: [] },
+    { pattern: "@login_required|LoginRequiredMixin", name: "Django login_required", count: 0, files: [] },
+    { pattern: "IsAuthenticated|AllowAny|BasePermission", name: "DRF permissions", count: 0, files: [] },
+    { pattern: "next-auth|NextAuth\\(|authOptions.*NextAuth", name: "NextAuth.js", count: 0, files: [] },
+    { pattern: "better-auth|betterAuth\\(|from ['\"]better-auth", name: "better-auth", count: 0, files: [] },
+    { pattern: "supabase\\.auth|useSupabaseClient", name: "Supabase Auth", count: 0, files: [] },
+    { pattern: "clerk|useClerk|ClerkProvider", name: "Clerk", count: 0, files: [] },
   ];
 
-  for (const [, content] of allContents) {
+  for (const [file, content] of allContents) {
     for (const p of authPatterns) {
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
+        p.files.push(file);
       }
     }
   }
@@ -757,22 +805,24 @@ function detectDominantPatterns(
       evidence: `${primary.count} files`,
       confidence: "high",
       discoverable: false,
+      evidenceFiles: primary.files.slice(0, 20),
     });
   }
 
   // ========================================
   // 7. STYLING CONVENTIONS
   // ========================================
-  const stylePatterns: { pattern: string; name: string; desc: string; count: number }[] = [
-    { pattern: "class=.*tw-|className=[\"'](?:flex |grid |p-|m-|text-|bg-|border-|rounded-|shadow-|w-|h-)", name: "Tailwind CSS", desc: "Styling uses Tailwind CSS utility classes", count: 0 },
-    { pattern: "from ['\"]styled-components|from ['\"]@emotion|styled\\.|styled\\(", name: "styled-components/Emotion", desc: "Styling uses CSS-in-JS (styled-components or Emotion)", count: 0 },
-    { pattern: "from.*\\.module\\.(css|scss)", name: "CSS Modules", desc: "Styling uses CSS Modules (*.module.css)", count: 0 },
+  const stylePatterns: { pattern: string; name: string; desc: string; count: number; files: string[] }[] = [
+    { pattern: "class=.*tw-|className=[\"'](?:flex |grid |p-|m-|text-|bg-|border-|rounded-|shadow-|w-|h-)", name: "Tailwind CSS", desc: "Styling uses Tailwind CSS utility classes", count: 0, files: [] },
+    { pattern: "from ['\"]styled-components|from ['\"]@emotion|styled\\.|styled\\(", name: "styled-components/Emotion", desc: "Styling uses CSS-in-JS (styled-components or Emotion)", count: 0, files: [] },
+    { pattern: "from.*\\.module\\.(css|scss)", name: "CSS Modules", desc: "Styling uses CSS Modules (*.module.css)", count: 0, files: [] },
   ];
 
-  for (const [f, content] of allContents) {
+  for (const [file, content] of allContents) {
     for (const p of stylePatterns) {
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
+        p.files.push(file);
       }
     }
   }
@@ -802,28 +852,30 @@ function detectDominantPatterns(
       evidence: `${primary.count} files`,
       confidence: "high",
       discoverable: false,
+      evidenceFiles: primary.files.slice(0, 20),
     });
   }
 
   // ========================================
   // 8. DATABASE / ORM PATTERNS
   // ========================================
-  const dbPatterns: { pattern: string; name: string; entryHint: string; count: number }[] = [
-    { pattern: "prisma\\.|PrismaClient|\\$queryRaw", name: "Prisma", entryHint: "prisma/schema.prisma", count: 0 },
-    { pattern: "drizzle\\(|pgTable|sqliteTable", name: "Drizzle ORM", entryHint: "drizzle.config.ts", count: 0 },
-    { pattern: "knex\\(|knex\\.schema", name: "Knex.js", entryHint: "knexfile", count: 0 },
-    { pattern: "sequelize\\.define|Model\\.init", name: "Sequelize", entryHint: "models/", count: 0 },
-    { pattern: "TypeORM|@Entity|getRepository", name: "TypeORM", entryHint: "entities/", count: 0 },
-    { pattern: "mongoose\\.model|mongoose\\.Schema|require\\(['\"]mongoose['\"]|from ['\"]mongoose['\"]", name: "Mongoose", entryHint: "models/", count: 0 },
-    { pattern: "from django\\.db|models\\.Model", name: "Django ORM", entryHint: "models.py", count: 0 },
-    { pattern: "from sqlalchemy|import sqlalchemy|SQLAlchemy\\(|declarative_base|sessionmaker", name: "SQLAlchemy", entryHint: "models/", count: 0 },
-    { pattern: "from tortoise|tortoise\\.models", name: "Tortoise ORM", entryHint: "models/", count: 0 },
+  const dbPatterns: { pattern: string; name: string; entryHint: string; count: number; files: string[] }[] = [
+    { pattern: "prisma\\.|PrismaClient|\\$queryRaw", name: "Prisma", entryHint: "prisma/schema.prisma", count: 0, files: [] },
+    { pattern: "drizzle\\(|pgTable|sqliteTable", name: "Drizzle ORM", entryHint: "drizzle.config.ts", count: 0, files: [] },
+    { pattern: "knex\\(|knex\\.schema", name: "Knex.js", entryHint: "knexfile", count: 0, files: [] },
+    { pattern: "sequelize\\.define|Model\\.init", name: "Sequelize", entryHint: "models/", count: 0, files: [] },
+    { pattern: "TypeORM|@Entity|getRepository", name: "TypeORM", entryHint: "entities/", count: 0, files: [] },
+    { pattern: "mongoose\\.model|mongoose\\.Schema|require\\(['\"]mongoose['\"]|from ['\"]mongoose['\"]", name: "Mongoose", entryHint: "models/", count: 0, files: [] },
+    { pattern: "from django\\.db|models\\.Model", name: "Django ORM", entryHint: "models.py", count: 0, files: [] },
+    { pattern: "from sqlalchemy|import sqlalchemy|SQLAlchemy\\(|declarative_base|sessionmaker", name: "SQLAlchemy", entryHint: "models/", count: 0, files: [] },
+    { pattern: "from tortoise|tortoise\\.models", name: "Tortoise ORM", entryHint: "models/", count: 0, files: [] },
   ];
 
-  for (const [, content] of allContents) {
+  for (const [file, content] of allContents) {
     for (const p of dbPatterns) {
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
+        p.files.push(file);
       }
     }
   }
@@ -848,6 +900,7 @@ function detectDominantPatterns(
       evidence: `${primary.count} files`,
       confidence: "high",
       discoverable: false,
+      evidenceFiles: primary.files.slice(0, 20),
     });
   }
 
@@ -888,6 +941,7 @@ function detectDominantPatterns(
       evidence: `${allGenerated.length} generated files`,
       confidence: "high",
       discoverable: false,
+      evidenceFiles: allGenerated.slice(0, 20),
     });
   }
 

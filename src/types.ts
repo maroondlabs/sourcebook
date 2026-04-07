@@ -11,6 +11,8 @@ export interface Finding {
   confidence: "high" | "medium" | "low";
   /** Is this discoverable by an agent reading the code? If yes, we filter it out */
   discoverable: boolean;
+  /** Files that contributed to this finding (for cross-validation against PageRank/git) */
+  evidenceFiles?: string[];
 }
 
 export interface FrameworkDetection {
