@@ -82,7 +82,8 @@ export function categorizeFindings(findings: Finding[]): {
  * actionable section in the output.
  */
 export function buildQuickReference(findings: Finding[]): string | null {
-  const patterns = findings.filter((f) => f.category === "Dominant patterns");
+  // Only include high/medium confidence patterns in Quick Reference
+  const patterns = findings.filter((f) => f.category === "Dominant patterns" && f.confidence !== "low");
   if (patterns.length < 2) return null;
 
   const lines = ["## Quick Reference", ""];

@@ -73,7 +73,7 @@ export async function detectPatterns(
   findings.push(...detectGoConventions(files, fileContents));
 
   // --- Dominant API/usage patterns ---
-  findings.push(...detectDominantPatterns(dir, files, fileContents, frameworks));
+  findings.push(...detectDominantPatterns(dir, files, fileContents, frameworks, repoMode));
 
   // Filter out discoverable findings
   return findings.filter((f) => !f.discoverable);
@@ -420,7 +420,8 @@ function detectDominantPatterns(
   dir: string,
   files: string[],
   contents: Map<string, string>,
-  frameworks: string[]
+  frameworks: string[],
+  repoMode: "app" | "library" | "monorepo" = "app"
 ): Finding[] {
   const findings: Finding[] = [];
 
@@ -432,6 +433,7 @@ function detectDominantPatterns(
        f.endsWith(".py") || f.endsWith(".go")) &&
       !f.endsWith(".d.ts") &&
       !/(?:^|\/)docs?\//i.test(f) &&
+      !/(?:^|\/)examples?\//i.test(f) &&
       !f.includes("node_modules") &&
       // Exclude JS/TS test files (by extension)
       !f.includes(".test.") && !f.includes(".spec.") &&
@@ -560,7 +562,9 @@ function detectDominantPatterns(
     }
   }
 
-  const dominantRouter = routerPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
+  // Libraries mention other frameworks in docs/docstrings — require more evidence
+  const routerThreshold = repoMode === "library" ? 5 : 2;
+  const dominantRouter = routerPatterns.filter((p) => p.count >= routerThreshold).sort((a, b) => b.count - a.count);
   if (dominantRouter.length > 0) {
     const primary = dominantRouter[0];
     findings.push({
