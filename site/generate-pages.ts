@@ -113,6 +113,25 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-tint":"#006e16
 .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
 body{font-family:'Inter',sans-serif}
 h1,h2,h3,h4,.label-mono{font-family:'Space Grotesk',sans-serif}
+html.dark body{background-color:#000;color:#fff}
+html.dark .bg-white{background-color:#000!important}
+html.dark .text-black{color:#fff!important}
+html.dark .border-black{border-color:#fff!important}
+html.dark .border-black\\/5{border-color:rgba(255,255,255,0.05)!important}
+html.dark .border-outline-variant\\/20{border-color:rgba(255,255,255,0.1)!important}
+html.dark .border-outline-variant\\/10{border-color:rgba(255,255,255,0.05)!important}
+html.dark .border-outline-variant\\/30{border-color:rgba(255,255,255,0.15)!important}
+html.dark .border-outline-variant\\/40{border-color:rgba(255,255,255,0.2)!important}
+html.dark .bg-surface-container-low{background-color:#0D0D0D!important}
+html.dark .bg-surface-container{background-color:#111!important}
+html.dark .bg-surface-container-high{background-color:#1a1a1a!important}
+html.dark .text-secondary{color:#888!important}
+html.dark .text-gray-400{color:#666!important}
+html.dark .text-gray-500{color:#555!important}
+html.dark .bg-black{background-color:#000!important}
+html.dark .hover\\:bg-black:hover{background-color:#fff!important}
+html.dark .hover\\:text-white:hover{color:#000!important}
+html.dark .hover\\:text-black:hover{color:#000!important}
 </style>`;
 
 const NAV = `<nav class="bg-white flex justify-between items-center w-full px-6 py-4 border-b border-black/5 sticky top-0 z-50">
@@ -124,7 +143,7 @@ const NAV = `<nav class="bg-white flex justify-between items-center w-full px-6 
 </div>
 </div>
 <div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-black">terminal</span>
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black hover:text-[#00FF41] transition-none" aria-label="Toggle dark mode">dark_mode</button>
 </div>
 </nav>`;
 
@@ -134,7 +153,11 @@ const FOOTER = `<footer class="bg-white flex justify-between items-center w-full
 <span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.8.3</span>
 </div>
 <a class="font-['Space_Grotesk'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00FF41]" href="/">PROJECT KNOWLEDGE FOR CODING AGENTS</a>
-</footer>`;
+</footer>
+<script>
+function toggleTheme(){var h=document.documentElement,d=h.classList.contains('dark');h.classList.remove('light','dark');h.classList.add(d?'light':'dark');localStorage.setItem('theme',d?'light':'dark');document.querySelector('[onclick="toggleTheme()"]').textContent=d?'dark_mode':'light_mode'}
+(function(){var s=localStorage.getItem('theme');if(s==='dark'){document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');var t=document.querySelector('[onclick="toggleTheme()"]');if(t)t.textContent='light_mode'}})();
+</script>`;
 
 function renderPage(repo: RepoConfig, scan: ProjectScan, claudeMd: string): string {
   const insights = extractTopInsights(scan);
