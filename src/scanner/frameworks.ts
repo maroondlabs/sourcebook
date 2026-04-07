@@ -244,6 +244,15 @@ export async function detectFrameworks(
     });
   }
 
+  // --- Fastify ---
+  if (allDeps["fastify"]) {
+    detected.push({
+      name: "Fastify",
+      version: allDeps["fastify"],
+      findings: [],
+    });
+  }
+
   // --- TypeScript ---
   if (allDeps["typescript"]) {
     const findings: Finding[] = [];

@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
 import { scanProject } from "../scanner/index.js";
@@ -6,6 +5,7 @@ import { generateClaude } from "../generators/claude.js";
 import { generateCursor, generateCursorLegacy } from "../generators/cursor.js";
 import { generateCopilot } from "../generators/copilot.js";
 import { writeOutput } from "../utils/output.js";
+import { readExisting, mergeContent, countManualSections } from "../utils/merge.js";
 import { requirePro } from "../auth/license.js";
 
 interface UpdateOptions {
@@ -14,40 +14,9 @@ interface UpdateOptions {
   budget: string;
 }
 
-// Headers that sourcebook generates — anything else is user-added
-const SOURCEBOOK_HEADERS = new Set([
-  "CLAUDE.md",
-  "Commands",
-  "Critical Constraints",
-  "Stack",
-  "Project Structure",
-  "Core Modules (by structural importance)",
-  "Core Modules",
-  "Conventions & Patterns",
-  "Conventions",
-  "Additional Context",
-  "Additional Notes",
-  "What to Add Manually",
-  "Copilot Instructions",
-  "Development Commands",
-  "Important Constraints",
-  "Technology Stack",
-  "High-Impact Files",
-  "Code Conventions",
-  "Constraints",
-  "Quick Reference",
-  "Dominant Patterns",
-]);
-
 /**
  * Re-analyze and regenerate context files while preserving manual edits.
- *
- * Strategy:
- * 1. Read existing output file
- * 2. Parse into sections (split on ## headers)
- * 3. Identify manual sections (headers not in SOURCEBOOK_HEADERS)
- * 4. Re-run scan and generate fresh content
- * 5. Replace sourcebook sections, keep manual sections in their original positions
+ * Uses shared merge logic from utils/merge.ts.
  */
 export async function update(options: UpdateOptions) {
   await requirePro("sourcebook update");
@@ -122,99 +91,3 @@ export async function update(options: UpdateOptions) {
   console.log(chalk.dim("\nDone. Your manual sections were preserved.\n"));
 }
 
-function readExisting(dir: string, filename: string): string | null {
-  const filePath = path.join(dir, filename);
-  try {
-    return fs.readFileSync(filePath, "utf-8");
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Parse markdown into sections split by ## headers.
- */
-function parseSections(content: string): { header: string; body: string }[] {
-  const sections: { header: string; body: string }[] = [];
-  const lines = content.split("\n");
-  let currentHeader = "";
-  let currentBody: string[] = [];
-
-  for (const line of lines) {
-    const headerMatch = line.match(/^##\s+(.+)/);
-    if (headerMatch) {
-      if (currentHeader || currentBody.length > 0) {
-        sections.push({ header: currentHeader, body: currentBody.join("\n") });
-      }
-      currentHeader = headerMatch[1].trim();
-      currentBody = [];
-    } else {
-      currentBody.push(line);
-    }
-  }
-
-  if (currentHeader || currentBody.length > 0) {
-    sections.push({ header: currentHeader, body: currentBody.join("\n") });
-  }
-
-  return sections;
-}
-
-function isSourcebookSection(header: string): boolean {
-  return SOURCEBOOK_HEADERS.has(header) || header === "";
-}
-
-function countManualSections(content: string): number {
-  const sections = parseSections(content);
-  return sections.filter((s) => s.header && !isSourcebookSection(s.header)).length;
-}
-
-/**
- * Merge fresh sourcebook output with existing content,
- * preserving any manually added sections.
- */
-function mergeContent(existing: string, fresh: string): string {
-  const existingSections = parseSections(existing);
-  const freshSections = parseSections(fresh);
-
-  // Extract manual sections from existing content
-  const manualSections = existingSections.filter(
-    (s) => s.header && !isSourcebookSection(s.header)
-  );
-
-  if (manualSections.length === 0) {
-    // No manual sections — just use the fresh content
-    return fresh;
-  }
-
-  // Find where "What to Add Manually" or last section is in fresh content
-  // Insert manual sections before the footer
-  const result: string[] = [];
-  let insertedManual = false;
-
-  for (const section of freshSections) {
-    // Insert manual sections before the "What to Add Manually" footer
-    if (section.header === "What to Add Manually" && !insertedManual) {
-      for (const manual of manualSections) {
-        result.push(`## ${manual.header}`);
-        result.push(manual.body);
-      }
-      insertedManual = true;
-    }
-
-    if (section.header) {
-      result.push(`## ${section.header}`);
-    }
-    result.push(section.body);
-  }
-
-  // If we never found the footer, append manual sections at the end
-  if (!insertedManual) {
-    for (const manual of manualSections) {
-      result.push(`## ${manual.header}`);
-      result.push(manual.body);
-    }
-  }
-
-  return result.join("\n");
-}
