@@ -537,7 +537,7 @@ function detectDominantPatterns(
     { pattern: "trpc\\.router|createTRPCRouter|from ['\"]@trpc", name: "tRPC routers", count: 0, files: [], lang: "js" },
     { pattern: "express\\.Router|router\\.get|router\\.post", name: "Express routers", count: 0, files: [], lang: "js" },
     { pattern: "from ['\"]express['\"]|require\\(['\"]express['\"]\\)", name: "Express app routes", count: 0, files: [], lang: "js" },
-    { pattern: "from ['\"]fastify['\"]|require\\(['\"]fastify['\"]\\)", name: "Fastify routes", count: 0, files: [], lang: "js" },
+    { pattern: "from ['\"]fastify['\"]|require\\(['\"]fastify['\"]\\)|fastify\\.get\\(|fastify\\.post\\(|fastify\\.route\\(", name: "Fastify routes", count: 0, files: [], lang: "js" },
     { pattern: "new Hono|from ['\"]hono['\"]", name: "Hono routes", count: 0, files: [], lang: "js" },
     { pattern: "FastAPI|@app\\.(get|post|put|delete)", name: "FastAPI endpoints", count: 0, files: [], lang: "py" },
     { pattern: "flask\\.route|@app\\.route", name: "Flask routes", count: 0, files: [], lang: "py" },
