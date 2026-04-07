@@ -148,6 +148,24 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
   // (LLMs retain end of context second-best)
   // ============================================
 
+  // "Check before act" — guide the agent to verify before making changes
+  const hasHubs = scan.rankedFiles && scan.rankedFiles.length > 0;
+  const hasConventions = important.length > 0;
+  if (hasHubs || hasConventions) {
+    const lines = ["## Before Making Changes", ""];
+    if (hasHubs) {
+      lines.push("- **Check file importance** before editing. Hub files (listed in Core Modules) affect many other files — changes here have the widest blast radius.");
+    }
+    if (hasConventions) {
+      lines.push("- **Follow existing patterns.** This project has established conventions (listed above). Match them instead of introducing new approaches.");
+    }
+    if (critical.length > 0) {
+      lines.push("- **Respect constraints.** Review the Critical Constraints section before making structural changes.");
+    }
+    lines.push("");
+    sections.push({ key: "check_before_act", content: lines.join("\n"), priority: 91 });
+  }
+
   const footer = [
     "## What to Add Manually",
     "",
