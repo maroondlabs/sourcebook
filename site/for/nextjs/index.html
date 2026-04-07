@@ -1,146 +1,200 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
-<head>
+<html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>How Next.js Works — Conventions, Patterns & Architecture | sourcebook</title>
-<meta name="description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files with sourcebook."/>
-<meta property="og:title" content="How Next.js Works | sourcebook"/>
-<meta property="og:description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files with sourcebook."/>
-<meta property="og:type" content="article"/>
-<meta property="og:url" content="https://sourcebook.run/for/nextjs"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="How Next.js Works | sourcebook"/>
-<meta name="twitter:description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files with sourcebook."/>
-<link rel="canonical" href="https://sourcebook.run/for/nextjs"/>
-<meta name="robots" content="index, follow"/>
-<meta name="theme-color" content="#000000"/>
-<link rel="icon" type="image/png" href="/logo.png"/>
-<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-tint":"#006e16","outline-variant":"#c6c6c6","surface-container":"#eeeeee","surface-container-low":"#f3f3f3","surface-container-high":"#e8e8e8","surface-container-highest":"#e2e2e2","surface":"#f9f9f9","on-surface":"#1b1b1b","secondary":"#5f5e5e","outline":"#777777","primary":"#000000","on-primary":"#72ff70","background":"#f9f9f9"},borderRadius:{DEFAULT:"0px",lg:"0px",xl:"0px",full:"0px"},fontFamily:{headline:["Space Grotesk"],body:["Inter"],label:["Space Grotesk"]}}}}
+</script>
 <style>
-  body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
-  .font-mono-tech { font-family: 'Space Grotesk', monospace; }
-  html.dark body { background-color: #000000; color: #FFFFFF; }
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+body{font-family:'Inter',sans-serif}
+h1,h2,h3,h4,.label-mono{font-family:'Space Grotesk',sans-serif}
 </style>
+<title>HOW NEXT.JS WORKS | SOURCEBOOK</title>
+<meta name="description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files."/>
+<link rel="canonical" href="https://sourcebook.run/for/nextjs"/>
+<meta property="og:title" content="How Next.js Works | sourcebook"/>
+<meta property="og:url" content="https://sourcebook.run/for/nextjs"/>
+<meta name="robots" content="index, follow"/>
+<link rel="icon" type="image/png" href="/logo.png"/>
 </head>
-<body>
-
-<!-- Nav -->
-<nav class="border-b border-gray-200 dark:border-gray-800 py-4 px-6">
-  <div class="max-w-4xl mx-auto flex justify-between items-center">
-    <a href="/" class="font-mono-tech font-bold text-lg">sourcebook</a>
-    <div class="flex gap-4 text-sm">
-      <a href="/for/" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">all repos</a>
-      <a href="https://github.com/maroondlabs/sourcebook" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">github</a>
-    </div>
-  </div>
+<body class="bg-white text-black antialiased">
+<nav class="bg-white flex justify-between items-center w-full px-6 py-4 border-b border-black/5 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<a href="/" class="text-xl font-bold text-black font-['Space_Grotesk'] uppercase tracking-tighter">SOURCEBOOK</a>
+<div class="hidden md:flex gap-4">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-xs text-black border-b-2 border-black" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-xs text-gray-500 hover:bg-[#00FF41] hover:text-black transition-none px-1" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-black">terminal</span>
+</div>
 </nav>
 
-<main class="max-w-4xl mx-auto px-6 py-12">
+<main class="max-w-7xl mx-auto px-6 pt-16 pb-12">
 
-  <!-- Hero -->
-  <div class="mb-12">
-    <p class="text-sm text-gray-500 mb-2 font-mono-tech">TypeScript · 27,423 files · 9 findings</p>
-    <h1 class="text-3xl font-bold font-mono-tech mb-3">how next.js actually works</h1>
-    <p class="text-gray-600 dark:text-gray-400">The React framework for the web. Extracted by <a href="https://github.com/maroondlabs/sourcebook" class="underline">sourcebook</a> from the <a href="https://github.com/vercel/next.js" class="underline">vercel/next.js</a> repository.</p>
+<!-- Hero -->
+<section class="mb-12">
+  <div class="flex flex-wrap gap-4 mb-4 text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary">
+    <span class="bg-black text-white px-2 py-0.5">TypeScript</span>
+    <span>27,423 FILES</span>
+    <span class="text-[#00881d]">9 FINDINGS</span>
   </div>
-
-  
-  <!-- Quick Reference -->
-  <section class="mb-12">
-    <h2 class="text-lg font-bold font-mono-tech mb-4">quick reference</h2>
-    <div class="flex flex-wrap"><span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Testing:</strong> Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</span>
-<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Testing:</strong> UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.</span></div>
-  </section>
-
-  
-  <!-- What Matters -->
-  <section class="mb-12">
-    <h2 class="text-lg font-bold font-mono-tech mb-4">what matters</h2>
-    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
-      <ul class="space-y-3">
-        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">TypeScript strict mode is OFF — agents shouldn't add strict type annotations</span></li>
-<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">This is a monorepo — check workspace dependencies before modifying shared code</span></li>
-<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">Generated files detected — editing them directly will break builds</span></li>
-<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">packages/next/src/shared/lib/invariant-error.ts is a hub file (imported by 54 files) — changes here ripple everywhere</span></li>
-      </ul>
+  <h1 class="text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-6 leading-none">
+    HOW NEXT.JS<br/>ACTUALLY WORKS
+  </h1>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <p class="text-lg text-secondary col-span-2 leading-relaxed">The React framework for the web. Conventions, patterns, and architecture extracted from the <a href="https://github.com/vercel/next.js" class="underline">vercel/next.js</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
+    <div class="flex items-end justify-end">
+      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/vercel/next.js">
+        VIEW_REPO <span class="material-symbols-outlined">north_east</span>
+      </a>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Key Findings -->
-  <section class="mb-12">
-    <h2 class="text-lg font-bold font-mono-tech mb-4">key findings</h2>
-    
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
-      <p style="margin: 0; font-size: 14px;">Strict mode is OFF. Don't add strict type annotations that would break existing patterns.</p>
+
+<!-- Quick Reference -->
+<section class="mb-12 bg-surface-container-low p-4 flex flex-wrap gap-6 items-center border-l-4 border-black">
+  <span class="text-xs font-bold font-['Space_Grotesk'] uppercase tracking-tighter">QUICK_REF:</span>
+  <div class="flex flex-wrap gap-3">
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Testing:</b> Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</span>
+  </div>
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+<section class="lg:col-span-8">
+
+
+<!-- What Matters -->
+<div class="p-8 bg-surface-container-low border border-outline-variant/20 mb-12">
+  <h2 class="text-xl font-bold uppercase mb-6 font-['Space_Grotesk']">WHAT_MATTERS</h2>
+  <ul class="space-y-6">
+    <li class="flex gap-4 items-start">
+      <span class="text-[#00881d] font-bold">→</span>
+      <p class="text-sm leading-relaxed">TypeScript strict mode is OFF — agents shouldn't add strict type annotations</p>
+    </li>
+    <li class="flex gap-4 items-start">
+      <span class="text-[#00881d] font-bold">→</span>
+      <p class="text-sm leading-relaxed">This is a monorepo — check workspace dependencies before modifying shared code</p>
+    </li>
+    <li class="flex gap-4 items-start">
+      <span class="text-[#00881d] font-bold">→</span>
+      <p class="text-sm leading-relaxed">Generated files detected — editing them directly will break builds</p>
+    </li>
+    <li class="flex gap-4 items-start">
+      <span class="text-[#00881d] font-bold">→</span>
+      <p class="text-sm leading-relaxed">packages/next/src/shared/lib/invariant-error.ts is a hub file (imported by 54 files) — changes here ripple everywhere</p>
+    </li>
+  </ul>
+</div>
+
+<!-- Key Findings -->
+<div class="mb-12">
+  <h2 class="text-2xl font-bold uppercase mb-6 flex items-center gap-2 font-['Space_Grotesk']">
+    <span class="w-8 h-1 bg-black"></span> KEY_FINDINGS
+  </h2>
+  <div class="space-y-4">
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Strict mode is OFF. Don't add strict type annotations that would break existing patterns.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
       
     </div>
-
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
-      <p style="margin: 0; font-size: 14px;">Path aliases configured: development-sandbox, next-test-utils, next-webdriver, e2e-utils, test-data-service, test-log, router-act, @next/playwright. Use these instead of relative imports.</p>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Path aliases configured: development-sandbox, next-test-utils, next-webdriver, e2e-utils, test-data-service, test-log, router-act, @next/playwright. Use these instead of relative imports.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
       
     </div>
-
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
-      <p style="margin: 0; font-size: 14px;">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.</p>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
       
     </div>
-
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
-      <p style="margin: 0; font-size: 14px;">Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</p>
-      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">4 test files</p>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">4 test files</code>
     </div>
-
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
-      <p style="margin: 0; font-size: 14px;">Generated files detected (test/integration/relay-graphql-swc-single-project/queries/__generated__/pagesQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-b/__generated__/pagesBQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-a/__generated__/pagesAQuery.graphql.ts, examples/with-xata/utils/xata.codegen.ts, examples/with-typescript-graphql/codegen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
-      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">19 generated files</p>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Generated files detected (test/integration/relay-graphql-swc-single-project/queries/__generated__/pagesQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-b/__generated__/pagesBQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-a/__generated__/pagesAQuery.graphql.ts, examples/with-xata/utils/xata.codegen.ts, examples/with-typescript-graphql/codegen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">19 generated files</code>
     </div>
-
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
-      <p style="margin: 0; font-size: 14px;">Limited git history available (shallow clone). Clone with full history for git insights.</p>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Limited git history available (shallow clone). Clone with full history for git insights.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
       
     </div>
-
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
-      <p style="margin: 0; font-size: 14px;">Hub files (most depended on): packages/next/src/shared/lib/invariant-error.ts (imported by 54 files); packages/next/src/server/config-shared.ts (imported by 49 files); packages/next/src/server/route-modules/app-page/module.compiled.js (imported by 48 files); packages/next/src/server/request/params.ts (imported by 45 files); packages/next/src/shared/lib/app-router-types.ts (imported by 42 files). Changes here have the widest blast radius.</p>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Hub files (most depended on): packages/next/src/shared/lib/invariant-error.ts (imported by 54 files); packages/next/src/server/config-shared.ts (imported by 49 files); packages/next/src/server/route-modules/app-page/module.compiled.js (imported by 48 files); packages/next/src/server/request/params.ts (imported by 45 files); packages/next/src/shared/lib/app-router-types.ts (imported by 42 files). Changes here have the widest blast radius.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
       
     </div>
-
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
-      <p style="margin: 0; font-size: 14px;">Circular import chains detected: describe.ts → compose.ts → index.ts → runner.ts; index.ts → runner.ts; module.js. Avoid adding to these cycles.</p>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Circular import chains detected: describe.ts → compose.ts → index.ts → runner.ts; index.ts → runner.ts; module.js. Avoid adding to these cycles.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
       
     </div>
     
     <details class="mt-4">
-      <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700">+ 1 more finding (medium confidence)</summary>
-      <div class="mt-4">
-    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #eab308;">
-      <p style="margin: 0; font-size: 14px;">UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.</p>
-      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">3 component directories</p>
-    </div></div>
+      <summary class="text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary cursor-pointer hover:text-black">+ 1 MORE FINDINGS (MEDIUM CONFIDENCE)</summary>
+      <div class="mt-4 space-y-4">
+        <div class="border-l-4 border-yellow-400 bg-white p-6">
+          <div class="flex justify-between items-start mb-2">
+            <p class="font-medium text-sm">UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.</p>
+            <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
+          </div>
+          <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">3 component directories</code>
+        </div>
+      </div>
     </details>
-  </section>
+  </div>
+</div>
 
-  
-  <!-- AI Tools Guidance -->
-  <section class="mb-12">
-    <h2 class="text-lg font-bold font-mono-tech mb-4">using AI tools on this repo</h2>
-    <div class="bg-black text-green-400 rounded-lg p-6 font-mono text-sm">
-      <p class="text-gray-400 mb-3">before making changes, your agent should:</p>
-      <p class="mb-1">→ Avoid editing generated files directly — modify the source/schema instead</p>
-<p class="mb-1">→ Check file importance before editing hub files — they affect many dependents</p>
-<p class="mb-1">→ Follow existing patterns listed above instead of introducing new approaches</p>
-    </div>
-  </section>
+</section>
+<aside class="lg:col-span-4 space-y-8">
 
-  <!-- Full CLAUDE.md -->
-  <section class="mb-12">
-    <h2 class="text-lg font-bold font-mono-tech mb-4">full CLAUDE.md</h2>
-    <details>
-      <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700 mb-2">show generated CLAUDE.md</summary>
-      <pre class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-xs overflow-x-auto whitespace-pre-wrap"># CLAUDE.md
+
+<!-- AI Tools Sidebar -->
+<div class="bg-black p-6 text-[#00FF41] border border-[#00FF41]/20">
+  <h3 class="font-['Space_Grotesk'] font-bold text-xs uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+    <span class="material-symbols-outlined text-sm">smart_toy</span> USING_AI_TOOLS
+  </h3>
+  <ul class="space-y-4 font-['Space_Grotesk'] text-xs uppercase tracking-wider leading-loose">
+    <li class="flex gap-3"><span>→</span><span>avoid editing generated files — modify the source/schema instead</span></li>
+    <li class="flex gap-3"><span>→</span><span>check file importance before editing hub files</span></li>
+    <li class="flex gap-3"><span>→</span><span>follow existing patterns listed in quick reference</span></li>
+  </ul>
+</div>
+
+<!-- CLAUDE.md -->
+<details class="group bg-surface-container-low border border-outline-variant/20 overflow-hidden">
+  <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-container-high transition-none list-none">
+    <span class="text-xs font-bold font-['Space_Grotesk'] uppercase">CLAUDE.MD</span>
+    <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+  </summary>
+  <div class="p-4 pt-0">
+    <pre class="bg-white border border-outline-variant/30 p-3 font-mono text-[10px] leading-relaxed text-secondary overflow-y-auto max-h-64 whitespace-pre-wrap"># CLAUDE.md
 
 This file provides guidance to Claude Code when working with this codebase.
 Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit — the best context comes from human + machine together.
@@ -221,36 +275,37 @@ The most valuable context is what only you know. Add:
 - Domain-specific rules or terminology
 - Environment setup beyond what .env.example shows
 </pre>
-    </details>
-  </section>
+  </div>
+</details>
 
-  <!-- CTA -->
-  <section class="mb-12 text-center py-8 border-t border-b border-gray-200 dark:border-gray-800">
-    <p class="text-sm text-gray-500 mb-2">generated in ~3 seconds with</p>
-    <code class="block text-lg font-mono-tech font-bold mb-4">npx sourcebook init</code>
-    <p class="text-sm text-gray-500">generate this for your own repo. free, no API keys.</p>
-    <a href="https://github.com/maroondlabs/sourcebook" class="inline-block mt-4 bg-black text-white dark:bg-white dark:text-black px-6 py-2 rounded-lg text-sm font-medium hover:opacity-80">view on github</a>
-  </section>
+</aside>
+</div>
 
-  
-  <!-- Related Repos -->
-  <section class="mb-12">
-    <h2 class="text-lg font-bold font-mono-tech mb-4">similar repos</h2>
-    <div class="flex flex-wrap gap-3">
-      <a href="/for/calcom" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Cal.com</a>
-<a href="/for/supabase" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Supabase</a>
-    </div>
-  </section>
+<!-- CTA -->
+<section class="py-16 border-y border-outline-variant/20 flex flex-col items-center text-center">
+  <span class="text-[10px] font-['Space_Grotesk'] uppercase tracking-[0.3em] mb-4 text-secondary">GENERATED IN ~3 SECONDS WITH</span>
+  <h2 class="text-4xl md:text-6xl font-bold font-['Space_Grotesk'] mb-8 tracking-tighter">npx sourcebook init</h2>
+  <a class="bg-black text-white px-10 py-4 font-bold uppercase tracking-widest hover:bg-[#00FF41] hover:text-black transition-none flex items-center gap-4 font-['Space_Grotesk']" href="https://github.com/maroondlabs/sourcebook">
+    VIEW ON GITHUB <span class="material-symbols-outlined">star</span>
+  </a>
+</section>
+
+
+<!-- Related -->
+<section class="mt-12">
+  <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">RELATED_REPOS</h3>
+  <div class="flex flex-wrap gap-3">
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/calcom">CAL.COM</a>
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/supabase">SUPABASE</a>
+  </div>
+</section>
 
 </main>
-
-<!-- Footer -->
-<footer class="border-t border-gray-200 dark:border-gray-800 py-6 px-6">
-  <div class="max-w-4xl mx-auto flex justify-between items-center text-sm text-gray-500">
-    <a href="/" class="font-mono-tech">sourcebook</a>
-    <span>project knowledge for coding agents</span>
-  </div>
+<footer class="bg-white flex justify-between items-center w-full px-6 py-8 border-t border-black/5">
+<div class="flex items-center gap-4">
+<span class="font-bold text-black font-['Space_Grotesk'] uppercase tracking-widest text-xs">SOURCEBOOK</span>
+<span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.8.3</span>
+</div>
+<a class="font-['Space_Grotesk'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00FF41]" href="/">PROJECT KNOWLEDGE FOR CODING AGENTS</a>
 </footer>
-
-</body>
-</html>
+</body></html>
