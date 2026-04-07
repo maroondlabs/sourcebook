@@ -181,7 +181,7 @@ function isEntryPointFile(file: string): boolean {
  * Extract import paths from a source file using regex.
  * Not as robust as Tree-sitter but fast and sufficient for graph building.
  */
-function extractImports(content: string): string[] {
+export function extractImports(content: string): string[] {
   // Strip block comments (including JSDoc) to avoid matching import() inside
   // annotations like /** @type {import('./types').Foo} */
   const stripped = content.replace(/\/\*[\s\S]*?\*\//g, "");
@@ -215,7 +215,7 @@ function extractImports(content: string): string[] {
 /**
  * Resolve an import path to an actual file in the project.
  */
-function resolveImport(
+export function resolveImport(
   importPath: string,
   fromFile: string,
   fileSet: Set<string>,
@@ -267,7 +267,7 @@ function resolveImport(
  * Simple PageRank implementation.
  * No external dependencies needed.
  */
-function pageRank(
+export function pageRank(
   nodes: string[],
   edges: ImportEdge[],
   iterations: number,

@@ -83,7 +83,7 @@ export async function detectPatterns(
  * Strip comments from source code before pattern matching.
  * Prevents false positives from commented-out code or documentation.
  */
-function stripComments(content: string): string {
+export function stripComments(content: string): string {
   // HTML comments
   content = content.replace(/<!--[\s\S]*?-->/g, "");
   // Python triple-quoted docstrings
@@ -96,7 +96,7 @@ function stripComments(content: string): string {
   return content;
 }
 
-function sampleFiles(
+export function sampleFiles(
   files: string[],
   maxCount: number,
   importanceHints?: { highImportFiles: string[]; highChurnFiles: string[] }

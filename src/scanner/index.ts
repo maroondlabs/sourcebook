@@ -92,7 +92,7 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
   };
 }
 
-function detectRepoMode(dir: string, files: string[], frameworks: string[]): "app" | "library" | "monorepo" {
+export function detectRepoMode(dir: string, files: string[], frameworks: string[]): "app" | "library" | "monorepo" {
   // --- Monorepo detection ---
   const hasMonorepoFile = files.some(
     (f) => f === "pnpm-workspace.yaml" || f === "lerna.json" || f === "nx.json" || f === "turbo.json"
@@ -158,7 +158,7 @@ function detectRepoMode(dir: string, files: string[], frameworks: string[]): "ap
   return "app";
 }
 
-function detectLanguages(files: string[]): string[] {
+export function detectLanguages(files: string[]): string[] {
   const extMap: Record<string, string> = {
     ".ts": "TypeScript",
     ".tsx": "TypeScript",
@@ -294,7 +294,7 @@ function rankFileImportance(
  * Adjusts confidence dynamically — weak detections get demoted so they
  * move to supplementary sections or get dropped entirely.
  */
-function validateFindings(
+export function validateFindings(
   findings: Finding[],
   rankedFiles: { file: string; score: number }[],
   activeAreas: string[],
