@@ -1,0 +1,42 @@
+[
+  {
+    "slug": "nextjs",
+    "name": "Next.js",
+    "repo": "vercel/next.js",
+    "description": "The React framework for the web",
+    "language": "TypeScript",
+    "related": ["calcom", "supabase"]
+  },
+  {
+    "slug": "fastapi",
+    "name": "FastAPI",
+    "repo": "fastapi/fastapi",
+    "description": "Modern Python web framework for building APIs",
+    "language": "Python",
+    "related": ["django", "flask"]
+  },
+  {
+    "slug": "django",
+    "name": "Django",
+    "repo": "django/django",
+    "description": "The web framework for perfectionists with deadlines",
+    "language": "Python",
+    "related": ["fastapi", "flask"]
+  },
+  {
+    "slug": "calcom",
+    "name": "Cal.com",
+    "repo": "calcom/cal.com",
+    "description": "Open-source scheduling infrastructure",
+    "language": "TypeScript",
+    "related": ["nextjs", "supabase"]
+  },
+  {
+    "slug": "supabase",
+    "name": "Supabase",
+    "repo": "supabase/supabase",
+    "description": "The open-source Firebase alternative",
+    "language": "TypeScript",
+    "related": ["nextjs", "calcom"]
+  }
+]

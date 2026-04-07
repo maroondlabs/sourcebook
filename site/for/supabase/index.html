@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How Supabase Works — Conventions, Patterns & Architecture | sourcebook</title>
+<meta name="description" content="How the Supabase repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. packages/ui/src/lib/utils/cn.ts is a hub file (imported by 57 files) — changes here ripple everywhere. Extracted from 14,874 files with sourcebook."/>
+<meta property="og:title" content="How Supabase Works | sourcebook"/>
+<meta property="og:description" content="How the Supabase repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. packages/ui/src/lib/utils/cn.ts is a hub file (imported by 57 files) — changes here ripple everywhere. Extracted from 14,874 files with sourcebook."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/supabase"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How Supabase Works | sourcebook"/>
+<meta name="twitter:description" content="How the Supabase repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. packages/ui/src/lib/utils/cn.ts is a hub file (imported by 57 files) — changes here ripple everywhere. Extracted from 14,874 files with sourcebook."/>
+<link rel="canonical" href="https://sourcebook.run/for/supabase"/>
+<meta name="robots" content="index, follow"/>
+<meta name="theme-color" content="#000000"/>
+<link rel="icon" type="image/png" href="/logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+  .font-mono-tech { font-family: 'Space Grotesk', monospace; }
+  html.dark body { background-color: #000000; color: #FFFFFF; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="border-b border-gray-200 dark:border-gray-800 py-4 px-6">
+  <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <a href="/" class="font-mono-tech font-bold text-lg">sourcebook</a>
+    <div class="flex gap-4 text-sm">
+      <a href="/for/" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">all repos</a>
+      <a href="https://github.com/maroondlabs/sourcebook" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">github</a>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-6 py-12">
+
+  <!-- Hero -->
+  <div class="mb-12">
+    <p class="text-sm text-gray-500 mb-2 font-mono-tech">TypeScript · 14,874 files · 11 findings</p>
+    <h1 class="text-3xl font-bold font-mono-tech mb-3">how supabase actually works</h1>
+    <p class="text-gray-600 dark:text-gray-400">The open-source Firebase alternative. Extracted by <a href="https://github.com/maroondlabs/sourcebook" class="underline">sourcebook</a> from the <a href="https://github.com/supabase/supabase" class="underline">supabase/supabase</a> repository.</p>
+  </div>
+
+  
+  <!-- Quick Reference -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">quick reference</h2>
+    <div class="flex flex-wrap"><span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Data Fetching:</strong> Data fetching uses React Query (useQuery/useMutation)</span></div>
+  </section>
+
+  
+  <!-- What Matters -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">what matters</h2>
+    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+      <ul class="space-y-3">
+        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">This is a monorepo — check workspace dependencies before modifying shared code</span></li>
+<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">packages/ui/src/lib/utils/cn.ts is a hub file (imported by 57 files) — changes here ripple everywhere</span></li>
+<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">Circular import chains detected — avoid adding to these cycles</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Key Findings -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">key findings</h2>
+    
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Local Supabase setup detected (supabase/ directory). Use `supabase db push` for migrations, not the dashboard.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">14 barrel export files found</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">53 named vs 6 default exports in sampled files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">15 files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Limited git history available (shallow clone). Clone with full history for git insights.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Hub files (most depended on): packages/ui/src/lib/utils/cn.ts (imported by 57 files); packages/pg-meta/src/pg-format/index.ts (imported by 40 files); packages/icons/src/createSupabaseIcon.ts (imported by 34 files); apps/studio/data/storage/keys.ts (imported by 24 files); packages/marketing/src/go/schemas.ts (imported by 23 files). Changes here have the widest blast radius.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Circular import chains detected: useCommandMenuTelemetry.ts → useCommandMenuTelemetryContext.tsx; Day5.tsx → index.tsx; CustomersSliderMobile.tsx → index.tsx. Avoid adding to these cycles.</p>
+      
+    </div>
+    
+  </section>
+
+  
+  <!-- AI Tools Guidance -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">using AI tools on this repo</h2>
+    <div class="bg-black text-green-400 rounded-lg p-6 font-mono text-sm">
+      <p class="text-gray-400 mb-3">before making changes, your agent should:</p>
+      <p class="mb-1">→ Check file importance before editing hub files — they affect many dependents</p>
+<p class="mb-1">→ Follow existing patterns listed above instead of introducing new approaches</p>
+    </div>
+  </section>
+
+  <!-- Full CLAUDE.md -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">full CLAUDE.md</h2>
+    <details>
+      <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700 mb-2">show generated CLAUDE.md</summary>
+      <pre class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-xs overflow-x-auto whitespace-pre-wrap"># CLAUDE.md
+
+This file provides guidance to Claude Code when working with this codebase.
+Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit — the best context comes from human + machine together.
+
+## Commands
+
+- **Dev:** `turbo run dev --parallel`
+- **Build:** `turbo run build`
+- **Lint:** `turbo run lint`
+- **typecheck:** `turbo --continue typecheck`
+- **generate:types:** `supabase gen types typescript --local &gt; ./supabase/functions/common/database-types.ts`
+- **authorize-vercel-deploys:** `tsx scripts/authorizeVercelDeploys.ts`
+
+## Critical Constraints
+
+- **Testing:** Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.
+- **Git history:** Limited git history available (shallow clone). Clone with full history for git insights.
+- **Core modules:** Hub files (most depended on): packages/ui/src/lib/utils/cn.ts (imported by 57 files); packages/pg-meta/src/pg-format/index.ts (imported by 40 files); packages/icons/src/createSupabaseIcon.ts (imported by 34 files); apps/studio/data/storage/keys.ts (imported by 24 files); packages/marketing/src/go/schemas.ts (imported by 23 files). Changes here have the widest blast radius.
+- **Circular dependencies:** Circular import chains detected: useCommandMenuTelemetry.ts → useCommandMenuTelemetryContext.tsx; Day5.tsx → index.tsx; CustomersSliderMobile.tsx → index.tsx. Avoid adding to these cycles.
+
+## Stack
+
+Next.js, Expo, Supabase, Tailwind CSS, TypeScript
+
+## Project Structure
+
+- `supabase/` — Supabase configuration and migrations
+- `scripts/` — Build / utility scripts
+- `e2e/` — End-to-end tests
+
+## Core Modules (by structural importance)
+
+- `packages/ui/src/lib/utils/cn.ts`
+- `packages/ui/src/components/Icon/IconBase.tsx`
+- `packages/icons/src/createSupabaseIcon.ts`
+- `packages/pg-meta/src/pg-format/index.ts`
+- `packages/icons/src/defaultAttributes.ts`
+
+## Conventions &amp; Patterns
+
+- **Supabase:** Local Supabase setup detected (supabase/ directory). Use `supabase db push` for migrations, not the dashboard.
+- **Project structure:** This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
+- **Import conventions:** Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.
+- **Export conventions:** Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.
+- **Dominant patterns:** Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.
+
+## Before Making Changes
+
+- **Check file importance** before editing. Hub files (listed in Core Modules) affect many other files — changes here have the widest blast radius.
+- **Follow existing patterns.** This project has established conventions (listed above). Match them instead of introducing new approaches.
+- **Respect constraints.** Review the Critical Constraints section before making structural changes.
+
+If the sourcebook MCP server is available (`sourcebook serve`), verify before acting:
+- `get_blast_radius` — check what breaks if you edit a hub file
+- `query_conventions` — confirm the right pattern before adding new code
+- `get_pressing_questions` — get a briefing before editing an unfamiliar file
+
+## What to Add Manually
+
+The most valuable context is what only you know. Add:
+
+- Architectural decisions and why they were made
+- Past incidents that shaped current conventions
+- Deprecated patterns to avoid in new code
+- Domain-specific rules or terminology
+- Environment setup beyond what .env.example shows
+</pre>
+    </details>
+  </section>
+
+  <!-- CTA -->
+  <section class="mb-12 text-center py-8 border-t border-b border-gray-200 dark:border-gray-800">
+    <p class="text-sm text-gray-500 mb-2">generated in ~3 seconds with</p>
+    <code class="block text-lg font-mono-tech font-bold mb-4">npx sourcebook init</code>
+    <p class="text-sm text-gray-500">generate this for your own repo. free, no API keys.</p>
+    <a href="https://github.com/maroondlabs/sourcebook" class="inline-block mt-4 bg-black text-white dark:bg-white dark:text-black px-6 py-2 rounded-lg text-sm font-medium hover:opacity-80">view on github</a>
+  </section>
+
+  
+  <!-- Related Repos -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">similar repos</h2>
+    <div class="flex flex-wrap gap-3">
+      <a href="/for/nextjs" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Next.js</a>
+<a href="/for/calcom" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Cal.com</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-gray-200 dark:border-gray-800 py-6 px-6">
+  <div class="max-w-4xl mx-auto flex justify-between items-center text-sm text-gray-500">
+    <a href="/" class="font-mono-tech">sourcebook</a>
+    <span>project knowledge for coding agents</span>
+  </div>
+</footer>
+
+</body>
+</html>

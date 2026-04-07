@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How FastAPI Works — Conventions, Patterns & Architecture | sourcebook</title>
+<meta name="description" content="How the FastAPI repo actually works: Uses FastAPI endpoints for routing — follow this pattern, don't add REST routes directly. Extracted from 2,984 files with sourcebook."/>
+<meta property="og:title" content="How FastAPI Works | sourcebook"/>
+<meta property="og:description" content="How the FastAPI repo actually works: Uses FastAPI endpoints for routing — follow this pattern, don't add REST routes directly. Extracted from 2,984 files with sourcebook."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/fastapi"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How FastAPI Works | sourcebook"/>
+<meta name="twitter:description" content="How the FastAPI repo actually works: Uses FastAPI endpoints for routing — follow this pattern, don't add REST routes directly. Extracted from 2,984 files with sourcebook."/>
+<link rel="canonical" href="https://sourcebook.run/for/fastapi"/>
+<meta name="robots" content="index, follow"/>
+<meta name="theme-color" content="#000000"/>
+<link rel="icon" type="image/png" href="/logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+  .font-mono-tech { font-family: 'Space Grotesk', monospace; }
+  html.dark body { background-color: #000000; color: #FFFFFF; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="border-b border-gray-200 dark:border-gray-800 py-4 px-6">
+  <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <a href="/" class="font-mono-tech font-bold text-lg">sourcebook</a>
+    <div class="flex gap-4 text-sm">
+      <a href="/for/" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">all repos</a>
+      <a href="https://github.com/maroondlabs/sourcebook" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">github</a>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-6 py-12">
+
+  <!-- Hero -->
+  <div class="mb-12">
+    <p class="text-sm text-gray-500 mb-2 font-mono-tech">Python · 2,984 files · 9 findings</p>
+    <h1 class="text-3xl font-bold font-mono-tech mb-3">how fastapi actually works</h1>
+    <p class="text-gray-600 dark:text-gray-400">Modern Python web framework for building APIs. Extracted by <a href="https://github.com/maroondlabs/sourcebook" class="underline">sourcebook</a> from the <a href="https://github.com/fastapi/fastapi" class="underline">fastapi/fastapi</a> repository.</p>
+  </div>
+
+  
+  <!-- Quick Reference -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">quick reference</h2>
+    <div class="flex flex-wrap"><span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Routing:</strong> API endpoints use FastAPI endpoints</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Validation:</strong> Use Pydantic BaseModel for data classes</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Testing:</strong> Tests use pytest.</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Routing:</strong> Route definitions live in: fastapi, fastapi/security, fastapi/openapi. Add new endpoints here.</span></div>
+  </section>
+
+  
+  <!-- What Matters -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">what matters</h2>
+    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+      <ul class="space-y-3">
+        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">Uses FastAPI endpoints for routing — follow this pattern, don't add REST routes directly</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Key Findings -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">key findings</h2>
+    
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">FastAPI project. Use Pydantic models for request/response schemas, not raw dicts.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Uses SQLAlchemy/SQLModel for ORM. Database sessions must be properly closed (use dependency injection).</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Uses pytest. Test files should be named `test_*.py` or `*_test.py`.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Tests live in a separate test/ directory, mirroring src/ structure. New tests go there, not next to source files.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">API endpoints use FastAPI endpoints. Follow this pattern for new routes.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">96 files use FastAPI endpoints</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Use Pydantic BaseModel for data classes. This is the project's standard validation approach.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">36 files use Pydantic</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Tests use pytest.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">32 test files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Route definitions live in: fastapi, fastapi/security, fastapi/openapi. Add new endpoints here.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">3 route directories</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Limited git history available (shallow clone). Clone with full history for git insights.</p>
+      
+    </div>
+    
+  </section>
+
+  
+  <!-- AI Tools Guidance -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">using AI tools on this repo</h2>
+    <div class="bg-black text-green-400 rounded-lg p-6 font-mono text-sm">
+      <p class="text-gray-400 mb-3">before making changes, your agent should:</p>
+      <p class="mb-1">→ Don't guess routing patterns — check the detected routing conventions first</p>
+<p class="mb-1">→ Follow existing patterns listed above instead of introducing new approaches</p>
+    </div>
+  </section>
+
+  <!-- Full CLAUDE.md -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">full CLAUDE.md</h2>
+    <details>
+      <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700 mb-2">show generated CLAUDE.md</summary>
+      <pre class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-xs overflow-x-auto whitespace-pre-wrap"># CLAUDE.md
+
+This file provides guidance to Claude Code when working with this codebase.
+Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit — the best context comes from human + machine together.
+
+## Quick Reference
+
+- **routing:** API endpoints use FastAPI endpoints
+- **validation:** Use Pydantic BaseModel for data classes
+- **testing:** Tests use pytest.
+
+## Critical Constraints
+
+- **FastAPI:** Uses SQLAlchemy/SQLModel for ORM. Database sessions must be properly closed (use dependency injection).
+- **Git history:** Limited git history available (shallow clone). Clone with full history for git insights.
+
+## Stack
+
+FastAPI
+
+## Project Structure
+
+- `tests/` — Tests
+- `scripts/` — Build / utility scripts
+- `docs/` — Documentation
+
+## Conventions &amp; Patterns
+
+- **FastAPI:** FastAPI project. Use Pydantic models for request/response schemas, not raw dicts.
+- **Testing:**
+  - Uses pytest. Test files should be named `test_*.py` or `*_test.py`.
+  - Tests live in a separate test/ directory, mirroring src/ structure. New tests go there, not next to source files.
+- **Dominant patterns:**
+  - API endpoints use FastAPI endpoints. Follow this pattern for new routes.
+  - Use Pydantic BaseModel for data classes. This is the project's standard validation approach.
+  - Tests use pytest.
+  - Route definitions live in: fastapi, fastapi/security, fastapi/openapi. Add new endpoints here.
+
+## Before Making Changes
+
+- **Follow existing patterns.** This project has established conventions (listed above). Match them instead of introducing new approaches.
+- **Respect constraints.** Review the Critical Constraints section before making structural changes.
+
+If the sourcebook MCP server is available (`sourcebook serve`), verify before acting:
+- `get_blast_radius` — check what breaks if you edit a hub file
+- `query_conventions` — confirm the right pattern before adding new code
+- `get_pressing_questions` — get a briefing before editing an unfamiliar file
+
+## What to Add Manually
+
+The most valuable context is what only you know. Add:
+
+- Architectural decisions and why they were made
+- Past incidents that shaped current conventions
+- Deprecated patterns to avoid in new code
+- Domain-specific rules or terminology
+- Environment setup beyond what .env.example shows
+</pre>
+    </details>
+  </section>
+
+  <!-- CTA -->
+  <section class="mb-12 text-center py-8 border-t border-b border-gray-200 dark:border-gray-800">
+    <p class="text-sm text-gray-500 mb-2">generated in ~3 seconds with</p>
+    <code class="block text-lg font-mono-tech font-bold mb-4">npx sourcebook init</code>
+    <p class="text-sm text-gray-500">generate this for your own repo. free, no API keys.</p>
+    <a href="https://github.com/maroondlabs/sourcebook" class="inline-block mt-4 bg-black text-white dark:bg-white dark:text-black px-6 py-2 rounded-lg text-sm font-medium hover:opacity-80">view on github</a>
+  </section>
+
+  
+  <!-- Related Repos -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">similar repos</h2>
+    <div class="flex flex-wrap gap-3">
+      <a href="/for/django" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Django</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-gray-200 dark:border-gray-800 py-6 px-6">
+  <div class="max-w-4xl mx-auto flex justify-between items-center text-sm text-gray-500">
+    <a href="/" class="font-mono-tech">sourcebook</a>
+    <span>project knowledge for coding agents</span>
+  </div>
+</footer>
+
+</body>
+</html>

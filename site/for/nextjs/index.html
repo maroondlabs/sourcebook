@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How Next.js Works — Conventions, Patterns & Architecture | sourcebook</title>
+<meta name="description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files with sourcebook."/>
+<meta property="og:title" content="How Next.js Works | sourcebook"/>
+<meta property="og:description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files with sourcebook."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/nextjs"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How Next.js Works | sourcebook"/>
+<meta name="twitter:description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files with sourcebook."/>
+<link rel="canonical" href="https://sourcebook.run/for/nextjs"/>
+<meta name="robots" content="index, follow"/>
+<meta name="theme-color" content="#000000"/>
+<link rel="icon" type="image/png" href="/logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+  .font-mono-tech { font-family: 'Space Grotesk', monospace; }
+  html.dark body { background-color: #000000; color: #FFFFFF; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="border-b border-gray-200 dark:border-gray-800 py-4 px-6">
+  <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <a href="/" class="font-mono-tech font-bold text-lg">sourcebook</a>
+    <div class="flex gap-4 text-sm">
+      <a href="/for/" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">all repos</a>
+      <a href="https://github.com/maroondlabs/sourcebook" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">github</a>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-6 py-12">
+
+  <!-- Hero -->
+  <div class="mb-12">
+    <p class="text-sm text-gray-500 mb-2 font-mono-tech">TypeScript · 27,423 files · 9 findings</p>
+    <h1 class="text-3xl font-bold font-mono-tech mb-3">how next.js actually works</h1>
+    <p class="text-gray-600 dark:text-gray-400">The React framework for the web. Extracted by <a href="https://github.com/maroondlabs/sourcebook" class="underline">sourcebook</a> from the <a href="https://github.com/vercel/next.js" class="underline">vercel/next.js</a> repository.</p>
+  </div>
+
+  
+  <!-- Quick Reference -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">quick reference</h2>
+    <div class="flex flex-wrap"><span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Testing:</strong> Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Testing:</strong> UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.</span></div>
+  </section>
+
+  
+  <!-- What Matters -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">what matters</h2>
+    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+      <ul class="space-y-3">
+        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">TypeScript strict mode is OFF — agents shouldn't add strict type annotations</span></li>
+<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">This is a monorepo — check workspace dependencies before modifying shared code</span></li>
+<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">Generated files detected — editing them directly will break builds</span></li>
+<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">packages/next/src/shared/lib/invariant-error.ts is a hub file (imported by 54 files) — changes here ripple everywhere</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Key Findings -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">key findings</h2>
+    
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Strict mode is OFF. Don't add strict type annotations that would break existing patterns.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Path aliases configured: development-sandbox, next-test-utils, next-webdriver, e2e-utils, test-data-service, test-log, router-act, @next/playwright. Use these instead of relative imports.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">4 test files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Generated files detected (test/integration/relay-graphql-swc-single-project/queries/__generated__/pagesQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-b/__generated__/pagesBQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-a/__generated__/pagesAQuery.graphql.ts, examples/with-xata/utils/xata.codegen.ts, examples/with-typescript-graphql/codegen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">19 generated files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Limited git history available (shallow clone). Clone with full history for git insights.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Hub files (most depended on): packages/next/src/shared/lib/invariant-error.ts (imported by 54 files); packages/next/src/server/config-shared.ts (imported by 49 files); packages/next/src/server/route-modules/app-page/module.compiled.js (imported by 48 files); packages/next/src/server/request/params.ts (imported by 45 files); packages/next/src/shared/lib/app-router-types.ts (imported by 42 files). Changes here have the widest blast radius.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Circular import chains detected: describe.ts → compose.ts → index.ts → runner.ts; index.ts → runner.ts; module.js. Avoid adding to these cycles.</p>
+      
+    </div>
+    
+    <details class="mt-4">
+      <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700">+ 1 more finding (medium confidence)</summary>
+      <div class="mt-4">
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #eab308;">
+      <p style="margin: 0; font-size: 14px;">UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">3 component directories</p>
+    </div></div>
+    </details>
+  </section>
+
+  
+  <!-- AI Tools Guidance -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">using AI tools on this repo</h2>
+    <div class="bg-black text-green-400 rounded-lg p-6 font-mono text-sm">
+      <p class="text-gray-400 mb-3">before making changes, your agent should:</p>
+      <p class="mb-1">→ Avoid editing generated files directly — modify the source/schema instead</p>
+<p class="mb-1">→ Check file importance before editing hub files — they affect many dependents</p>
+<p class="mb-1">→ Follow existing patterns listed above instead of introducing new approaches</p>
+    </div>
+  </section>
+
+  <!-- Full CLAUDE.md -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">full CLAUDE.md</h2>
+    <details>
+      <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700 mb-2">show generated CLAUDE.md</summary>
+      <pre class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-xs overflow-x-auto whitespace-pre-wrap"># CLAUDE.md
+
+This file provides guidance to Claude Code when working with this codebase.
+Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit — the best context comes from human + machine together.
+
+## Quick Reference
+
+- **testing:** Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.
+
+## Commands
+
+- **Dev:** `turbo run dev --parallel --filter=&quot;!@next/bundle-analyzer-ui&quot;`
+- **Build:** `turbo run build --remote-cache-timeout 60 --summarize true`
+- **Test:** `pnpm test-webpack`
+- **Lint:** `run-p test-types lint-typescript prettier-check &quot;lint-eslint .&quot; lint-ast-grep lint-language check-unused-turbo-tasks`
+- **test-deploy-inner:** `cross-env NEXT_TEST_MODE=deploy pnpm testheadless`
+- **test-deploy:** `pnpm run test-deploy-webpack`
+- **test-deploy-webpack:** `pnpm run with-webpack pnpm test-deploy-inner`
+- **test-deploy-turbo:** `pnpm run with-turbo pnpm test-deploy-inner`
+- **testonly-deploy-inner:** `cross-env NEXT_TEST_MODE=deploy pnpm testonly`
+- **testonly-deploy:** `pnpm run testonly-deploy-webpack`
+- **testonly-deploy-webpack:** `pnpm run with-webpack pnpm run testonly-deploy-inner`
+- **testonly-deploy-turbo:** `pnpm run with-turbo pnpm testonly-deploy-inner`
+
+## Critical Constraints
+
+- **TypeScript:** Strict mode is OFF. Don't add strict type annotations that would break existing patterns.
+- **Critical constraints:** Generated files detected (test/integration/relay-graphql-swc-single-project/queries/__generated__/pagesQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-b/__generated__/pagesBQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-a/__generated__/pagesAQuery.graphql.ts, examples/with-xata/utils/xata.codegen.ts, examples/with-typescript-graphql/codegen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.
+- **Git history:** Limited git history available (shallow clone). Clone with full history for git insights.
+- **Core modules:** Hub files (most depended on): packages/next/src/shared/lib/invariant-error.ts (imported by 54 files); packages/next/src/server/config-shared.ts (imported by 49 files); packages/next/src/server/route-modules/app-page/module.compiled.js (imported by 48 files); packages/next/src/server/request/params.ts (imported by 45 files); packages/next/src/shared/lib/app-router-types.ts (imported by 42 files). Changes here have the widest blast radius.
+- **Circular dependencies:** Circular import chains detected: describe.ts → compose.ts → index.ts → runner.ts; index.ts → runner.ts; module.js. Avoid adding to these cycles.
+
+## Stack
+
+Next.js, Expo, Supabase, Tailwind CSS, Express, TypeScript
+
+## Project Structure
+
+- `test/` — Tests
+- `scripts/` — Build / utility scripts
+- `docs/` — Documentation
+
+## Core Modules (by structural importance)
+
+- `turbopack/crates/turbopack-tests/tests/execution/turbopack/chunking/combinations/input/d.js`
+- `packages/next/src/shared/lib/invariant-error.ts`
+- `packages/next/src/shared/lib/app-router-types.ts`
+- `packages/next/src/shared/lib/segment-cache/vary-params-decoding.ts`
+- `turbopack/packages/devlow-bench/src/runner.ts`
+
+## Conventions &amp; Patterns
+
+- **TypeScript imports:** Path aliases configured: development-sandbox, next-test-utils, next-webdriver, e2e-utils, test-data-service, test-log, router-act, @next/playwright. Use these instead of relative imports.
+- **Project structure:** This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
+- **Dominant patterns:** Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.
+
+## Additional Context
+
+- **Dominant patterns:** UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.
+
+## Before Making Changes
+
+- **Check file importance** before editing. Hub files (listed in Core Modules) affect many other files — changes here have the widest blast radius.
+- **Follow existing patterns.** This project has established conventions (listed above). Match them instead of introducing new approaches.
+- **Respect constraints.** Review the Critical Constraints section before making structural changes.
+
+If the sourcebook MCP server is available (`sourcebook serve`), verify before acting:
+- `get_blast_radius` — check what breaks if you edit a hub file
+- `query_conventions` — confirm the right pattern before adding new code
+- `get_pressing_questions` — get a briefing before editing an unfamiliar file
+
+## What to Add Manually
+
+The most valuable context is what only you know. Add:
+
+- Architectural decisions and why they were made
+- Past incidents that shaped current conventions
+- Deprecated patterns to avoid in new code
+- Domain-specific rules or terminology
+- Environment setup beyond what .env.example shows
+</pre>
+    </details>
+  </section>
+
+  <!-- CTA -->
+  <section class="mb-12 text-center py-8 border-t border-b border-gray-200 dark:border-gray-800">
+    <p class="text-sm text-gray-500 mb-2">generated in ~3 seconds with</p>
+    <code class="block text-lg font-mono-tech font-bold mb-4">npx sourcebook init</code>
+    <p class="text-sm text-gray-500">generate this for your own repo. free, no API keys.</p>
+    <a href="https://github.com/maroondlabs/sourcebook" class="inline-block mt-4 bg-black text-white dark:bg-white dark:text-black px-6 py-2 rounded-lg text-sm font-medium hover:opacity-80">view on github</a>
+  </section>
+
+  
+  <!-- Related Repos -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">similar repos</h2>
+    <div class="flex flex-wrap gap-3">
+      <a href="/for/calcom" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Cal.com</a>
+<a href="/for/supabase" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Supabase</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-gray-200 dark:border-gray-800 py-6 px-6">
+  <div class="max-w-4xl mx-auto flex justify-between items-center text-sm text-gray-500">
+    <a href="/" class="font-mono-tech">sourcebook</a>
+    <span>project knowledge for coding agents</span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How Cal.com Works — Conventions, Patterns & Architecture | sourcebook</title>
+<meta name="description" content="How the Cal.com repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Generated files detected — editing them directly will break builds. Extracted from 10,458 files with sourcebook."/>
+<meta property="og:title" content="How Cal.com Works | sourcebook"/>
+<meta property="og:description" content="How the Cal.com repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Generated files detected — editing them directly will break builds. Extracted from 10,458 files with sourcebook."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/calcom"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How Cal.com Works | sourcebook"/>
+<meta name="twitter:description" content="How the Cal.com repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Generated files detected — editing them directly will break builds. Extracted from 10,458 files with sourcebook."/>
+<link rel="canonical" href="https://sourcebook.run/for/calcom"/>
+<meta name="robots" content="index, follow"/>
+<meta name="theme-color" content="#000000"/>
+<link rel="icon" type="image/png" href="/logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+  .font-mono-tech { font-family: 'Space Grotesk', monospace; }
+  html.dark body { background-color: #000000; color: #FFFFFF; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="border-b border-gray-200 dark:border-gray-800 py-4 px-6">
+  <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <a href="/" class="font-mono-tech font-bold text-lg">sourcebook</a>
+    <div class="flex gap-4 text-sm">
+      <a href="/for/" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">all repos</a>
+      <a href="https://github.com/maroondlabs/sourcebook" class="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">github</a>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-6 py-12">
+
+  <!-- Hero -->
+  <div class="mb-12">
+    <p class="text-sm text-gray-500 mb-2 font-mono-tech">TypeScript · 10,458 files · 21 findings</p>
+    <h1 class="text-3xl font-bold font-mono-tech mb-3">how cal.com actually works</h1>
+    <p class="text-gray-600 dark:text-gray-400">Open-source scheduling infrastructure. Extracted by <a href="https://github.com/maroondlabs/sourcebook" class="underline">sourcebook</a> from the <a href="https://github.com/calcom/cal.com" class="underline">calcom/cal.com</a> repository.</p>
+  </div>
+
+  
+  <!-- Quick Reference -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">quick reference</h2>
+    <div class="flex flex-wrap"><span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Validation:</strong> Use Zod schemas for validation</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Data Fetching:</strong> Data fetching uses React Query (useQuery/useMutation)</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Testing:</strong> Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Styling:</strong> Styling uses Tailwind CSS utility classes.</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Database:</strong> Database access uses Prisma. Schema/models defined in packages/prisma/schema.prisma.</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Routing:</strong> Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.</span>
+<span class="inline-block bg-gray-100 dark:bg-gray-800 text-sm px-3 py-1 rounded-full mr-2 mb-2"><strong>Routing:</strong> Third-party integrations live under packages/app-store/ (zoomvideo, zohocrm, zohocalendar, zoho-bigin, zapier, wordpress, ...). Each integration has its own directory with components, lib, and API code.</span></div>
+  </section>
+
+  
+  <!-- What Matters -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">what matters</h2>
+    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+      <ul class="space-y-3">
+        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">This is a monorepo — check workspace dependencies before modifying shared code</span></li>
+<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">Generated files detected — editing them directly will break builds</span></li>
+<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">packages/trpc/server/types.ts is a hub file (imported by 172 files) — changes here ripple everywhere</span></li>
+<li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">→</span><span class="text-sm">Circular import chains detected — avoid adding to these cycles</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Key Findings -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">key findings</h2>
+    
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">40 barrel export files found</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Environment variables are documented in .env.example. Copy it to .env.local before running the project.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">26 named vs 2 default exports in sampled files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Use Zod schemas for validation. This is the project's standard validation approach.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">7 files use Zod</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">12 test files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Styling uses Tailwind CSS utility classes.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">12 files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Database access uses Prisma. Schema/models defined in packages/prisma/schema.prisma.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">19 files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Generated files detected (vitest-mocks/tailwind.generated.css, packages/app-store/video.adapters.generated.ts, packages/app-store/redirect-apps.generated.ts, packages/app-store/payment.services.generated.ts, packages/app-store/crm.apps.generated.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">14 generated files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">3 route directories</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Third-party integrations live under packages/app-store/ (zoomvideo, zohocrm, zohocalendar, zoho-bigin, zapier, wordpress, ...). Each integration has its own directory with components, lib, and API code.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">107 integrations found</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Limited git history available (shallow clone). Clone with full history for git insights.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Hub files (most depended on): packages/trpc/server/types.ts (imported by 172 files); packages/platform/atoms/lib/http.ts (imported by 72 files); packages/features/di/di.ts (imported by 60 files); packages/app-store/_utils/getAppKeysFromSlug.ts (imported by 53 files); packages/emails/src/renderEmail.ts (imported by 51 files). Changes here have the widest blast radius.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #22c55e;">
+      <p style="margin: 0; font-size: 14px;">Circular import chains detected: bookingScenario.ts → getMockRequestDataForBooking.ts; create-event-type.input.ts → CantHaveRecurrenceAndBookerActiveBookingsLimit.ts; handleMarkNoShow.ts → handleSendingAttendeeNoShowDataToApps.ts. Avoid adding to these cycles.</p>
+      
+    </div>
+    
+    <details class="mt-4">
+      <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700">+ 3 more findings (medium confidence)</summary>
+      <div class="mt-4">
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #eab308;">
+      <p style="margin: 0; font-size: 14px;">4 env vars detected. Public (browser-exposed): NEXT_PUBLIC_WEBAPP_URL. Private (server-only): CI, PLAYWRIGHT_HEADLESS, PWDEBUG.</p>
+      
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #eab308;">
+      <p style="margin: 0; font-size: 14px;">Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">6 files</p>
+    </div>
+
+    <div style="margin-bottom: 12px; padding-left: 16px; border-left: 2px solid #eab308;">
+      <p style="margin: 0; font-size: 14px;">UI components live in: packages/ui, packages/ui/components, packages/trpc/components. Add new components here.</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">3 component directories</p>
+    </div></div>
+    </details>
+  </section>
+
+  
+  <!-- AI Tools Guidance -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">using AI tools on this repo</h2>
+    <div class="bg-black text-green-400 rounded-lg p-6 font-mono text-sm">
+      <p class="text-gray-400 mb-3">before making changes, your agent should:</p>
+      <p class="mb-1">→ Avoid editing generated files directly — modify the source/schema instead</p>
+<p class="mb-1">→ Check file importance before editing hub files — they affect many dependents</p>
+<p class="mb-1">→ Follow existing patterns listed above instead of introducing new approaches</p>
+    </div>
+  </section>
+
+  <!-- Full CLAUDE.md -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">full CLAUDE.md</h2>
+    <details>
+      <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700 mb-2">show generated CLAUDE.md</summary>
+      <pre class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-xs overflow-x-auto whitespace-pre-wrap"># CLAUDE.md
+
+This file provides guidance to Claude Code when working with this codebase.
+Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit — the best context comes from human + machine together.
+
+## Quick Reference
+
+- **validation:** Use Zod schemas for validation
+- **data fetching:** Data fetching uses React Query (useQuery/useMutation)
+- **testing:** Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.
+- **styling:** Styling uses Tailwind CSS utility classes.
+- **routing:** Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.
+- **components:** UI components live in: packages/ui, packages/ui/components, packages/trpc/components. Add new components here.
+
+## Commands
+
+- **Dev:** `turbo run dev --filter=&quot;@calcom/web&quot;`
+- **Build:** `turbo run build --filter=@calcom/web...`
+- **Test:** `TZ=UTC vitest run`
+- **Lint:** `turbo lint`
+- **db-deploy:** `turbo run db-deploy`
+- **db-seed:** `turbo run db-seed`
+- **deploy:** `turbo run deploy`
+- **deploy:trigger:prod:** `turbo run deploy:trigger:prod --filter=&quot;@calcom/features&quot;`
+- **deploy:trigger:staging:** `turbo run deploy:trigger:staging --filter=&quot;@calcom/features&quot;`
+
+## Critical Constraints
+
+- **Testing:** Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.
+- **Critical constraints:** Generated files detected (vitest-mocks/tailwind.generated.css, packages/app-store/video.adapters.generated.ts, packages/app-store/redirect-apps.generated.ts, packages/app-store/payment.services.generated.ts, packages/app-store/crm.apps.generated.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.
+- **Git history:** Limited git history available (shallow clone). Clone with full history for git insights.
+- **Core modules:** Hub files (most depended on): packages/trpc/server/types.ts (imported by 172 files); packages/platform/atoms/lib/http.ts (imported by 72 files); packages/features/di/di.ts (imported by 60 files); packages/app-store/_utils/getAppKeysFromSlug.ts (imported by 53 files); packages/emails/src/renderEmail.ts (imported by 51 files). Changes here have the widest blast radius.
+- **Circular dependencies:** Circular import chains detected: bookingScenario.ts → getMockRequestDataForBooking.ts; create-event-type.input.ts → CantHaveRecurrenceAndBookerActiveBookingsLimit.ts; handleMarkNoShow.ts → handleSendingAttendeeNoShowDataToApps.ts. Avoid adding to these cycles.
+
+## Stack
+
+Next.js, Tailwind CSS, TypeScript
+
+## Project Structure
+
+- `scripts/` — Build / utility scripts
+- `docs/` — Documentation
+
+## Core Modules (by structural importance)
+
+- `packages/trpc/server/types.ts`
+- `packages/features/webhooks/lib/dto/types.ts`
+- `packages/features/webhooks/lib/interface/IWebhookRepository.ts`
+- `packages/platform/atoms/lib/http.ts`
+- `packages/app-store/_utils/getAppKeysFromSlug.ts`
+
+## Conventions &amp; Patterns
+
+- **Project structure:** This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
+- **Import conventions:** Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.
+- **Environment:** Environment variables are documented in .env.example. Copy it to .env.local before running the project.
+- **Export conventions:** Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.
+- **Dominant patterns:**
+  - Use Zod schemas for validation. This is the project's standard validation approach.
+  - Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.
+  - Styling uses Tailwind CSS utility classes.
+  - Database access uses Prisma. Schema/models defined in packages/prisma/schema.prisma.
+  - Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.
+  - Third-party integrations live under packages/app-store/ (zoomvideo, zohocrm, zohocalendar, zoho-bigin, zapier, wordpress, ...). Each integration has its own directory with components, lib, and API code.
+
+## Additional Context
+
+- **Environment:** 4 env vars detected. Public (browser-exposed): NEXT_PUBLIC_WEBAPP_URL. Private (server-only): CI, PLAYWRIGHT_HEADLESS, PWDEBUG.
+- **Dominant patterns:**
+  - Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.
+  - UI components live in: packages/ui, packages/ui/components, packages/trpc/components. Add new components here.
+
+## Before Making Changes
+
+- **Check file importance** before editing. Hub files (listed in Core Modules) affect many other files — changes here have the widest blast radius.
+- **Follow existing patterns.** This project has established conventions (listed above). Match them instead of introducing new approaches.
+- **Respect constraints.** Review the Critical Constraints section before making structural changes.
+
+If the sourcebook MCP server is available (`sourcebook serve`), verify before acting:
+- `get_blast_radius` — check what breaks if you edit a hub file
+- `query_conventions` — confirm the right pattern before adding new code
+- `get_pressing_questions` — get a briefing before editing an unfamiliar file
+
+## What to Add Manually
+
+The most valuable context is what only you know. Add:
+
+- Architectural decisions and why they were made
+- Past incidents that shaped current conventions
+- Deprecated patterns to avoid in new code
+- Domain-specific rules or terminology
+- Environment setup beyond what .env.example shows
+</pre>
+    </details>
+  </section>
+
+  <!-- CTA -->
+  <section class="mb-12 text-center py-8 border-t border-b border-gray-200 dark:border-gray-800">
+    <p class="text-sm text-gray-500 mb-2">generated in ~3 seconds with</p>
+    <code class="block text-lg font-mono-tech font-bold mb-4">npx sourcebook init</code>
+    <p class="text-sm text-gray-500">generate this for your own repo. free, no API keys.</p>
+    <a href="https://github.com/maroondlabs/sourcebook" class="inline-block mt-4 bg-black text-white dark:bg-white dark:text-black px-6 py-2 rounded-lg text-sm font-medium hover:opacity-80">view on github</a>
+  </section>
+
+  
+  <!-- Related Repos -->
+  <section class="mb-12">
+    <h2 class="text-lg font-bold font-mono-tech mb-4">similar repos</h2>
+    <div class="flex flex-wrap gap-3">
+      <a href="/for/nextjs" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Next.js</a>
+<a href="/for/supabase" class="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700">Supabase</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-gray-200 dark:border-gray-800 py-6 px-6">
+  <div class="max-w-4xl mx-auto flex justify-between items-center text-sm text-gray-500">
+    <a href="/" class="font-mono-tech">sourcebook</a>
+    <span>project knowledge for coding agents</span>
+  </div>
+</footer>
+
+</body>
+</html>
