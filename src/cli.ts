@@ -8,6 +8,7 @@ import { init } from "./commands/init.js";
 import { update } from "./commands/update.js";
 import { diff } from "./commands/diff.js";
 import { watch } from "./commands/watch.js";
+import { ask } from "./commands/ask.js";
 import { activate } from "./commands/activate.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -104,6 +105,14 @@ program
     if (pathArg) options.dir = pathArg;
     return watch(options);
   });
+
+program
+  .command("ask")
+  .description("Query your codebase knowledge in natural language")
+  .argument("<question>", "Natural language question about your codebase")
+  .option("-d, --dir <path>", "Target directory to analyze", ".")
+  .option("--json", "Output as JSON")
+  .action((question, options) => ask(question, options));
 
 program
   .command("activate <key>")
