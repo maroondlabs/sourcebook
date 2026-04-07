@@ -163,6 +163,11 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
       lines.push("- **Respect constraints.** Review the Critical Constraints section before making structural changes.");
     }
     lines.push("");
+    lines.push("If the sourcebook MCP server is available (`sourcebook serve`), verify before acting:");
+    lines.push("- `get_blast_radius` — check what breaks if you edit a hub file");
+    lines.push("- `query_conventions` — confirm the right pattern before adding new code");
+    lines.push("- `get_pressing_questions` — get a briefing before editing an unfamiliar file");
+    lines.push("");
     sections.push({ key: "check_before_act", content: lines.join("\n"), priority: 91 });
   }
 
