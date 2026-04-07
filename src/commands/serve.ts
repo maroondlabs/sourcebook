@@ -199,6 +199,21 @@ async function handleAnalyzeCodebase(
 }
 
 /**
+ * Build a human-readable explanation of why a finding was detected.
+ */
+function buildWhy(f: Finding): string {
+  const parts: string[] = [];
+  if (f.evidenceFiles && f.evidenceFiles.length > 0) {
+    parts.push(`found in ${f.evidenceFiles.length} file${f.evidenceFiles.length > 1 ? "s" : ""}`);
+  }
+  if (f.evidence) {
+    parts.push(f.evidence);
+  }
+  parts.push(`confidence: ${f.confidence}`);
+  return parts.join(", ");
+}
+
+/**
  * Check if a finding is relevant to a specific file.
  * Uses evidenceFiles for precise matching, falls back to description matching.
  */
@@ -248,9 +263,18 @@ async function handleGetFileContext(
     (f) => f.category === "Hidden dependencies" && findingMatchesFile(f, file)
   );
 
+  // Build human-readable summary
+  const summaryParts: string[] = [];
+  if (hubFinding) summaryParts.push("hub file (high blast radius)");
+  if (coChangeFinding) summaryParts.push("has co-change partners");
+  if (relevantFindings.length > 0) summaryParts.push(`${relevantFindings.length} relevant finding${relevantFindings.length > 1 ? "s" : ""}`);
+
   return {
     file,
     exists: scan.files.includes(file),
+    summary: summaryParts.length > 0
+      ? `${file}: ${summaryParts.join(", ")}`
+      : `${file}: no special concerns found`,
     importance: fileRank
       ? {
           score: Math.round(fileRank.score * 10000) / 10000,
@@ -265,6 +289,9 @@ async function handleGetFileContext(
       category: f.category,
       description: f.description,
       confidence: f.confidence,
+      evidence: f.evidence || null,
+      evidenceFiles: f.evidenceFiles?.slice(0, 10) || null,
+      why: buildWhy(f),
     })),
     applicableConventions: conventions.map((f) => ({
       category: f.category,
@@ -308,8 +335,25 @@ async function handleGetBlastRadius(
   const ranked = scan.rankedFiles || [];
   const fileRank = ranked.find((r) => r.file === file);
 
+  // Compute risk level with more factors
+  const riskFactors: string[] = [];
+  if (hubFinding) riskFactors.push("hub file (many dependents)");
+  if (directDependents.length >= 5) riskFactors.push(`${directDependents.length} direct dependents`);
+  if (circularFinding) riskFactors.push("involved in circular dependency");
+  if (fragileFinding) riskFactors.push("historically fragile (frequent re-edits)");
+  if (coChangeFinding) riskFactors.push("has co-change partners that may need updating");
+
+  const riskLevel = hubFinding || directDependents.length >= 10
+    ? "high"
+    : circularFinding || fragileFinding || directDependents.length >= 5
+      ? "medium"
+      : "low";
+
   return {
     file,
+    summary: riskFactors.length > 0
+      ? `${file}: ${riskLevel} risk — ${riskFactors.join("; ")}`
+      : `${file}: low risk — no special concerns`,
     importance: fileRank
       ? Math.round(fileRank.score * 10000) / 10000
       : null,
@@ -322,18 +366,8 @@ async function handleGetBlastRadius(
     fragileDetail: fragileFinding?.description || null,
     inCircularDep: !!circularFinding,
     circularDetail: circularFinding?.description || null,
-    graphFindings: scan.findings
-      .filter((f) => ["Core modules", "Circular dependencies", "Dead code candidates"].includes(f.category))
-      .map((f) => ({
-        category: f.category,
-        description: f.description,
-        confidence: f.confidence,
-      })),
-    riskLevel: hubFinding
-      ? "high"
-      : circularFinding || fragileFinding
-        ? "medium"
-        : "low",
+    riskLevel,
+    riskFactors,
   };
 }
 
@@ -383,11 +417,14 @@ async function handleQueryConventions(
   }
 
   return {
+    summary: `${conventions.length} convention${conventions.length !== 1 ? "s" : ""} detected across ${new Set(conventions.map((f) => f.category)).size} categories`,
     conventions: conventions.map((f) => ({
       category: f.category,
       description: f.description,
-      rationale: f.rationale,
       confidence: f.confidence,
+      evidence: f.evidence || null,
+      evidenceFiles: f.evidenceFiles?.slice(0, 10) || null,
+      why: buildWhy(f),
     })),
     frameworks: scan.frameworks,
     repoMode: scan.repoMode,
