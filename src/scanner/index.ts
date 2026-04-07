@@ -51,17 +51,23 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
   // Detect repo mode early so it can inform pattern detection
   const repoMode = detectRepoMode(dir, files, frameworks.map((f) => f.name));
 
-  // Quick file importance ranking for smarter sampling
-  const importanceHints = rankFileImportance(dir, files);
+  // Build import graph first — PageRank results inform pattern sampling
+  const graphAnalysis = await analyzeImportGraph(dir, files);
+
+  // Quick git churn ranking for sampling (lightweight, single git command)
+  const highChurnFiles = getHighChurnFiles(dir);
+
+  // Use PageRank top files + git churn for smarter pattern sampling
+  const importanceHints = {
+    highImportFiles: graphAnalysis.rankedFiles.slice(0, 20).map((r) => r.file),
+    highChurnFiles,
+  };
 
   // Detect code patterns and conventions (the non-obvious stuff)
   const patterns = await detectPatterns(dir, files, frameworks.map((fw) => fw.name), repoMode, importanceHints);
 
   // Analyze git history for decision shadows and hidden dependencies
   const gitAnalysis = await analyzeGitHistory(dir);
-
-  // Build import graph and run PageRank for structural importance
-  const graphAnalysis = await analyzeImportGraph(dir, files);
 
   // Cross-validate pattern findings against structural and historical signals
   const validatedPatterns = validateFindings(
@@ -185,85 +191,10 @@ export function detectLanguages(files: string[]): string[] {
 }
 
 /**
- * Lightweight file importance ranking for hybrid sampling.
- * Runs before full graph/git analysis — fast fan-in count + git churn.
+ * Quick git churn ranking — most-changed files in the last 3 months.
+ * Single git command, returns top-20 file paths.
  */
-function rankFileImportance(
-  dir: string,
-  files: string[],
-): { highImportFiles: string[]; highChurnFiles: string[] } {
-  const highImportFiles: string[] = [];
-  const highChurnFiles: string[] = [];
-
-  // --- Quick fan-in count (who gets imported the most?) ---
-  const sourceFiles = files.filter(
-    (f) =>
-      /\.(ts|tsx|js|jsx)$/.test(f) &&
-      !f.endsWith(".d.ts") &&
-      !f.includes("node_modules")
-  );
-
-  if (sourceFiles.length >= 10) {
-    const fileSet = new Set(sourceFiles);
-    const fanIn = new Map<string, number>();
-
-    // Sample up to 200 files for import scanning
-    const sorted = sourceFiles.slice().sort();
-    const step = Math.max(1, Math.floor(sorted.length / 200));
-    const sample = sorted.filter((_, i) => i % step === 0).slice(0, 200);
-
-    for (const file of sample) {
-      const filePath = path.resolve(path.join(dir, file));
-      if (!filePath.startsWith(path.resolve(dir) + path.sep)) continue;
-      let content: string;
-      try {
-        // Read only first 2KB — imports are at the top
-        const fd = fs.openSync(filePath, "r");
-        const buf = Buffer.alloc(2048);
-        const bytesRead = fs.readSync(fd, buf, 0, 2048, 0);
-        fs.closeSync(fd);
-        content = buf.toString("utf-8", 0, bytesRead);
-      } catch {
-        continue;
-      }
-
-      // Extract import targets
-      const importPaths: string[] = [];
-      for (const m of content.matchAll(/(?:import|export)\s+.*?\s+from\s+['"]([^'"]+)['"]/g)) {
-        importPaths.push(m[1]);
-      }
-      for (const m of content.matchAll(/require\s*\(\s*['"]([^'"]+)['"]\s*\)/g)) {
-        importPaths.push(m[1]);
-      }
-
-      for (const imp of importPaths.filter((p) => p.startsWith(".") || p.startsWith("@/") || p.startsWith("~/"))) {
-        let resolved: string;
-        if (imp.startsWith("@/") || imp.startsWith("~/")) {
-          resolved = imp.replace(/^[@~]\//, "src/");
-        } else {
-          resolved = path.normalize(path.join(path.dirname(file), imp));
-        }
-        const withoutJsExt = resolved.replace(/\.js$/, "");
-        // Try common resolutions
-        for (const candidate of [resolved, withoutJsExt, `${withoutJsExt}.ts`, `${withoutJsExt}.tsx`, `${resolved}.ts`, `${resolved}.tsx`, `${resolved}.js`]) {
-          const normalized = candidate.replace(/^\.\//, "");
-          if (fileSet.has(normalized)) {
-            fanIn.set(normalized, (fanIn.get(normalized) || 0) + 1);
-            break;
-          }
-        }
-      }
-    }
-
-    // Top 20 by fan-in
-    const topByFanIn = [...fanIn.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
-      .map(([f]) => f);
-    highImportFiles.push(...topByFanIn);
-  }
-
-  // --- Quick git churn (most-changed files in last 3 months) ---
+function getHighChurnFiles(dir: string): string[] {
   try {
     const gitOutput = execFileSync(
       "git",
@@ -277,16 +208,13 @@ function rankFileImportance(
         churnCount.set(file, (churnCount.get(file) || 0) + 1);
       }
     }
-    const topByChurn = [...churnCount.entries()]
+    return [...churnCount.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 20)
       .map(([f]) => f);
-    highChurnFiles.push(...topByChurn);
   } catch {
-    // No git or shallow clone — skip churn data
+    return []; // No git or shallow clone
   }
-
-  return { highImportFiles, highChurnFiles };
 }
 
 /**
@@ -308,8 +236,9 @@ export function validateFindings(
     let score = 0;
     const count = f.evidenceFiles.length;
 
-    // File count factor
-    if (count >= 5) score += 2;
+    // File count factor — dominant patterns (7+) are strong signals on their own
+    if (count >= 7) score += 3;
+    else if (count >= 5) score += 2;
     else if (count >= 3) score += 1;
 
     // PageRank overlap: evidence files that are structurally important
@@ -325,8 +254,11 @@ export function validateFindings(
     if (activeOverlap) score += 1;
 
     // Map score to confidence
+    // 3+ = high (5+ files in active area, or fewer files with PageRank presence)
+    // 2  = medium (some signal but not strong)
+    // <2 = low (weak detection, likely noise)
     let confidence: "high" | "medium" | "low";
-    if (score >= 4) confidence = "high";
+    if (score >= 3) confidence = "high";
     else if (score >= 2) confidence = "medium";
     else confidence = "low";
 
