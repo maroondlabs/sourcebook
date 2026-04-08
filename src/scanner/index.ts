@@ -159,16 +159,7 @@ export function detectRepoMode(dir: string, files: string[], frameworks: string[
     return parts.length === 2 && parts[1] === "__init__.py" && !excludedDirs.has(parts[0]);
   });
   if (hasPyprojectToml && (hasSrcLayout || hasFlatPythonPackage) && !hasAppDirs) {
-    // Confirm it has a [project] or [tool.poetry] section
-    const pyprojectPath = path.join(dir, "pyproject.toml");
-    try {
-      const pyprojectContent = fs.readFileSync(pyprojectPath, "utf-8");
-      if (pyprojectContent.includes("[project]") || pyprojectContent.includes("[tool.poetry]")) {
-        return "library";
-      }
-    } catch {
-      // unreadable, fall through
-    }
+    return "library";
   }
 
   // Other Python publish configs without app dirs
