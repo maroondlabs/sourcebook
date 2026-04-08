@@ -479,7 +479,7 @@ function detectDominantPatterns(
     { pattern: "\\bt\\(['\"]", hook: "t(\"key\")", count: 0, files: [] },
     { pattern: "i18next", hook: "i18next", count: 0, files: [] },
     { pattern: "gettext", hook: "gettext()", count: 0, files: [] },
-    { pattern: "_\\(['\"]", hook: "_(\"string\")", count: 0, files: [] },
+    { pattern: "(?<!\\w)_\\(['\"]", hook: "_(\"string\")", count: 0, files: [] },
   ];
 
   for (const [file, content] of allContents) {
