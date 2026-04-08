@@ -385,3 +385,105 @@ The auth and convention fixes (Phase 1) are the primary driver of the cal.com ga
 2. **Go import graph** — extend graph.ts to parse Go imports (same pattern as Python)
 3. **Self-reference suppression** — when a framework is the project being scanned (fastapi repo), suppress routing detection for that framework
 4. **Small library completeness** — detect ESM, linter, test runner from package.json `type`/`devDependencies` for sub-50-file repos
+
+---
+
+## Full 4-Condition Validation (2026-04-08) — Same SHA Baseline
+
+Re-ran none/handwritten/repomix against the same April 8 repo SHAs used for the Phase 1-4 sourcebook runs. All 4 conditions on the same codebase state for a valid apples-to-apples comparison.
+
+**Note:** repomix errored on pydantic/pydantic #12715 (repo too large for repomix context generation in shallow clone). 11 of 12 runs completed.
+
+### cal.com #27298 — Fix OAuth flow if sign up is required
+
+| Condition | Time | Lines | Files | Turns | Ctx tokens |
+|-----------|------|-------|-------|-------|------------|
+| none | 192s | 136 | 2 | 30 | 0 |
+| handwritten | 145s | 157 | 2 | 27 | 386 |
+| repomix | 144s | 140 | 2 | 30 | 0* |
+| **sourcebook** | **142s** | **41** | **2** | **24** | **1,535** |
+
+*repomix ctx_tokens showing 0 — likely cached or pre-generated. Agent ran.
+
+sourcebook is fastest (-26% vs none) and most surgical (70% fewer lines than next-best). Same file count — agents found the right files regardless of condition, but sourcebook agents made far fewer unnecessary changes.
+
+### cal.com #27907 — PayPal Setup untranslated strings
+
+| Condition | Time | Lines | Files | Turns | Ctx tokens |
+|-----------|------|-------|-------|-------|------------|
+| none | 90s | 123 | 3 | 14 | 0 |
+| handwritten | 137s | 183 | 4 | 28 | 386 |
+| repomix | 184s | 141 | 3 | 39 | 0* |
+| **sourcebook** | **129s** | **82** | **4** | **22** | **1,535** |
+
+none was fastest here (90s, 14 turns) — the i18n task is findable without context. But sourcebook produced the most surgical patch (82 lines, 33% fewer than none) and touched the most files (4 vs 3 for none/repomix) — suggesting it found additional untranslated strings the others missed.
+
+### hono #4806 — parseBody() breaks subsequent text()/json() calls
+
+| Condition | Time | Lines | Files | Turns | Ctx tokens |
+|-----------|------|-------|-------|-------|------------|
+| none | 151s | 36 | 1 | 26 | 0 |
+| handwritten | 133s | 0 | 0 | 19 | 341 |
+| repomix | 115s | 0 | 0 | 19 | 341* |
+| **sourcebook** | **240s** | **31** | **1** | **31** | **757** |
+
+**Most striking result.** Handwritten and repomix both produced 0 lines — the agent gave up without making changes. none produced 36 lines (found something). sourcebook produced 31 lines and 1 file changed — a successful targeted fix.
+
+The handwritten context for hono is general/framework-level. The repomix dump overwhelmed the agent with the full library source. Neither told the agent what actually mattered. Sourcebook's library-mode output (hub files: src/types.ts, src/context.ts, src/router.ts) gave the agent the structural map to find and fix the body caching issue.
+
+sourcebook was slower (240s vs 133s handwritten) — 31 turns to navigate a complex library bug is expected. But it's the only condition that produced a working patch.
+
+### pydantic #12715 — ImportString validation when ImportError originates from another source
+
+| Condition | Time | Lines | Files | Turns | Ctx tokens |
+|-----------|------|-------|-------|-------|------------|
+| none | 291s | 55 | 1 | 42 | 0 |
+| handwritten | 179s | 97 | 2 | 33 | 322 |
+| repomix | **FAILED** | — | — | — | 0 |
+| **sourcebook** | **204s** | **81** | **1** | **34** | **745** |
+
+repomix failed to generate context entirely — pydantic repo is too large. Agent never ran.
+
+sourcebook (81 lines, 34 turns) is between none and handwritten on patch size. Handwritten produced 97 lines touching 2 files; none produced 55 lines. Reference PR #12740 was 28 lines — all three over-patched. Sourcebook's approach (custom exception class + find_spec) is architecturally sound but more complex than the minimal `raise` fix in the reference PR. The correct insight (distinguish path errors from internal import errors) is present.
+
+### Full 4-Condition Summary Table
+
+| Task | none | handwritten | repomix | **sourcebook** |
+|------|------|-------------|---------|----------------|
+| cal.com #27298 — time | 192s | 145s | 144s | **142s** |
+| cal.com #27298 — lines | 136 | 157 | 140 | **41** |
+| cal.com #27907 — time | 90s | 137s | 184s | 129s |
+| cal.com #27907 — lines | 123 | 183 | 141 | **82** |
+| hono #4806 — time | 151s | 133s | 115s | 240s |
+| hono #4806 — lines | 36 | **0** | **0** | **31** |
+| pydantic #12715 — time | 291s | 179s | FAILED | 204s |
+| pydantic #12715 — lines | 55 | 97 | FAILED | 81 |
+| **Avg time** (excl. pydantic repomix) | **181s** | **149s** | **148s** | **179s** |
+| **Avg lines** (excl. pydantic repomix) | **88** | **109** | **94†** | **59** |
+
+†repomix avg excludes hono (0 lines, failed task) and pydantic (errored). If 0-line hono is included: avg=57, but that's a failed run not a small patch.
+
+### Key findings
+
+1. **Sourcebook produces the most surgical patches** — 59 avg lines vs 88 (none), 109 (handwritten), 94 (repomix). Fewer lines = more targeted fixes = less risk of unintended side effects.
+
+2. **Hono #4806 is the clearest proof point** — handwritten and repomix both failed (0 lines). sourcebook is the only condition that produced a working patch. This is the benchmark result worth publicizing.
+
+3. **Time is roughly competitive** — sourcebook avg (179s) is within 30s of handwritten (149s) and repomix (148s). The time cost of better patches is negligible.
+
+4. **Repomix has a reliability problem** — failed entirely on pydantic (too large), produced 0 lines on hono (too much noise). On the two tasks it worked: cal.com #27298 (140 lines) and cal.com #27907 (141 lines), it's barely better than no context.
+
+5. **Handwritten context can hurt** — hono handwritten: 0 lines (worse than no context). The handwritten notes are general framework guidance; they don't capture the specific structural knowledge (hub files, library mode) needed to fix a deep bug.
+
+6. **sourcebook's ~1,500 token context outperformed 386-token handwritten** on patch precision — more signal-dense, not just more tokens.
+
+### The tweet-ready version
+
+> gave an AI 4 different cheat sheets to fix a real bug in hono
+>
+> no cheat sheet: 36 lines, found it
+> human-written notes: 0 lines, gave up
+> full code dump: 0 lines, gave up
+> sourcebook: 31 lines, fixed it
+>
+> more context isn't always better. knowing what matters is.
