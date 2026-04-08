@@ -4,6 +4,85 @@ Automated daily tracking of competitive landscape.
 
 ---
 
+## 2026-04-08 — Deep Dive: GitNexus (Priority Competitor)
+
+### Assessment: Biggest Direct Competitor
+
+GitNexus is the most serious competitive threat identified to date. Full deep-dive after seeing it flagged as shipping 2 patches/day in the March log.
+
+**GitHub:** [abhigyanpatwari/GitNexus](https://github.com/abhigyanpatwari/GitNexus)
+**npm:** `gitnexus` — v1.5.3, published April 1, 2026
+**Stars:** ~23,800 | **Forks:** 2,700 | **Contributors:** 58
+**License:** PolyForm Noncommercial 1.0.0 (commercial routed to separate offering)
+
+### What It Actually Does
+
+GitNexus is a **runtime knowledge graph engine**, not a static context file generator. The core product:
+
+1. `npx gitnexus analyze` — indexes the codebase into a graph database (migrating KuzuDB → LadybugDB). Captures every dependency, call chain, functional cluster, and execution flow. Also generates AGENTS.md/CLAUDE.md as a byproduct.
+2. `gitnexus mcp` — starts a local MCP server exposing graph query tools to the agent at runtime.
+3. Agent tools available mid-task: `query` (natural-language search over graph), `context` (360° symbol view — callers, callees), `impact` (blast-radius analysis), `detect_changes` (git-diff impact), `rename` (coordinated multi-file renames), `cypher` (raw graph queries).
+
+**The bet:** agents should query codebase structure on-demand as they work, not just read static context upfront.
+
+### Where They Overlap With sourcebook
+
+- Both generate AGENTS.md and CLAUDE.md automatically
+- Both identify hub files (high fan-in nodes)
+- Both position around "agents that understand codebase structure"
+- Both target Claude Code, Cursor, Codex, Windsurf users
+- Same install pattern: `npx gitnexus analyze` vs `npx sourcebook init`
+
+### Where They Don't Overlap
+
+GitNexus does **structural relationships** — what calls what, what breaks if X changes. It does NOT:
+- Detect conventions (export style, import patterns, naming)
+- Extract constraints (don't edit generated files, auth lives here)
+- Analyze git history forensics (reverts, co-change coupling, churn)
+- Filter for discoverability (drop what agents already know)
+- Produce portable context that works without a running server
+
+sourcebook does **behavioral/contextual knowledge** — what agents keep missing that isn't in the code. The generated AGENTS.md is the product, not a byproduct.
+
+### The Architecture Divide
+
+| Dimension | GitNexus | sourcebook |
+|-----------|----------|------------|
+| Primary product | Runtime MCP query layer | Static context file |
+| Runtime dependency | Yes — MCP server must be running | None |
+| Portability | Tied to indexed database | Works anywhere |
+| Knowledge type | Structural (call chains, blast radius) | Behavioral (conventions, constraints) |
+| Re-index required | Yes — after significant changes | Yes — sourcebook update |
+| Generated AGENTS.md | Structural summary of graph | Convention/constraint extraction |
+
+### The Real Risk
+
+Not feature overlap — **mindshare**. 23.8k stars is substantial social proof. If "gitnexus" becomes the default answer to "how do I give my agent codebase context," sourcebook gets crowded out before establishing positioning. They're well-funded-feeling (58 contributors, commercial tier), actively shipping, and already integrated into the Claude Code skills ecosystem.
+
+### Our Actual Moat
+
+The benchmark data from April 8 answers this directly. Runtime structural queries (gitnexus's approach) don't solve the hono #4806 problem — an agent that can query call chains mid-task still needs to know **upfront** that this is a library, that `src/types.ts` is the hub, and what the body caching pattern is. That pre-knowledge is what sourcebook's static output delivers. The hono result (handwritten=0, repomix=0, none=36, sourcebook=31) is the proof point.
+
+gitnexus helps agents navigate once they're in the right place. sourcebook gets them to the right place first.
+
+### Strategic Response
+
+1. **Don't build graph query features** — that's their game on their terms
+2. **Double down on convention extraction + constraint surfacing** — they don't do this
+3. **AGENTS.md output** — both tools should be generating the same file format; sourcebook needs this shipped
+4. **"Zero runtime dependency"** is a real differentiator — sourcebook works in CI, in any editor, on any machine, without a running database
+5. **Use the benchmark data** — static upfront context (sourcebook) outperformed runtime structural queries on hard bugs; this is the empirical argument
+
+### Flags for Roadmap
+
+🚨 **Monitor their AGENTS.md generation quality** — if they start including convention detection, the gap narrows fast
+🚨 **Ship AGENTS.md output immediately** — currently gitnexus generates it, sourcebook doesn't. This is a positioning gap.
+⚠️ **Watch for commercial launch** — PolyForm Noncommercial means a paid tier is coming. When it launches, they'll push hard on distribution.
+
+---
+
+---
+
 ## 2026-03-26
 
 ### GitHub Stars
