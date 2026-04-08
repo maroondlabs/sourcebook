@@ -99,6 +99,23 @@ describe("routing patterns", () => {
     const routing = findByDescription(findings, "FastAPI");
     expect(routing).toBeDefined();
   });
+
+  it("does NOT detect FastAPI from docs_src/ files", async () => {
+    // pydantic regression: docs_src/ uses FastAPI in examples but it's not the project's pattern
+    const files: Record<string, string> = {};
+    for (let i = 0; i < 5; i++) {
+      files[`docs_src/tutorial/api${i}.py`] = `
+        from fastapi import FastAPI
+        app = FastAPI()
+        @app.get("/items/${i}")
+        async def read_item():
+            return {"id": ${i}}
+      `;
+    }
+    const findings = await detectWithFiles(files, { repoMode: "library" });
+    const routing = findByDescription(findings, "FastAPI");
+    expect(routing).toBeUndefined();
+  });
 });
 
 // ========================================
@@ -159,6 +176,19 @@ describe("auth patterns", () => {
     }
     const findings = await detectWithFiles(files);
     const auth = findByDescription(findings, "Supabase Auth");
+    expect(auth).toBeDefined();
+  });
+
+  it("detects FastAPI security", async () => {
+    const files: Record<string, string> = {};
+    for (let i = 0; i < 3; i++) {
+      files[`fastapi/routers/secure${i}.py`] = `
+        from fastapi.security import OAuth2PasswordBearer
+        oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+      `;
+    }
+    const findings = await detectWithFiles(files, { repoMode: "library" });
+    const auth = findByDescription(findings, "FastAPI security");
     expect(auth).toBeDefined();
   });
 });

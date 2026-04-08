@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractImports, resolveImport, pageRank } from "../src/scanner/graph.js";
+import { extractImports, extractPythonImports, resolveImport, resolvePythonImport, pageRank } from "../src/scanner/graph.js";
 import type { ImportEdge } from "../src/scanner/graph.js";
 
 describe("extractImports", () => {
@@ -148,5 +148,73 @@ describe("pageRank", () => {
     const scores = pageRank(nodes, edges, 20, 0.85);
     expect(scores.has("isolated")).toBe(true);
     expect(scores.get("isolated")!).toBeGreaterThan(0);
+  });
+});
+
+describe("extractPythonImports", () => {
+  it("extracts relative imports (single dot)", () => {
+    const content = `from .validators import validate\nfrom .models import User`;
+    const result = extractPythonImports(content);
+    expect(result).toContain(".validators");
+    expect(result).toContain(".models");
+  });
+
+  it("extracts relative imports (double dot)", () => {
+    const content = `from ..core.utils import helper`;
+    const result = extractPythonImports(content);
+    expect(result).toContain("..core.utils");
+  });
+
+  it("extracts absolute imports", () => {
+    const content = `from pydantic.main import BaseModel\nimport pydantic.validators`;
+    const result = extractPythonImports(content);
+    expect(result).toContain("pydantic.main");
+    expect(result).toContain("pydantic.validators");
+  });
+
+  it("returns empty for stdlib-only files", () => {
+    const content = `import os\nimport sys\nfrom typing import List`;
+    const result = extractPythonImports(content);
+    // All are valid imports — just absolute, no dots; will not resolve to project files
+    expect(result).toContain("os");
+    expect(result).toContain("sys");
+  });
+});
+
+describe("resolvePythonImport", () => {
+  it("resolves relative single-dot import", () => {
+    const fileSet = new Set(["pydantic/validators.py"]);
+    const result = resolvePythonImport(".validators", "pydantic/main.py", fileSet);
+    expect(result).toBe("pydantic/validators.py");
+  });
+
+  it("resolves relative double-dot import", () => {
+    const fileSet = new Set(["pydantic/core.py"]);
+    const result = resolvePythonImport("..core", "pydantic/_internal/utils.py", fileSet);
+    expect(result).toBe("pydantic/core.py");
+  });
+
+  it("resolves relative import to __init__.py package", () => {
+    const fileSet = new Set(["pydantic/_internal/__init__.py"]);
+    const result = resolvePythonImport("._internal", "pydantic/main.py", fileSet);
+    expect(result).toBe("pydantic/_internal/__init__.py");
+  });
+
+  it("resolves absolute import by dotted module path", () => {
+    const fileSet = new Set(["pydantic/main.py"]);
+    const result = resolvePythonImport("pydantic.main", "tests/test_model.py", fileSet);
+    expect(result).toBe("pydantic/main.py");
+  });
+
+  it("returns null for stdlib/external imports", () => {
+    const fileSet = new Set(["pydantic/main.py"]);
+    const result = resolvePythonImport("os", "pydantic/main.py", fileSet);
+    expect(result).toBeNull();
+  });
+
+  it("returns null for unresolvable imports", () => {
+    const fileSet = new Set(["pydantic/main.py"]);
+    const result = resolvePythonImport(".nonexistent", "pydantic/main.py", fileSet);
+    expect(result).toBeNull();
   });
 });

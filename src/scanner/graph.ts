@@ -35,20 +35,34 @@ export async function analyzeImportGraph(
 ): Promise<GraphAnalysis> {
   const findings: Finding[] = [];
 
-  // Only analyze source files (exclude .d.ts declaration files)
-  const sourceFiles = files.filter((f) =>
-    /\.(ts|tsx|js|jsx)$/.test(f) && !f.endsWith(".d.ts")
+  // Separate JS/TS and Python source files — exclude docs/examples/benchmarks
+  const jsSourceFiles = files.filter((f) =>
+    /\.(ts|tsx|js|jsx)$/.test(f) &&
+    !f.endsWith(".d.ts") &&
+    !/(?:^|\/)docs?(?:[_-][^/]+)?\//i.test(f) &&
+    !/(?:^|\/)examples?(?:[_-][^/]+)?\//i.test(f) &&
+    !/(?:^|\/)benchmarks?\//i.test(f)
   );
+  const pySourceFiles = files.filter(
+    (f) =>
+      f.endsWith(".py") &&
+      !/(?:^|\/)docs?(?:[_-][^/]+)?\//i.test(f) &&
+      !/(?:^|\/)examples?(?:[_-][^/]+)?\//i.test(f) &&
+      !/(?:^|\/)benchmarks?\//i.test(f)
+  );
+  const allSourceFiles = [...jsSourceFiles, ...pySourceFiles];
 
-  if (sourceFiles.length < 5) {
+  if (allSourceFiles.length < 5) {
     return { rankedFiles: [], findings, edges: [] };
   }
 
   // Extract imports from each file
   const edges: ImportEdge[] = [];
-  const fileSet = new Set(sourceFiles);
+  const jsFileSet = new Set(jsSourceFiles);
+  const pyFileSet = new Set(pySourceFiles);
 
-  for (const file of sourceFiles) {
+  // JS/TS import edges
+  for (const file of jsSourceFiles) {
     const filePath = safePath(dir, file);
     if (!filePath) continue;
     let content: string;
@@ -61,7 +75,28 @@ export async function analyzeImportGraph(
     const imports = extractImports(content);
 
     for (const imp of imports) {
-      const resolved = resolveImport(imp, file, fileSet, dir);
+      const resolved = resolveImport(imp, file, jsFileSet, dir);
+      if (resolved) {
+        edges.push({ from: file, to: resolved });
+      }
+    }
+  }
+
+  // Python import edges
+  for (const file of pySourceFiles) {
+    const filePath = safePath(dir, file);
+    if (!filePath) continue;
+    let content: string;
+    try {
+      content = fs.readFileSync(filePath, "utf-8");
+    } catch {
+      continue;
+    }
+
+    const imports = extractPythonImports(content);
+
+    for (const imp of imports) {
+      const resolved = resolvePythonImport(imp, file, pyFileSet);
       if (resolved) {
         edges.push({ from: file, to: resolved });
       }
@@ -73,7 +108,7 @@ export async function analyzeImportGraph(
   }
 
   // Run PageRank — exclude test files so test helpers don't dominate
-  const prodSourceFiles = sourceFiles.filter((f) => !isNonProductionFile(f));
+  const prodSourceFiles = allSourceFiles.filter((f) => !isNonProductionFile(f));
   const prodEdgesForRank = edges.filter((e) => !isNonProductionFile(e.from) && !isNonProductionFile(e.to));
   const scores = pageRank(prodSourceFiles, prodEdgesForRank, 20, 0.85);
 
@@ -85,6 +120,7 @@ export async function analyzeImportGraph(
 
   // Find hub files (high fan-in -- many production files import them)
   // Exclude test/spec files from the fan-in count so test helpers don't appear as hubs
+  // Use lower threshold for Python files — libraries have fewer total files
   const fanIn = new Map<string, number>();
   for (const edge of edges) {
     if (!isTestFile(edge.from)) {
@@ -93,7 +129,7 @@ export async function analyzeImportGraph(
   }
 
   const hubs = [...fanIn.entries()]
-    .filter(([, count]) => count >= 5)
+    .filter(([file, count]) => count >= (file.endsWith(".py") ? 3 : 5))
     .sort((a, b) => b[1] - a[1]);
 
   if (hubs.length > 0) {
@@ -113,11 +149,22 @@ export async function analyzeImportGraph(
 
   // Detect potential circular dependencies (test files excluded to reduce noise)
   const prodEdges = edges.filter((e) => !isNonProductionFile(e.from) && !isNonProductionFile(e.to));
-  const cycles = detectCycles(prodEdges, sourceFiles.filter((f) => !isNonProductionFile(f)));
+  const cycles = detectCycles(prodEdges, allSourceFiles.filter((f) => !isNonProductionFile(f)));
   if (cycles.length > 0) {
     const cycleDescriptions = cycles
       .slice(0, 3)
-      .map((c) => c.map((f) => path.basename(f)).join(" → "));
+      .map((c) =>
+        c
+          .map((f) => {
+            const base = path.basename(f);
+            // __init__.py is ambiguous — include parent dir for context
+            if (base === "__init__.py") {
+              return `${path.basename(path.dirname(f))}/${base}`;
+            }
+            return base;
+          })
+          .join(" → ")
+      );
 
     findings.push({
       category: "Circular dependencies",
@@ -135,7 +182,7 @@ export async function analyzeImportGraph(
     connectedFiles.add(edge.from);
     connectedFiles.add(edge.to);
   }
-  const orphans = sourceFiles.filter(
+  const orphans = allSourceFiles.filter(
     (f) =>
       !connectedFiles.has(f) &&
       !isNonProductionFile(f) &&
@@ -160,13 +207,22 @@ export async function analyzeImportGraph(
   return { rankedFiles, findings, edges };
 }
 
-const TEST_FILE_RE = /(?:^|\/)(?:test|__tests__|e2e|playwright|cypress)\//i;
+const TEST_FILE_RE = /(?:^|\/)(?:tests?|__tests__|e2e|playwright|cypress)\//i;
 const TEST_EXT_RE = /\.(test|spec|test-d)\.[^.]+$/;
 // Root-level test entry files common in small libraries (e.g. ora's test.js)
 const TEST_NAME_RE = /(?:^|\/)tests?\.[^.]+$/;
+// Python test file conventions: test_foo.py or foo_test.py
+const PY_TEST_PREFIX_RE = /(?:^|\/)test_[^/]+\.py$/;
+const PY_TEST_SUFFIX_RE = /[^/]+_test\.py$/;
 
 function isTestFile(file: string): boolean {
-  return TEST_FILE_RE.test(file) || TEST_EXT_RE.test(file) || TEST_NAME_RE.test(file);
+  return (
+    TEST_FILE_RE.test(file) ||
+    TEST_EXT_RE.test(file) ||
+    TEST_NAME_RE.test(file) ||
+    PY_TEST_PREFIX_RE.test(file) ||
+    PY_TEST_SUFFIX_RE.test(file)
+  );
 }
 
 const ENTRY_POINT_RE =
@@ -223,6 +279,87 @@ export function extractImports(content: string): string[] {
 
   // Only return relative imports (not packages)
   return imports.filter((p) => p.startsWith(".") || p.startsWith("@/") || p.startsWith("~/"));
+}
+
+/**
+ * Extract import specifiers from a Python source file.
+ * Handles both relative (from .module import X) and absolute
+ * (from pydantic.main import X, import os.path) forms.
+ */
+export function extractPythonImports(content: string): string[] {
+  const imports: string[] = [];
+
+  // "from .module import X" or "from package.submodule import Y"
+  const fromImports = content.matchAll(/^from\s+(\.+[\w.]*|[\w][\w.]*)\s+import\b/gm);
+  for (const match of fromImports) {
+    imports.push(match[1]);
+  }
+
+  // "import module" or "import package.submodule"
+  const plainImports = content.matchAll(/^import\s+([\w][\w.]*)/gm);
+  for (const match of plainImports) {
+    imports.push(match[1]);
+  }
+
+  return imports;
+}
+
+/**
+ * Resolve a Python import specifier to a file in the project.
+ * Handles relative imports (leading dots) and absolute imports
+ * that resolve to project files.
+ */
+export function resolvePythonImport(
+  importSpec: string,
+  fromFile: string,
+  pyFileSet: Set<string>
+): string | null {
+  const fromDir = path.dirname(fromFile);
+
+  let baseDir: string;
+  let modulePart: string;
+
+  if (importSpec.startsWith(".")) {
+    // Relative import: count leading dots
+    const dotsMatch = importSpec.match(/^(\.+)/);
+    const dots = dotsMatch![1].length;
+    const remainder = importSpec.slice(dots);
+
+    // 1 dot = current dir, 2 dots = parent dir, etc.
+    let base = fromDir;
+    for (let i = 1; i < dots; i++) {
+      base = path.dirname(base);
+    }
+    // Normalize "." to empty string so path.join works correctly
+    baseDir = base === "." ? "" : base;
+    modulePart = remainder;
+  } else {
+    // Absolute import — resolve from project root
+    baseDir = "";
+    modulePart = importSpec;
+  }
+
+  if (!modulePart) {
+    // "from . import X" — current package's __init__.py
+    const candidate = baseDir ? `${baseDir}/__init__.py` : "__init__.py";
+    return pyFileSet.has(candidate) ? candidate : null;
+  }
+
+  // Convert dotted module path to slash-separated file path
+  const modPath = modulePart.replace(/\./g, "/");
+  const base = baseDir ? `${baseDir}/${modPath}` : modPath;
+  const normalized = base.replace(/^\.\//, "");
+
+  const candidates = [
+    `${normalized}.py`,
+    `${normalized}/__init__.py`,
+  ];
+
+  for (const candidate of candidates) {
+    if (pyFileSet.has(candidate)) return candidate;
+  }
+
+  return null;
 }
 
 /**

@@ -101,9 +101,13 @@ export function sampleFiles(
   maxCount: number,
   importanceHints?: { highImportFiles: string[]; highChurnFiles: string[] }
 ): string[] {
-  // Exclude .d.ts declaration files and docs/ directory files
+  // Exclude .d.ts declaration files, docs dirs, example dirs, and benchmark dirs
   const filtered = files.filter(
-    (f) => !f.endsWith(".d.ts") && !/(?:^|\/)docs?\//i.test(f)
+    (f) =>
+      !f.endsWith(".d.ts") &&
+      !/(?:^|\/)docs?(?:[_-][^/]+)?\//i.test(f) &&
+      !/(?:^|\/)examples?(?:[_-][^/]+)?\//i.test(f) &&
+      !/(?:^|\/)benchmarks?\//i.test(f)
   );
 
   if (filtered.length <= maxCount) return filtered;
@@ -112,13 +116,17 @@ export function sampleFiles(
   const selected = new Set<string>();
 
   // Tier 1: Entry points and configs (guaranteed)
+  // Includes TS/JS conventions (index., app.) and Python conventions (__init__.py, main.py)
   for (const f of filtered) {
+    const base = path.basename(f);
     if (
       f.includes("index.") ||
       f.includes("config.") ||
       f.includes("app.") ||
       f.includes("layout.") ||
-      f.includes("middleware.")
+      f.includes("middleware.") ||
+      base === "__init__.py" ||   // Python package entry point
+      base === "main.py"          // Python app/script entry point
     ) {
       selected.add(f);
     }
@@ -432,8 +440,8 @@ function detectDominantPatterns(
       (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".jsx") ||
        f.endsWith(".py") || f.endsWith(".go")) &&
       !f.endsWith(".d.ts") &&
-      !/(?:^|\/)docs?\//i.test(f) &&
-      !/(?:^|\/)examples?\//i.test(f) &&
+      !/(?:^|\/)docs?(?:[_-][^/]+)?\//i.test(f) &&
+      !/(?:^|\/)examples?(?:[_-][^/]+)?\//i.test(f) &&
       !f.includes("node_modules") &&
       // Exclude JS/TS test files (by extension)
       !f.includes(".test.") && !f.includes(".spec.") &&
@@ -471,7 +479,7 @@ function detectDominantPatterns(
     { pattern: "\\bt\\(['\"]", hook: "t(\"key\")", count: 0, files: [] },
     { pattern: "i18next", hook: "i18next", count: 0, files: [] },
     { pattern: "gettext", hook: "gettext()", count: 0, files: [] },
-    { pattern: "_\\(['\"]", hook: "_(\"string\")", count: 0, files: [] },
+    { pattern: "(?<!\\w)_\\(['\"]", hook: "_(\"string\")", count: 0, files: [] },
   ];
 
   for (const [file, content] of allContents) {
@@ -772,6 +780,7 @@ function detectDominantPatterns(
     { pattern: "better-auth|betterAuth\\(|from ['\"]better-auth", name: "better-auth", count: 0, files: [] },
     { pattern: "supabase\\.auth|useSupabaseClient", name: "Supabase Auth", count: 0, files: [] },
     { pattern: "clerk|useClerk|ClerkProvider", name: "Clerk", count: 0, files: [] },
+    { pattern: "OAuth2PasswordBearer|HTTPBearer|APIKeyHeader|from fastapi\\.security", name: "FastAPI security", count: 0, files: [] },
   ];
 
   for (const [file, content] of allContents) {
@@ -786,6 +795,22 @@ function detectDominantPatterns(
   const dominantAuth = authPatterns.filter((p) => p.count >= 2).sort((a, b) => b.count - a.count);
   if (dominantAuth.length > 0) {
     const primary = dominantAuth[0];
+
+    // Ensure auth-named files are read even if they weren't in the stratified sample.
+    // Entrypoints like _auth-middleware.ts can live deep in the tree and get missed.
+    const unreadAuthFiles = files.filter(
+      (f) =>
+        (f.includes("auth") || f.includes("middleware") || f.includes("guard")) &&
+        !f.includes("node_modules") && !f.includes(".test.") &&
+        (f.endsWith(".ts") || f.endsWith(".tsx") || f.endsWith(".js") || f.endsWith(".py")) &&
+        !allContents.has(f)
+    );
+    for (const f of unreadAuthFiles.slice(0, 30)) {
+      const safe = safePath(dir, f);
+      if (!safe) continue;
+      try { allContents.set(f, stripComments(fs.readFileSync(safe, "utf-8"))); } catch { /**/ }
+    }
+
     // Find auth middleware/guard files that actually match the winning pattern
     const authPatternRe = new RegExp(primary.pattern);
     const authFiles = files.filter(

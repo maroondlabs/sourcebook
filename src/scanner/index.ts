@@ -76,10 +76,23 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
     gitAnalysis.activeAreas,
   );
 
+  // Surface library mode explicitly — agents need to know this is a publishable
+  // package, not an app. Affects how they treat the public API surface.
+  const repoModeFindings: Finding[] = [];
+  if (repoMode === "library") {
+    repoModeFindings.push({
+      category: "Project structure",
+      description: "This is a publishable library, not an application. Focus changes on the public API surface. Avoid breaking changes to exported types and function signatures.",
+      confidence: "high",
+      discoverable: false,
+    });
+  }
+
   // Compile findings -- things an agent wouldn't figure out on its own
   const findings: Finding[] = [
     ...frameworks.map((fw) => fw.findings).flat(),
     ...structure.findings,
+    ...repoModeFindings,
     ...validatedPatterns,
     ...gitAnalysis.findings,
     ...graphAnalysis.findings,
@@ -137,11 +150,16 @@ export function detectRepoMode(dir: string, files: string[], frameworks: string[
   // "type": "module" with no app framework → lean toward library
   if (pkg.type === "module" && !hasAppDirs && !isAppFramework && !hasComponents) return "library";
 
-  // Python: pyproject.toml with src/ layout → library
+  // Python: pyproject.toml with src/ layout or flat package layout → library
   const hasPyprojectToml = files.some((f) => f === "pyproject.toml");
   const hasSrcLayout = files.some((f) => f.startsWith("src/") && f.endsWith(".py"));
-  if (hasPyprojectToml && hasSrcLayout && !hasAppDirs) {
-    // Confirm it has a [project] section by reading the file
+  const excludedDirs = new Set(["test", "tests", "docs", "examples", "scripts", "tools", "benchmarks", ".github"]);
+  const hasFlatPythonPackage = files.some((f) => {
+    const parts = f.split("/");
+    return parts.length === 2 && parts[1] === "__init__.py" && !excludedDirs.has(parts[0]);
+  });
+  if (hasPyprojectToml && (hasSrcLayout || hasFlatPythonPackage) && !hasAppDirs) {
+    // Confirm it has a [project] or [tool.poetry] section
     const pyprojectPath = path.join(dir, "pyproject.toml");
     try {
       const pyprojectContent = fs.readFileSync(pyprojectPath, "utf-8");
@@ -265,6 +283,12 @@ export function validateFindings(
 
     // Never downgrade from high if file count alone is overwhelming
     if (f.confidence === "high" && count >= 10) confidence = "high";
+
+    // Floor: explicit pattern detections with 3+ evidence files should never be
+    // dropped entirely. Cross-validation can lower confidence but low = invisible.
+    // This matters most for shallow clones (no activeAreas → score=1 even for
+    // valid patterns like auth, routing detected in 3 files).
+    if (confidence === "low" && count >= 3) confidence = "medium";
 
     // Category-specific: auth detected in only 1 directory with no PageRank presence → medium
     if (f.description.includes("Auth") || f.description.includes("auth")) {
