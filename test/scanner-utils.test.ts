@@ -144,6 +144,14 @@ describe("sampleFiles", () => {
     expect(result).not.toContain("benchmarks/webapp/express.js");
     expect(result).toContain("src/index.ts");
   });
+
+  it("prioritizes Python __init__.py as entry point (Tier 1)", () => {
+    const files = Array.from({ length: 100 }, (_, i) => `pydantic/file${i}.py`);
+    files.push("pydantic/__init__.py", "pydantic/main.py");
+    const result = sampleFiles(files, 10);
+    expect(result).toContain("pydantic/__init__.py");
+    expect(result).toContain("pydantic/main.py");
+  });
 });
 
 describe("detectLanguages", () => {

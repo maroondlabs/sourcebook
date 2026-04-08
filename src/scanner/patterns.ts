@@ -116,13 +116,17 @@ export function sampleFiles(
   const selected = new Set<string>();
 
   // Tier 1: Entry points and configs (guaranteed)
+  // Includes TS/JS conventions (index., app.) and Python conventions (__init__.py, main.py)
   for (const f of filtered) {
+    const base = path.basename(f);
     if (
       f.includes("index.") ||
       f.includes("config.") ||
       f.includes("app.") ||
       f.includes("layout.") ||
-      f.includes("middleware.")
+      f.includes("middleware.") ||
+      base === "__init__.py" ||   // Python package entry point
+      base === "main.py"          // Python app/script entry point
     ) {
       selected.add(f);
     }
