@@ -144,7 +144,7 @@ case "$CONDITION" in
   sourcebook)
     echo "Generating sourcebook context..."
     SB_START=$(date +%s%N)
-    npx --yes sourcebook init --format claude 2>/dev/null || true
+    ${SOURCEBOOK_BIN:-npx --yes sourcebook} init --format claude 2>/dev/null || true
     SB_END=$(date +%s%N)
     SB_MS=$(( (SB_END - SB_START) / 1000000 ))
 
