@@ -3,7 +3,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>sourcebook — AI can read your code. It still doesn't know how your project works.</title>
-<meta name="description" content="sourcebook helps AI understand how your project actually works. It captures the project knowledge your team relies on — conventions, patterns, traps, and where things go — and turns it into guidance coding agents can use."/>
+<meta name="description" content="sourcebook extracts the conventions, constraints, and architectural truths your AI coding agents keep missing. One command generates CLAUDE.md and AGENTS.md — works with Claude Code, Cursor, Copilot, Codex, and Windsurf."/>
 <meta property="og:title" content="sourcebook — project knowledge for coding agents"/>
 <meta property="og:description" content="AI can read your code. It still doesn't know how your project works. sourcebook captures the missing project knowledge."/>
 <meta property="og:type" content="website"/>
@@ -20,6 +20,7 @@
 <link rel="icon" type="image/png" href="logo.png"/>
 <meta property="og:image" content="https://sourcebook.run/og-image.png"/>
 <meta name="twitter:image" content="https://sourcebook.run/og-image.png"/>
+<script defer src="/_vercel/insights/script.js"></script>
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -187,10 +188,8 @@
 <div class="hidden md:flex gap-8 items-center ml-12">
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/research">RESEARCH</a>
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook#readme">DOCS</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="#features">FEATURES</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="https://github.com/maroondlabs/sourcebook/releases">CHANGELOG</a>
 </div>
 <div class="flex items-center gap-2 md:gap-4 ml-auto">
 <button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
@@ -244,9 +243,10 @@
 <div><span class="text-[#00FF41]">●</span> <b>Dead code:</b> 1,907 orphan files detected</div>
 </div>
 <div class="text-white mt-4 border-t border-[#1A1A1A] pt-4">
-<span class="bg-[#00FF41] text-black px-1 mr-2">DONE</span> Wrote CLAUDE.md, .cursorrules, copilot-instructions.md
+<span class="bg-[#00FF41] text-black px-1 mr-2">DONE</span> Wrote CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md
 </div>
 <div class="text-[#5F5E5E] mt-1 terminal-cursor">3.1s — only non-discoverable information. </div>
+<div class="text-[#5F5E5E] mt-3 text-xs">Works with Claude Code · Cursor · GitHub Copilot · OpenAI Codex · Windsurf</div>
 </div>
 </div>
 </section>
