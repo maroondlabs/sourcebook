@@ -18,7 +18,12 @@ export async function detectFrameworks(
 
   // Read all package.json files (root + workspaces/sub-packages)
   const pkgFiles = files.filter(
-    (f) => f.endsWith("package.json") && !f.includes("node_modules")
+    (f) =>
+      f.endsWith("package.json") &&
+      !f.includes("node_modules") &&
+      // Exclude sub-directory package.json files from example/benchmark/doc dirs —
+      // they pull in unrelated deps (e.g. hono benchmarks have express, react)
+      !/(?:^|\/)(?:examples?|demos?|benchmarks?|docs?(?:[_-][^/]+)?|fixtures?)\//i.test(f)
   );
   if (pkgFiles.length === 0) pkgFiles.push("package.json");
 

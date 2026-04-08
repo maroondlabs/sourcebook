@@ -128,6 +128,22 @@ describe("sampleFiles", () => {
     expect(result).not.toContain("docs/guide.ts");
     expect(result).toContain("src/a.ts");
   });
+
+  it("excludes docs_src/ directory files", () => {
+    // pydantic regression: docs_src/*.py files contain FastAPI examples and must not be sampled
+    const files = ["docs_src/tutorial/api.py", "src/validators.py"];
+    const result = sampleFiles(files, 50);
+    expect(result).not.toContain("docs_src/tutorial/api.py");
+    expect(result).toContain("src/validators.py");
+  });
+
+  it("excludes benchmarks/ directory files", () => {
+    // hono regression: benchmarks/ has express/react deps that pollute framework detection
+    const files = ["benchmarks/webapp/express.js", "src/index.ts"];
+    const result = sampleFiles(files, 50);
+    expect(result).not.toContain("benchmarks/webapp/express.js");
+    expect(result).toContain("src/index.ts");
+  });
 });
 
 describe("detectLanguages", () => {
@@ -193,5 +209,34 @@ describe("detectRepoMode", () => {
   it("returns app when app framework is present", () => {
     const result = detectRepoMode("/fake", ["src/index.ts", "app/page.tsx"], ["Next.js"]);
     expect(result).toBe("app");
+  });
+
+  it("detects Python library with flat package layout", () => {
+    // Pydantic-style: pydantic/__init__.py at root + pyproject.toml
+    const result = detectRepoMode("/tmp/pydantic-test", [
+      "pyproject.toml",
+      "pydantic/__init__.py",
+      "pydantic/main.py",
+      "tests/test_main.py",
+    ], []);
+    expect(result).toBe("library");
+  });
+
+  it("does not classify tests/__init__.py as a flat Python package", () => {
+    const result = detectRepoMode("/fake", [
+      "pyproject.toml",
+      "tests/__init__.py",
+      "tests/test_main.py",
+    ], []);
+    expect(result).toBe("app");
+  });
+
+  it("detects Python library with src/ layout", () => {
+    const result = detectRepoMode("/tmp/pydantic-test", [
+      "pyproject.toml",
+      "src/mylib/__init__.py",
+      "src/mylib/core.py",
+    ], []);
+    expect(result).toBe("library");
   });
 });
