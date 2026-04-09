@@ -32,8 +32,8 @@ program
   .option("-d, --dir <path>", "Target directory to analyze", ".")
   .option(
     "-f, --format <formats>",
-    "Output formats (claude,cursor,copilot,all)",
-    "claude"
+    "Output formats (claude,cursor,copilot,agents,all)",
+    "claude,agents"
   )
   .option(
     "--budget <tokens>",
@@ -53,8 +53,8 @@ program
   .option("-d, --dir <path>", "Target directory to analyze", ".")
   .option(
     "-f, --format <formats>",
-    "Output formats (claude,cursor,copilot,all)",
-    "claude"
+    "Output formats (claude,cursor,copilot,agents,all)",
+    "claude,agents"
   )
   .option(
     "--budget <tokens>",
