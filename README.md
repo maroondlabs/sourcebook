@@ -13,7 +13,7 @@ npx sourcebook init
 ```
 
 <p align="center">
-  <img src="demo.svg" alt="sourcebook demo" width="820" />
+  <img src="demo-hono.gif" alt="sourcebook demo" width="820" />
 </p>
 
 > Tools like Repomix give AI your entire codebase. sourcebook gives it your project knowledge.
@@ -38,14 +38,15 @@ sourcebook extracts only what agents keep missing: the conventions, hidden depen
 ## Quick Start
 
 ```bash
-# Generate CLAUDE.md for your project
+# Generate CLAUDE.md + AGENTS.md for your project
 npx sourcebook init
 
 # Generate for a specific tool
-npx sourcebook init --format claude    # CLAUDE.md (default)
-npx sourcebook init --format cursor    # .cursor/rules/sourcebook.mdc + .cursorrules
-npx sourcebook init --format copilot   # .github/copilot-instructions.md
-npx sourcebook init --format all       # All of the above
+npx sourcebook init --format claude,agents  # CLAUDE.md + AGENTS.md (default)
+npx sourcebook init --format cursor         # .cursor/rules/sourcebook.mdc + .cursorrules
+npx sourcebook init --format copilot        # .github/copilot-instructions.md
+npx sourcebook init --format agents         # AGENTS.md only
+npx sourcebook init --format all            # All of the above
 
 # Re-analyze while preserving your manual edits
 npx sourcebook update
@@ -61,9 +62,11 @@ npx sourcebook init --budget 1000
 
 | Command | What it does |
 |---------|-------------|
-| `sourcebook init` | Analyze codebase and generate context files |
+| `sourcebook init` | Analyze codebase and generate context files (CLAUDE.md + AGENTS.md by default) |
 | `sourcebook update` | Re-analyze while preserving sections you added manually |
 | `sourcebook diff` | Show what would change without writing files (exit code 1 if changes found — useful for CI) |
+| `sourcebook ask <query>` | Query codebase knowledge in natural language |
+| `sourcebook watch` | Auto-regenerate context files when source changes |
 | `sourcebook serve` | Start an MCP server exposing live codebase intelligence |
 
 ### Options
@@ -71,7 +74,7 @@ npx sourcebook init --budget 1000
 | Flag | Description | Default |
 |------|-------------|---------|
 | `-d, --dir <path>` | Target directory | `.` |
-| `-f, --format <formats>` | Output formats: `claude`, `cursor`, `copilot`, `all` | `claude` |
+| `-f, --format <formats>` | Output formats: `claude`, `agents`, `cursor`, `copilot`, `all` | `claude,agents` |
 | `--budget <tokens>` | Max token budget for output | `4000` |
 | `--dry-run` | Preview findings without writing files | — |
 
@@ -125,10 +128,7 @@ Extracting repo truths...
   ● Commit style: Conventional Commits (feat/fix/docs)
 
 ✓ Wrote CLAUDE.md
-✓ Wrote .cursor/rules/sourcebook.mdc
-✓ Wrote .github/copilot-instructions.md
-
-Done in 3.1s
+✓ Wrote AGENTS.md
 ```
 
 ## How It Works
