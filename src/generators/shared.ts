@@ -56,10 +56,14 @@ export function categorizeFindings(findings: Finding[]): {
   important: Finding[];
   supplementary: Finding[];
 } {
+  // Strip internal artifacts that describe the scanner's environment, not the project
+  const filtered = findings.filter(
+    (f) => !f.description.includes("shallow clone")
+  );
   return {
-    critical: findings.filter((f) => f.confidence === "high" && isCritical(f)),
-    important: findings.filter((f) => f.confidence === "high" && !isCritical(f)),
-    supplementary: findings.filter((f) => f.confidence === "medium"),
+    critical: filtered.filter((f) => f.confidence === "high" && isCritical(f)),
+    important: filtered.filter((f) => f.confidence === "high" && !isCritical(f)),
+    supplementary: filtered.filter((f) => f.confidence === "medium"),
   };
 }
 

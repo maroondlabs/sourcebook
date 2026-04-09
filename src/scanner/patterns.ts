@@ -598,6 +598,8 @@ function detectDominantPatterns(
   ];
 
   for (const [file, content] of allContents) {
+    // Skip test files — they often import validation libs for testing, not as project standard
+    if (/\.(test|spec)\.[jt]sx?$|__tests__|\/test\//.test(file)) continue;
     for (const p of schemaPatterns) {
       if (new RegExp(p.pattern).test(content)) {
         p.count++;
