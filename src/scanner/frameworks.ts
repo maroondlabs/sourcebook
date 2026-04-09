@@ -307,7 +307,17 @@ export async function detectFrameworks(
   const hasRequirements = fs.existsSync(path.join(dir, "requirements.txt"));
   const hasSetupPy = fs.existsSync(path.join(dir, "setup.py"));
 
-  if (hasPyproject || hasRequirements || hasSetupPy) {
+  // Only enter Python detection if Python is a significant part of the project,
+  // not just benchmarks/scripts (e.g., Rust projects with Python bench/ dirs)
+  const primaryPySourceFiles = files.filter(
+    (f) =>
+      f.endsWith(".py") &&
+      !/(test[s_]?\/|bench\/|scripts?\/|docs[_\/]|examples?\/|fixtures?\/)/.test(f) &&
+      !f.startsWith(".")
+  );
+  const isPrimaryPython = primaryPySourceFiles.length >= 5;
+
+  if ((hasPyproject || hasRequirements || hasSetupPy) && isPrimaryPython) {
     const findings: Finding[] = [];
     let pyDeps = "";
 
@@ -345,23 +355,51 @@ export async function detectFrameworks(
       detected.push({ name: "Django", findings });
     }
 
-    // FastAPI
+    // FastAPI — only label as "FastAPI project" if it's the primary app framework,
+    // not just a dependency used in tests/docs/internal plumbing
     else if (pyDepsLower.includes("fastapi")) {
-      findings.push({
-        category: "FastAPI",
-        description: "FastAPI project. Use Pydantic models for request/response schemas, not raw dicts.",
-        confidence: "high",
-        discoverable: false,
-      });
-      if (pyDepsLower.includes("sqlalchemy") || pyDepsLower.includes("sqlmodel")) {
+      // Check if FastAPI() is used in primary source files (not test/docs/example dirs)
+      const primaryPyFiles = files.filter(
+        (f) =>
+          f.endsWith(".py") &&
+          !/(test[s_]?\/|docs[_\/]|examples?\/|bench\/|fixture)/.test(f)
+      );
+      // Count files that actually import and use FastAPI — need at least 3 to be a real FastAPI project
+      // (prevents false positives from docstring examples, test fixtures, or incidental imports)
+      let fastapiFileCount = 0;
+      for (const f of primaryPyFiles) {
+        try {
+          const content = fs.readFileSync(path.join(dir, f), "utf-8");
+          // Only count actual imports, not docstring examples
+          if (/^from fastapi import|^import fastapi/m.test(content)) {
+            fastapiFileCount++;
+          }
+        } catch {
+          // skip
+        }
+      }
+      const hasFastAPIApp = fastapiFileCount >= 3;
+
+      if (hasFastAPIApp) {
         findings.push({
           category: "FastAPI",
-          description: "Uses SQLAlchemy/SQLModel for ORM. Database sessions must be properly closed (use dependency injection).",
+          description: "FastAPI project. Use Pydantic models for request/response schemas, not raw dicts.",
           confidence: "high",
           discoverable: false,
         });
+        if (pyDepsLower.includes("sqlalchemy") || pyDepsLower.includes("sqlmodel")) {
+          findings.push({
+            category: "FastAPI",
+            description: "Uses SQLAlchemy/SQLModel for ORM. Database sessions must be properly closed (use dependency injection).",
+            confidence: "high",
+            discoverable: false,
+          });
+        }
+        detected.push({ name: "FastAPI", findings });
+      } else {
+        // FastAPI is a dependency but not the primary framework — treat as generic Python
+        detected.push({ name: "Python", findings: [] });
       }
-      detected.push({ name: "FastAPI", findings });
     }
 
     // Flask

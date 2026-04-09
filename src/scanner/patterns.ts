@@ -754,18 +754,44 @@ function detectDominantPatterns(
         (f.includes("test") || f.includes("spec"))
     );
 
-    let desc = `Tests use ${primary.name}.`;
-    if (testHelperFiles.length > 0) {
-      desc += ` Test utilities in: ${testHelperFiles[0]}.`;
+    // If pytest is the dominant test pattern, verify the project is actually Python-primary
+    // (prevents false positives on Rust/Go projects with Python benchmark dirs)
+    if (primary.name === "pytest") {
+      const pySourceFiles = files.filter(
+        (f) =>
+          f.endsWith(".py") &&
+          !/(test[s_]?\/|bench\/|scripts?\/|docs[_\/]|examples?\/|fixtures?\/)/.test(f) &&
+          !f.startsWith(".")
+      );
+      if (pySourceFiles.length < 5) {
+        // Not enough Python source to call pytest the primary test framework — skip
+        // (it's likely benchmarks or support scripts)
+      } else {
+        let desc = `Tests use ${primary.name}.`;
+        if (testHelperFiles.length > 0) {
+          desc += ` Test utilities in: ${testHelperFiles[0]}.`;
+        }
+        findings.push({
+          category: "Dominant patterns",
+          description: desc,
+          evidence: `${primary.count} test files`,
+          confidence: "high",
+          discoverable: false,
+        });
+      }
+    } else {
+      let desc = `Tests use ${primary.name}.`;
+      if (testHelperFiles.length > 0) {
+        desc += ` Test utilities in: ${testHelperFiles[0]}.`;
+      }
+      findings.push({
+        category: "Dominant patterns",
+        description: desc,
+        evidence: `${primary.count} test files`,
+        confidence: "high",
+        discoverable: false,
+      });
     }
-
-    findings.push({
-      category: "Dominant patterns",
-      description: desc,
-      evidence: `${primary.count} test files`,
-      confidence: "high",
-      discoverable: false,
-    });
   }
 
   // ========================================
