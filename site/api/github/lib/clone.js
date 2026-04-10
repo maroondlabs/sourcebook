@@ -1,8 +1,7 @@
-const { mkdtempSync, rmSync, createWriteStream } = require("node:fs");
+const { mkdtempSync, rmSync } = require("node:fs");
 const { join } = require("node:path");
 const { tmpdir } = require("node:os");
 const https = require("node:https");
-const { pipeline } = require("node:stream/promises");
 
 /**
  * Download a repo as a tarball and extract it to /tmp.
@@ -28,10 +27,15 @@ async function cloneRepo(cloneUrl, token) {
       },
     };
 
+    let redirects = 0;
     function follow(url, opts) {
       https.get(url, opts, (res) => {
         // Follow redirects (GitHub returns 302 to S3 — drop auth headers)
         if (res.statusCode === 301 || res.statusCode === 302) {
+          if (++redirects > 5) {
+            reject(new Error("Too many redirects"));
+            return;
+          }
           return follow(res.headers.location, {
             headers: { "User-Agent": "sourcebook-review" },
           });

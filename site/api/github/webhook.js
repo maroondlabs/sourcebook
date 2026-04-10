@@ -8,18 +8,25 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Read raw body for signature verification
+  // Read raw body for signature verification (cap at 5MB)
+  const MAX_BODY = 5 * 1024 * 1024;
   const chunks = [];
+  let totalSize = 0;
   for await (const chunk of req) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    const buf = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+    totalSize += buf.length;
+    if (totalSize > MAX_BODY) {
+      return res.status(413).json({ error: "Payload too large" });
+    }
+    chunks.push(buf);
   }
   const rawBody = Buffer.concat(chunks);
 
-  // Verify webhook signature
+  // Verify webhook signature (fail closed — reject if secret is missing)
   const signature = req.headers["x-hub-signature-256"];
   const secret = process.env.GITHUB_WEBHOOK_SECRET;
 
-  if (secret && !verifySignature(rawBody, signature, secret)) {
+  if (!secret || !verifySignature(rawBody, signature, secret)) {
     console.error("[sourcebook] Webhook signature verification failed");
     return res.status(401).json({ error: "Invalid signature" });
   }
@@ -144,7 +151,7 @@ module.exports = async function handler(req, res) {
         "## sourcebook",
         "",
         "Analysis failed — this is likely a timeout or configuration issue.",
-        `Error: \`${err.message}\``,
+        "Run `npx sourcebook init` locally for full analysis.",
         "",
         "---",
         "*[sourcebook](https://sourcebook.run)*",
@@ -155,7 +162,7 @@ module.exports = async function handler(req, res) {
       // If we can't even post the error comment, just log it
     }
 
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: "Analysis failed" });
   } finally {
     if (cloneDir) {
       cleanupClone(cloneDir);
