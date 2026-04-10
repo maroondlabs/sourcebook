@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
 
   // Only handle opened and synchronize actions
   const { action } = payload;
-  if (action !== "opened" && action !== "synchronize") {
+  if (action !== "opened" && action !== "reopened" && action !== "synchronize") {
     return res.status(200).json({ ignored: true, action });
   }
 
