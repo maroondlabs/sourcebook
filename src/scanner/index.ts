@@ -209,7 +209,7 @@ function getHighChurnFiles(dir: string): string[] {
     const gitOutput = execFileSync(
       "git",
       ["log", "--since=3 months ago", "--name-only", "--pretty=format:", "--diff-filter=AMRC", "-500"],
-      { cwd: dir, encoding: "utf-8", timeout: 5000, maxBuffer: 1024 * 1024 }
+      { cwd: dir, encoding: "utf-8", timeout: 5000, maxBuffer: 1024 * 1024, stdio: ["pipe", "pipe", "ignore"] }
     );
     const churnCount = new Map<string, number>();
     for (const line of gitOutput.split("\n")) {
