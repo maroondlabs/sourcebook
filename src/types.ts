@@ -55,4 +55,6 @@ export interface ProjectScan {
   edges?: { from: string; to: string }[];
   /** Detected repo mode for context prioritization */
   repoMode?: "app" | "library" | "monorepo";
+  /** Co-change clusters: [fileA, fileB, coChangeCount] — files that move together without imports */
+  coChangeClusters?: [string, string, number][];
 }

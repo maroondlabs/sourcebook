@@ -10,6 +10,7 @@ import { diff } from "./commands/diff.js";
 import { watch } from "./commands/watch.js";
 import { ask } from "./commands/ask.js";
 import { activate } from "./commands/activate.js";
+import { truth } from "./commands/truth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pkgVersion = (
@@ -41,6 +42,7 @@ program
     "4000"
   )
   .option("--dry-run", "Preview findings without writing files")
+  .option("--verbose", "Include discoverable context (stack, standard commands, obvious patterns)")
   .action((pathArg, options) => {
     if (pathArg) options.dir = pathArg;
     return init(options);
@@ -113,6 +115,16 @@ program
   .option("-d, --dir <path>", "Target directory to analyze", ".")
   .option("--json", "Output as JSON")
   .action((question, options) => ask(question, options));
+
+program
+  .command("truth")
+  .description("Generate a Repo Truth Map — see where your codebase actually lives")
+  .argument("[path]", "Target directory to analyze (same as --dir)")
+  .option("-d, --dir <path>", "Target directory to analyze", ".")
+  .action((pathArg, options) => {
+    if (pathArg) options.dir = pathArg;
+    return truth(options);
+  });
 
 program
   .command("activate <key>")

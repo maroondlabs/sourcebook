@@ -109,6 +109,7 @@ export async function scanProject(dir: string): Promise<ProjectScan> {
     rankedFiles: graphAnalysis.rankedFiles,
     edges: graphAnalysis.edges,
     repoMode,
+    coChangeClusters: gitAnalysis.coChangeClusters,
   };
 }
 
