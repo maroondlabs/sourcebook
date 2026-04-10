@@ -1,0 +1,4 @@
+ CLAUDE.md                                 | 92 -------------------------------
+ apps/web/components/apps/paypal/Setup.tsx |  3 +-
+ packages/i18n/locales/en/common.json      |  4 +-
+ 3 files changed, 3 insertions(+), 96 deletions(-)

@@ -1,0 +1,2 @@
+CLAUDE.md
+apps/web/modules/signup-view.tsx

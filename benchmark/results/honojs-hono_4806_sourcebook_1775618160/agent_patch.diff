@@ -1,0 +1,31 @@
+diff --git a/src/request.ts b/src/request.ts
+index bbb74a3..43962ff 100644
+--- a/src/request.ts
++++ b/src/request.ts
+@@ -227,12 +227,24 @@ export class HonoRequest<P extends string = '/', I extends Input['out'] = {}> {
+ 
+     const anyCachedKey = Object.keys(bodyCache)[0]
+     if (anyCachedKey) {
+-      return (bodyCache[anyCachedKey as keyof Body] as Promise<BodyInit>).then((body) => {
++      const cached = bodyCache[anyCachedKey as keyof Body]
++
++      // Handle both Promise and non-Promise cached values
++      if (cached && typeof cached.then === 'function') {
++        return (cached as Promise<BodyInit>).then((body) => {
++          if (anyCachedKey === 'json') {
++            body = JSON.stringify(body)
++          }
++          return new Response(body)[key]()
++        })
++      } else {
++        // If cached value is not a Promise, convert it to the requested format
++        let body = cached as BodyInit
+         if (anyCachedKey === 'json') {
+           body = JSON.stringify(body)
+         }
+         return new Response(body)[key]()
+-      })
++      }
+     }
+ 
+     return (bodyCache[key] = raw[key]())

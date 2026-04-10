@@ -1,0 +1,3 @@
+ CLAUDE.md                        | 92 ----------------------------------------
+ apps/web/modules/signup-view.tsx | 19 +++++++--
+ 2 files changed, 15 insertions(+), 96 deletions(-)

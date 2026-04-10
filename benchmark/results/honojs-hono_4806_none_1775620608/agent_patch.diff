@@ -1,0 +1,36 @@
+diff --git a/src/request.test.ts b/src/request.test.ts
+index b27126d..2155b18 100644
+--- a/src/request.test.ts
++++ b/src/request.test.ts
+@@ -443,6 +443,31 @@ describe('Body methods with caching', () => {
+   })
+ })
+ 
++describe('Bug reproduction', () => {
++  test('parseBody should not break subsequent text() calls - debug', async () => {
++    console.log('Creating request with application/json content-type...')
++    const req = new HonoRequest(
++      new Request('http://localhost', {
++        method: 'POST',
++        body: JSON.stringify({ event: 'push' }),
++        headers: { 'Content-Type': 'application/json' },
++      })
++    )
++
++    console.log('Calling parseBody()...')
++    const parsed = await req.parseBody()
++    console.log('parseBody() result:', parsed)
++    console.log('bodyCache keys:', Object.keys(req.bodyCache))
++    console.log('bodyCache contents:', req.bodyCache)
++
++    console.log('Calling text()...')
++    const text = await req.text()
++    console.log('text() result:', text)
++
++    expect(text).toBe(JSON.stringify({ event: 'push' }))
++  })
++})
++
+ describe('cloneRawRequest', () => {
+   test('clones unconsumed request object', async () => {
+     const req = new HonoRequest(

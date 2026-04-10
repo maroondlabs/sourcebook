@@ -1,0 +1,5 @@
+ CLAUDE.md                                                           | 4 ++++
+ packages/app-store/paypal/components/EventTypeAppCardInterface.tsx  | 2 +-
+ .../app-store/paypal/components/EventTypeAppSettingsInterface.tsx   | 6 +++---
+ packages/i18n/locales/en/common.json                                | 1 +
+ 4 files changed, 9 insertions(+), 4 deletions(-)

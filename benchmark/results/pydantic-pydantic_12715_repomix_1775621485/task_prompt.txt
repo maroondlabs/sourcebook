@@ -1,0 +1,92 @@
+You are working on the pydantic/pydantic repository.
+
+## Task
+Fix the following issue:
+
+**Improve logic around `ImportString` validation when the `ImportError` originates from another source**
+
+### Initial Checks
+
+- [x] I confirm that I'm using Pydantic V2
+
+### Description
+
+When something else (and not the `ImportString` import path) produces an `ImportError`, `ImportString`'s error handling catches the exception and assumes it has been produced by the user-provided import path. 
+
+This results in a misleading and confusing exception message. 
+
+### Example Code
+
+#### repro.py
+
+```py
+
+from pydantic import TypeAdapter
+from pydantic.types import ImportString
+
+adapter: TypeAdapter[type] = TypeAdapter(ImportString)
+
+# This import path points to a valid module, but that module has its own ImportError
+import_path = "my_module.MyClass"
+
+print("Attempting to validate import path:", import_path)
+print()
+
+# What Pydantic reports:
+print("=== Pydantic ImportString error ===")
+try:
+    adapter.validate_python(import_path)
+except Exception as e:
+    print(f"{type(e).__name__}: {e}")
+
+print()
+
+# What the actual error is:
+print("=== Actual ImportError ===")
+try:
+    import my_module
+except ImportError as e:
+    print(f"{type(e).__name__}: {e}")
+```
+
+#### my_module.py
+
+```py
+import torch  # do not install torch!
+
+class MyClass:
+    pass
+```
+
+```
+› python repro.py
+Attempting to validate import path: my_module.MyClass
+
+=== Pydantic ImportString error ===
+ValidationError: 1 validation error for function-plain[import_string()]
+  Invalid python path: No module named 'my_module.MyClass' [type=import_error, input_value='my_module.MyClass', input_type=str]
+
+=== Actual ImportError ===
+ModuleNotFoundError: No module named 'torch'
+```
+
+### Python, Pydantic & OS Version
+
+```Text
+pydantic version: 2.12.5
+        pydantic-core version: 2.41.5
+          pydantic-core build: profile=release pgo=false
+               python version: 3.10.19 (main, Oct  9 2025, 15:25:03) [GCC 14.3.0]
+                     platform: Linux-6.12.64-x86_64-with-glibc2.40
+             related packages: typing_extensions-4.15.0 pydantic-settings-2.12.0
+                       commit: unknown
+```
+
+## Instructions
+- Read the codebase to understand the problem
+- Make the minimal changes needed to fix the issue
+- Follow the existing code conventions and patterns
+- Do not add unnecessary changes
+- Create or modify tests if the fix warrants it
+
+When you are done, stop. Do not run tests unless you are confident they exist and will work.

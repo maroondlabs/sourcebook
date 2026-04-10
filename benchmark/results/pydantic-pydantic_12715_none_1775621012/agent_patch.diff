@@ -1,0 +1,55 @@
+diff --git a/pydantic/_internal/_validators.py b/pydantic/_internal/_validators.py
+index 3ad6c92..16f97b7 100644
+--- a/pydantic/_internal/_validators.py
++++ b/pydantic/_internal/_validators.py
+@@ -25,6 +25,11 @@ from pydantic._internal._import_utils import import_cached_field_info
+ from pydantic.errors import PydanticSchemaGenerationError
+ 
+ 
++class _ImportPathFormatError(ImportError):
++    """Exception raised when the import path format is invalid."""
++    pass
++
++
+ def sequence_validator(
+     input_value: Sequence[Any],
+     /,
+@@ -69,8 +74,12 @@ def import_string(value: Any) -> Any:
+     if isinstance(value, str):
+         try:
+             return _import_string_logic(value)
+-        except ImportError as e:
++        except _ImportPathFormatError as e:
++            raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
++        except ModuleNotFoundError as e:
++            # Module not found errors should still be wrapped as invalid python path
+             raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
++        # Let other ImportErrors (from internal module import issues) bubble up with original message
+     else:
+         # otherwise we just return the value and let the next validator do the rest of the work
+         return value
+@@ -98,13 +107,13 @@ def _import_string_logic(dotted_path: str) -> Any:
+ 
+     components = dotted_path.strip().split(':')
+     if len(components) > 2:
+-        raise ImportError(f"Import strings should have at most one ':'; received {dotted_path!r}")
++        raise _ImportPathFormatError(f"Import strings should have at most one ':'; received {dotted_path!r}")
+     attribute = None
+     if len(components) == 2:
+         attribute = components[1]
+     module_path = components[0]
+     if not module_path:
+-        raise ImportError(f'Import strings should have a nonempty module name; received {dotted_path!r}')
++        raise _ImportPathFormatError(f'Import strings should have a nonempty module name; received {dotted_path!r}')
+ 
+     try:
+         module = import_module(module_path)
+@@ -123,7 +132,7 @@ def _import_string_logic(dotted_path: str) -> Any:
+         try:
+             return getattr(module, attribute)
+         except AttributeError as e:
+-            raise ImportError(f'cannot import name {attribute!r} from {module_path!r}') from e
++            raise _ImportPathFormatError(f'cannot import name {attribute!r} from {module_path!r}') from e
+     else:
+         return module
+ 

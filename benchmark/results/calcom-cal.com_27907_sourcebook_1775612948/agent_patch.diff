@@ -1,0 +1,412 @@
+diff --git a/AGENTS.md b/AGENTS.md
+deleted file mode 100644
+index 5032e5b..0000000
+--- a/AGENTS.md
++++ /dev/null
+@@ -1,244 +0,0 @@
+-# Cal.com Development Guide for AI Agents
+-
+-You are a senior Cal.com engineer working in a Yarn/Turbo monorepo. You prioritize type safety, security, and small, reviewable diffs.
+-
+-## Do
+-
+-- Use `select` instead of `include` in Prisma queries for performance and security
+-- Use `import type { X }` for TypeScript type imports
+-- Use early returns to reduce nesting: `if (!booking) return null;`
+-- Use `ErrorWithCode` for errors in non-tRPC files (services, repositories, utilities); use `TRPCError` only in tRPC routers
+-- Use conventional commits: `feat:`, `fix:`, `refactor:`
+-- Create PRs in draft mode by default
+-- Run `yarn type-check:ci --force` before concluding CI failures are unrelated to your changes
+-- Import directly from source files, not barrel files (e.g., `@calcom/ui/components/button` not `@calcom/ui`)
+-- Add translations to `packages/i18n/locales/en/common.json` for all UI strings
+-- Use `date-fns` or native `Date` instead of Day.js when timezone awareness isn't needed
+-- Put permission checks in `page.tsx`, never in `layout.tsx`
+-- Use `ast-grep` for searching if available; otherwise use `rg` (ripgrep), then fall back to `grep`
+-- Use Biome for formatting and linting
+-- Only add code comments that explain **why**, not **what** — see [code comment guidelines](agents/rules/quality-code-comments.md)
+-
+-
+-## Don't
+-
+-- Never use `as any` - use proper type-safe solutions instead
+-- Never expose `credential.key` field in API responses or queries
+-- Never commit secrets or API keys
+-- Never modify `*.generated.ts` files directly - they're created by app-store-cli
+-- Never put business logic in repositories - that belongs in Services
+-- Never use barrel imports from index.ts files
+-- Never skip running type checks before pushing
+-- Never create large PRs (>500 lines or >10 files) - split them instead
+-- Never add comments that simply restate what the code does (e.g., `// Get the user` above a `getUser()` call)
+-
+-## PR Size Guidelines
+-
+-Large PRs are difficult to review, prone to errors, and slow down the development process. Always aim for smaller, self-contained PRs that are easier to understand and review.
+-
+-### Size Limits
+-
+-- **Lines changed**: Keep PRs under 500 lines of code (additions + deletions)
+-- **Files changed**: Keep PRs under 10 code files
+-- **Single responsibility**: Each PR should do one thing well
+-
+-**Note**: These limits apply to code files only. Non-code files like documentation (README.md, CHANGELOG.md), lock files (yarn.lock, package-lock.json), and auto-generated files are excluded from the count.
+-
+-### How to Split Large Changes
+-
+-When a task requires extensive changes, break it into multiple PRs:
+-
+-1. **By layer**: Separate database/schema changes, backend logic, and frontend UI into different PRs
+-2. **By feature component**: Split a feature into its constituent parts (e.g., API endpoint PR, then UI PR, then integration PR)
+-3. **By refactor vs feature**: Do preparatory refactoring in a separate PR before adding new functionality
+-4. **By dependency order**: Create PRs in the order they can be merged (base infrastructure first, then features that depend on it)
+-
+-### Examples of Good PR Splits
+-
+-**Instead of one large "Add booking notifications" PR:**
+-- PR 1: Add notification preferences schema and migration
+-- PR 2: Add notification service and API endpoints
+-- PR 3: Add notification UI components
+-- PR 4: Integrate notifications into booking flow
+-
+-**Instead of one large "Refactor calendar sync" PR:**
+-- PR 1: Extract calendar sync logic into dedicated service
+-- PR 2: Add new calendar provider abstraction
+-- PR 3: Migrate existing providers to new abstraction
+-- PR 4: Add new calendar provider support
+-
+-### Benefits of Smaller PRs
+-
+-- Faster review cycles and quicker feedback
+-- Easier to identify and fix issues
+-- Lower risk of merge conflicts
+-- Simpler to revert if problems arise
+-- Better git history and easier debugging
+-
+-## Commands
+-
+-See [agents/commands.md](agents/commands.md) for full reference. Key commands:
+-
+-```bash
+-yarn type-check:ci --force  # Type check (always run before pushing)
+-yarn biome check --write .  # Lint and format
+-TZ=UTC yarn test            # Run unit tests
+-yarn prisma generate        # Regenerate types after schema changes
+-```
+-
+-
+-## Boundaries
+-
+-### Always do
+-- Run type check on changed files before committing
+-- Run relevant tests before pushing
+-- Use `select` in Prisma queries
+-- Follow conventional commits for PR titles
+-- Run Biome before pushing
+-
+-### Ask first
+-- Adding new dependencies
+-- Schema changes to `packages/prisma/schema.prisma`
+-- Changes affecting multiple packages
+-- Deleting files
+-- Running full build or E2E suites
+-
+-### Never do
+-- Commit secrets, API keys, or `.env` files
+-- Expose `credential.key` in any query
+-- Use `as any` type casting
+-- Force push or rebase shared branches
+-- Modify generated files directly
+-
+-## Project Structure
+-
+-```
+-apps/web/                    # Main Next.js application
+-packages/prisma/             # Database schema (schema.prisma) and migrations
+-packages/trpc/               # tRPC API layer (routers in server/routers/)
+-packages/ui/                 # Shared UI components
+-packages/features/           # Feature-specific code
+-packages/app-store/          # Third-party integrations
+-packages/lib/                # Shared utilities
+-```
+-
+-### Key files
+-- Routes: `apps/web/app/` (App Router)
+-- Database schema: `packages/prisma/schema.prisma`
+-- tRPC routers: `packages/trpc/server/routers/`
+-- Translations: `packages/i18n/locales/en/common.json`
+-- Workflow constants: `packages/features/ee/workflows/lib/constants.ts`
+-
+-## Tech Stack
+-
+-- **Framework**: Next.js 13+ (App Router in some areas)
+-- **Language**: TypeScript (strict)
+-- **Database**: PostgreSQL with Prisma ORM
+-- **API**: tRPC for type-safe APIs
+-- **Auth**: NextAuth.js
+-- **Styling**: Tailwind CSS
+-- **Testing**: Vitest (unit), Playwright (E2E)
+-- **i18n**: next-i18next
+-
+-## Code Examples
+-
+-### Good error handling
+-
+-```typescript
+-// Good - Descriptive error with context
+-throw new Error(`Unable to create booking: User ${userId} has no available time slots for ${date}`);
+-
+-// Bad - Generic error
+-throw new Error("Booking failed");
+-```
+-
+-For which error class to use (`ErrorWithCode` vs `TRPCError`) and concrete examples, see [quality-error-handling](agents/rules/quality-error-handling.md).
+-
+-### Good Prisma query
+-
+-```typescript
+-// Good - Use select for performance and security
+-const booking = await prisma.booking.findFirst({
+-  select: {
+-    id: true,
+-    title: true,
+-    user: {
+-      select: {
+-        id: true,
+-        name: true,
+-        email: true,
+-      }
+-    }
+-  }
+-});
+-
+-// Bad - Include fetches all fields including sensitive ones
+-const booking = await prisma.booking.findFirst({
+-  include: { user: true }
+-});
+-```
+-
+-### Good imports
+-
+-```typescript
+-// Good - Type imports and direct paths
+-import type { User } from "@prisma/client";
+-import { Button } from "@calcom/ui/components/button";
+-
+-// Bad - Regular import for types, barrel imports
+-import { User } from "@prisma/client";
+-import { Button } from "@calcom/ui";
+-```
+-
+-### API v2 Imports (apps/api/v2)
+-
+-When importing from `@calcom/features` or `@calcom/trpc` into `apps/api/v2`, **do not import directly** because the API v2 app's `tsconfig.json` doesn't have path mappings for these modules, which causes "module not found" errors.
+-
+-Instead, re-export from `packages/platform/libraries/index.ts` and import from `@calcom/platform-libraries`:
+-
+-```typescript
+-// Step 1: In packages/platform/libraries/index.ts, add the export
+-export { ProfileRepository } from "@calcom/features/profile/repositories/ProfileRepository";
+-
+-// Step 2: In apps/api/v2, import from platform-libraries
+-import { ProfileRepository } from "@calcom/platform-libraries";
+-
+-// Bad - Direct import causes module not found error in apps/api/v2
+-import { ProfileRepository } from "@calcom/features/profile/repositories/ProfileRepository";
+-```
+-
+-## PR Checklist
+-
+-- [ ] Title follows conventional commits: `feat(scope): description`
+-- [ ] Type check passes: `yarn type-check:ci --force`
+-- [ ] Lint passes: `yarn lint:fix`
+-- [ ] Relevant tests pass
+-- [ ] Diff is small and focused (<500 lines, <10 files)
+-- [ ] No secrets or API keys committed
+-- [ ] UI strings added to translation files
+-- [ ] Created as draft PR
+-
+-## When Stuck
+-
+-- Ask a clarifying question before making large speculative changes
+-- Propose a short plan for complex tasks
+-- Open a draft PR with notes if unsure about approach
+-- Fix type errors before test failures - they're often the root cause
+-- Run `yarn prisma generate` if you see missing enum/type errors
+-
+-## Spec-Driven Development (Opt-In)
+-
+-For complex features, you can use spec-driven development when explicitly requested.
+-
+-**To enable:** Tell the AI "use spec-driven development" or "follow the spec workflow"
+-
+-See [SPEC-WORKFLOW.md](SPEC-WORKFLOW.md) for the full workflow documentation.
+-
+-## Extended Documentation
+-
+-For detailed information, see the `agents/` directory:
+-
+-- **[agents/README.md](agents/README.md)** - Rules index and architecture overview
+-- **[agents/rules/](agents/rules/)** - Modular engineering rules
+-- **[agents/commands.md](agents/commands.md)** - Complete command reference
+-- **[agents/knowledge-base.md](agents/knowledge-base.md)** - Domain knowledge and business rules
+diff --git a/CLAUDE.md b/CLAUDE.md
+deleted file mode 120000
+index 47d29cb..0000000
+--- a/CLAUDE.md
++++ /dev/null
+@@ -1 +0,0 @@
+-agents.md
+\ No newline at end of file
+diff --git a/CLAUDE.md b/CLAUDE.md
+new file mode 100644
+index 0000000..11cd95e
+--- /dev/null
++++ b/CLAUDE.md
+@@ -0,0 +1,92 @@
++# CLAUDE.md
++
++This file provides guidance to Claude Code when working with this codebase.
++Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit — the best context comes from human + machine together.
++
++## Quick Reference
++
++- **validation:** Use Zod schemas for validation
++- **data fetching:** Data fetching uses React Query (useQuery/useMutation)
++- **testing:** Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.
++- **styling:** Styling uses Tailwind CSS utility classes.
++- **routing:** Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.
++- **components:** UI components live in: packages/ui, packages/ui/components, packages/trpc/components. Add new components here.
++
++## Commands
++
++- **Dev:** `turbo run dev --filter="@calcom/web"`
++- **Build:** `turbo run build --filter=@calcom/web...`
++- **Test:** `TZ=UTC vitest run`
++- **Lint:** `turbo lint`
++- **db-deploy:** `turbo run db-deploy`
++- **db-seed:** `turbo run db-seed`
++- **deploy:** `turbo run deploy`
++- **deploy:trigger:prod:** `turbo run deploy:trigger:prod --filter="@calcom/features"`
++- **deploy:trigger:staging:** `turbo run deploy:trigger:staging --filter="@calcom/features"`
++
++## Critical Constraints
++
++- **Testing:** Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.
++- **Critical constraints:** Generated files detected (vitest-mocks/tailwind.generated.css, packages/app-store/video.adapters.generated.ts, packages/app-store/redirect-apps.generated.ts, packages/app-store/payment.services.generated.ts, packages/app-store/crm.apps.generated.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.
++- **Git history:** Limited git history available (shallow clone). Clone with full history for git insights.
++- **Core modules:** Hub files (most depended on): packages/trpc/server/types.ts (imported by 172 files); packages/platform/atoms/lib/http.ts (imported by 72 files); packages/features/di/di.ts (imported by 60 files); packages/app-store/_utils/getAppKeysFromSlug.ts (imported by 53 files); packages/emails/src/renderEmail.ts (imported by 51 files). Changes here have the widest blast radius.
++- **Circular dependencies:** Circular import chains detected: bookingScenario.ts → getMockRequestDataForBooking.ts; create-event-type.input.ts → CantHaveRecurrenceAndBookerActiveBookingsLimit.ts; handleMarkNoShow.ts → handleSendingAttendeeNoShowDataToApps.ts. Avoid adding to these cycles.
++
++## Stack
++
++Next.js, Tailwind CSS, TypeScript
++
++## Project Structure
++
++- `scripts/` — Build / utility scripts
++- `docs/` — Documentation
++
++## Core Modules (by structural importance)
++
++- `packages/trpc/server/types.ts`
++- `packages/features/webhooks/lib/dto/types.ts`
++- `packages/features/webhooks/lib/interface/IWebhookRepository.ts`
++- `packages/platform/atoms/lib/http.ts`
++- `packages/app-store/_utils/getAppKeysFromSlug.ts`
++
++## Conventions & Patterns
++
++- **Project structure:** This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
++- **Import conventions:** Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.
++- **Environment:** Environment variables are documented in .env.example. Copy it to .env.local before running the project.
++- **Export conventions:** Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.
++- **Dominant patterns:**
++  - Use Zod schemas for validation. This is the project's standard validation approach.
++  - Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.
++  - Styling uses Tailwind CSS utility classes.
++  - Database access uses Prisma. Schema/models defined in packages/prisma/schema.prisma.
++  - Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.
++  - Third-party integrations live under packages/app-store/ (zoomvideo, zohocrm, zohocalendar, zoho-bigin, zapier, wordpress, ...). Each integration has its own directory with components, lib, and API code.
++
++## Additional Context
++
++- **Environment:** 4 env vars detected. Public (browser-exposed): NEXT_PUBLIC_WEBAPP_URL. Private (server-only): CI, PLAYWRIGHT_HEADLESS, PWDEBUG.
++- **Dominant patterns:**
++  - Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.
++  - UI components live in: packages/ui, packages/ui/components, packages/trpc/components. Add new components here.
++
++## Before Making Changes
++
++- **Check file importance** before editing. Hub files (listed in Core Modules) affect many other files — changes here have the widest blast radius.
++- **Follow existing patterns.** This project has established conventions (listed above). Match them instead of introducing new approaches.
++- **Respect constraints.** Review the Critical Constraints section before making structural changes.
++
++If the sourcebook MCP server is available (`sourcebook serve`), verify before acting:
++- `get_blast_radius` — check what breaks if you edit a hub file
++- `query_conventions` — confirm the right pattern before adding new code
++- `get_pressing_questions` — get a briefing before editing an unfamiliar file
++
++## What to Add Manually
++
++The most valuable context is what only you know. Add:
++
++- Architectural decisions and why they were made
++- Past incidents that shaped current conventions
++- Deprecated patterns to avoid in new code
++- Domain-specific rules or terminology
++- Environment setup beyond what .env.example shows
+diff --git a/packages/app-store/paypal/components/EventTypeAppCardInterface.tsx b/packages/app-store/paypal/components/EventTypeAppCardInterface.tsx
+index cf815c5..19e3432 100644
+--- a/packages/app-store/paypal/components/EventTypeAppCardInterface.tsx
++++ b/packages/app-store/paypal/components/EventTypeAppCardInterface.tsx
+@@ -40,7 +40,7 @@ const EventTypeAppCard: EventTypeAppCardComponent = function EventTypeAppCard({
+       switchOnClick={(enabled) => {
+         setRequirePayment(enabled);
+       }}
+-      description={<>Add Paypal payment to your events</>}
++      description={<>{t("paypal_app_description")}</>}
+       disableSwitch={shouldDisableSwitch}
+       switchTooltip={shouldDisableSwitch ? t("other_payment_app_enabled") : undefined}>
+       <>
+diff --git a/packages/app-store/paypal/components/EventTypeAppSettingsInterface.tsx b/packages/app-store/paypal/components/EventTypeAppSettingsInterface.tsx
+index 7663c55..22aeaa7 100644
+--- a/packages/app-store/paypal/components/EventTypeAppSettingsInterface.tsx
++++ b/packages/app-store/paypal/components/EventTypeAppSettingsInterface.tsx
+@@ -65,7 +65,7 @@ const EventTypeAppSettingsInterface: EventTypeAppSettingsComponent = ({
+     <>
+       <div className="mt-2 block items-center sm:flex">
+         <TextField
+-          label="Price"
++          label={t("price")}
+           labelSrOnly
+           addOnLeading={currencySymbol}
+           addOnSuffix={currency}
+@@ -74,7 +74,7 @@ const EventTypeAppSettingsInterface: EventTypeAppSettingsComponent = ({
+           type="number"
+           required
+           className="block w-full rounded-sm pl-2 text-sm"
+-          placeholder="Price"
++          placeholder={t("price")}
+           data-testid="paypal-price-input"
+           onChange={(e) => {
+             setAppData("price", convertToSmallestCurrencyUnit(Number(e.target.value), currency));
+@@ -108,7 +108,7 @@ const EventTypeAppSettingsInterface: EventTypeAppSettingsComponent = ({
+ 
+       <div className="mt-4 w-60">
+         <label className="text-default mb-1 block text-sm font-medium" htmlFor="currency">
+-          Payment option
++          {t("payment_option")}
+         </label>
+         <Select<Option>
+           data-testid="paypal-payment-option-select"
+diff --git a/packages/i18n/locales/en/common.json b/packages/i18n/locales/en/common.json
+index 5156830..4181d52 100644
+--- a/packages/i18n/locales/en/common.json
++++ b/packages/i18n/locales/en/common.json
+@@ -4757,6 +4757,7 @@
+   "paypal_getting_started": "Getting started with Paypal APP",
+   "important_requirements": "Important requirements:",
+   "paypal_description": "Here in Cal.com we offer Paypal as one of our payment gateway. You can use your own Paypal Business account to receive payments from your customers enabling and setting up price and currency for each of your event types.",
++  "paypal_app_description": "Add Paypal payment to your events",
+   "paypal_payment_logo": "PayPal payment logo",
+   "secret_key": "Secret key",
+   "paypal_business_account": "PayPal Business account",

@@ -1,0 +1,61 @@
+diff --git a/src/request.test.ts b/src/request.test.ts
+index b27126d..9fb648c 100644
+--- a/src/request.test.ts
++++ b/src/request.test.ts
+@@ -394,6 +394,24 @@ describe('Body methods with caching', () => {
+         // application/json is not a valid formData content-type, so this should throw
+         expect(req.formData()).rejects.toThrow()
+       })
++
++      it('should handle non-Promise values in bodyCache', async () => {
++        const req = createReq()
++        // Simulate the issue by directly injecting a non-Promise value into bodyCache
++        // This could happen through middleware or other caching mechanisms
++        // @ts-ignore - accessing private field for testing
++        req.bodyCache.parsedBody = { some: 'data' }
++
++        // These calls should not throw TypeError: bodyCache[anyCachedKey].then is not a function
++        expect(async () => await req.text()).not.toThrow()
++        expect(async () => await req.json()).not.toThrow()
++        expect(async () => await req.arrayBuffer()).not.toThrow()
++        expect(async () => await req.blob()).not.toThrow()
++
++        // Verify that the methods still return the correct data from the raw request
++        expect(await req.text()).toBe(JSON.stringify({ event: 'push' }))
++        expect(await req.json()).toEqual({ event: 'push' })
++      })
+     })
+ 
+     describe('Return type', () => {
+diff --git a/src/request.ts b/src/request.ts
+index bbb74a3..dff4fd7 100644
+--- a/src/request.ts
++++ b/src/request.ts
+@@ -227,12 +227,21 @@ export class HonoRequest<P extends string = '/', I extends Input['out'] = {}> {
+ 
+     const anyCachedKey = Object.keys(bodyCache)[0]
+     if (anyCachedKey) {
+-      return (bodyCache[anyCachedKey as keyof Body] as Promise<BodyInit>).then((body) => {
+-        if (anyCachedKey === 'json') {
+-          body = JSON.stringify(body)
+-        }
+-        return new Response(body)[key]()
+-      })
++      const cachedValue = bodyCache[anyCachedKey as keyof Body]
++      // Check if the cached value is a Promise
++      if (cachedValue && typeof cachedValue === 'object' && 'then' in cachedValue) {
++        return (cachedValue as Promise<BodyInit>).then((body) => {
++          if (anyCachedKey === 'json') {
++            body = JSON.stringify(body)
++          }
++          return new Response(body)[key]()
++        })
++      } else {
++        // Handle non-Promise cached values (e.g., from parseBody when content type is not form data)
++        // In this case, we cannot reconstruct other body formats from a parsed object,
++        // so we fall back to the raw request
++        return (bodyCache[key] = raw[key]())
++      }
+     }
+ 
+     return (bodyCache[key] = raw[key]())

@@ -1,0 +1,81 @@
+diff --git a/pydantic/_internal/_validators.py b/pydantic/_internal/_validators.py
+index 3ad6c92..04529f2 100644
+--- a/pydantic/_internal/_validators.py
++++ b/pydantic/_internal/_validators.py
+@@ -5,6 +5,11 @@ Import of this module is deferred since it contains imports of many standard lib
+ 
+ from __future__ import annotations as _annotations
+ 
++
++class _ImportStringPathError(ImportError):
++    """Raised when an import string path is invalid (not when internal imports fail)."""
++    pass
++
+ import collections.abc
+ import math
+ import re
+@@ -69,8 +74,11 @@ def import_string(value: Any) -> Any:
+     if isinstance(value, str):
+         try:
+             return _import_string_logic(value)
+-        except ImportError as e:
++        except _ImportStringPathError as e:
+             raise PydanticCustomError('import_error', 'Invalid python path: {error}', {'error': str(e)}) from e
++        except ImportError as e:
++            # Internal import errors (module exists but has import issues) - preserve original error
++            raise PydanticCustomError('import_error', '{error}', {'error': str(e)}) from e
+     else:
+         # otherwise we just return the value and let the next validator do the rest of the work
+         return value
+@@ -98,17 +106,17 @@ def _import_string_logic(dotted_path: str) -> Any:
+ 
+     components = dotted_path.strip().split(':')
+     if len(components) > 2:
+-        raise ImportError(f"Import strings should have at most one ':'; received {dotted_path!r}")
++        raise _ImportStringPathError(f"Import strings should have at most one ':'; received {dotted_path!r}")
+     attribute = None
+     if len(components) == 2:
+         attribute = components[1]
+     module_path = components[0]
+     if not module_path:
+-        raise ImportError(f'Import strings should have a nonempty module name; received {dotted_path!r}')
++        raise _ImportStringPathError(f'Import strings should have a nonempty module name; received {dotted_path!r}')
+ 
+     try:
+         module = import_module(module_path)
+-    except ModuleNotFoundError:
++    except ModuleNotFoundError as e:
+         if attribute is None and '.' in module_path:
+             # Try interpreting the final dotted segment as an attribute, not a submodule
+             maybe_module_path, maybe_attribute = module_path.rsplit('.', 1)
+@@ -117,13 +125,28 @@ def _import_string_logic(dotted_path: str) -> Any:
+                 return _import_string_logic(f'{maybe_module_path}:{maybe_attribute}')
+             except ImportError:
+                 pass
+-        raise
++        # Module not found is a path validation error
++        raise _ImportStringPathError(str(e)) from e
++    except ImportError as e:
++        # Check if this is an internal import error (module exists but has import issues)
++        # vs. a path validation error (module doesn't exist)
++        from importlib import util
++        try:
++            spec = util.find_spec(module_path)
++            if spec is not None:
++                # Module exists but has internal import errors - preserve the original error
++                raise e
++        except (ImportError, ValueError, AttributeError):
++            # find_spec itself failed, treat as path validation error
++            pass
++        # Module doesn't exist, treat as path validation error
++        raise _ImportStringPathError(str(e)) from e
+ 
+     if attribute is not None:
+         try:
+             return getattr(module, attribute)
+         except AttributeError as e:
+-            raise ImportError(f'cannot import name {attribute!r} from {module_path!r}') from e
++            raise _ImportStringPathError(f'cannot import name {attribute!r} from {module_path!r}') from e
+     else:
+         return module
+ 

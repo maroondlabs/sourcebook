@@ -1,0 +1,18 @@
+{
+  "repo": "calcom/cal.com",
+  "issue": 27907,
+  "issue_title": "PayPal Setup component contains untranslated strings (TODO)",
+  "condition": "repomix",
+  "run_id": "calcom-cal.com_27907_repomix_1775620418",
+  "model": "claude-sonnet-4-20250514",
+  "repo_sha": "4cbbb962e2d33a96cee352b20b8e417eca545edf",
+  "agent_time_ms": 184004,
+  "patch_lines":      141,
+  "files_changed":        3,
+  "input_tokens": 3112,
+  "output_tokens": 8010,
+  "tool_calls": 0,
+  "turns": 39,
+  "produced_patch": true,
+  "timestamp": "2026-04-08T03:56:48Z"
+}

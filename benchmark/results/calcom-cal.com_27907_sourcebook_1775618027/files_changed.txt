@@ -1,0 +1,4 @@
+CLAUDE.md
+packages/app-store/paypal/components/EventTypeAppCardInterface.tsx
+packages/app-store/paypal/components/EventTypeAppSettingsInterface.tsx
+packages/i18n/locales/en/common.json

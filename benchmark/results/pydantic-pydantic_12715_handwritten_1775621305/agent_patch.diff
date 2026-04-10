@@ -1,0 +1,97 @@
+diff --git a/pydantic/_internal/_validators.py b/pydantic/_internal/_validators.py
+index 3ad6c92..4459b20 100644
+--- a/pydantic/_internal/_validators.py
++++ b/pydantic/_internal/_validators.py
+@@ -118,6 +118,31 @@ def _import_string_logic(dotted_path: str) -> Any:
+             except ImportError:
+                 pass
+         raise
++    except ImportError as e:
++        # If we get an ImportError (not ModuleNotFoundError), it means the module exists
++        # but there was an error during import (e.g., missing dependency within the module).
++        # Check if this is truly an issue with the module path itself or an internal error.
++
++        # If the error message mentions the module_path we're trying to import,
++        # it's likely a path issue. Otherwise, it's probably an internal import error.
++        error_msg = str(e)
++        if f"No module named '{module_path}'" in error_msg:
++            # This is actually a module-not-found issue, treat it like ModuleNotFoundError
++            if attribute is None and '.' in module_path:
++                # Try interpreting the final dotted segment as an attribute, not a submodule
++                maybe_module_path, maybe_attribute = module_path.rsplit('.', 1)
++
++                try:
++                    return _import_string_logic(f'{maybe_module_path}:{maybe_attribute}')
++                except ImportError:
++                    pass
++            raise
++        else:
++            # This is an internal import error within the module, preserve the original error
++            # by re-raising with a more informative message
++            raise ImportError(
++                f"Error importing module '{module_path}': {error_msg}"
++            ) from e
+ 
+     if attribute is not None:
+         try:
+diff --git a/tests/test_types.py b/tests/test_types.py
+index 21faeab..ec222c9 100644
+--- a/tests/test_types.py
++++ b/tests/test_types.py
+@@ -1041,6 +1041,56 @@ def test_string_import_errors(import_string, errors):
+     assert exc_info.value.errors() == errors
+ 
+ 
++def test_import_string_with_internal_import_error():
++    """Test that ImportString properly reports internal ImportError from within modules.
++
++    When a module exists but has an ImportError during import (e.g., missing dependency),
++    the error should preserve the original ImportError message rather than claiming
++    the import path is invalid.
++
++    This addresses: https://github.com/pydantic/pydantic/issues/xxxxx
++    """
++    import tempfile
++    import os
++    from pathlib import Path
++
++    # Create a temporary module with an internal ImportError
++    with tempfile.TemporaryDirectory() as temp_dir:
++        temp_module_path = Path(temp_dir) / 'test_module_internal_error.py'
++        temp_module_path.write_text("""
++import nonexistent_module  # This will cause ImportError
++
++class TestClass:
++    pass
++""")
++
++        # Add temp directory to sys.path so the module can be imported
++        import sys
++        sys.path.insert(0, temp_dir)
++
++        try:
++            adapter = TypeAdapter(ImportString)
++
++            # This should raise a ValidationError with the original ImportError message
++            with pytest.raises(ValidationError) as exc_info:
++                adapter.validate_python('test_module_internal_error.TestClass')
++
++            # The error should mention the actual missing module, not claim the path is invalid
++            error = exc_info.value.errors()[0]
++            assert error['type'] == 'import_error'
++
++            # The error message should contain information about the actual ImportError
++            error_msg = error['ctx']['error']
++            assert 'nonexistent_module' in error_msg or 'No module named' in error_msg
++            # Should not claim that 'test_module_internal_error.TestClass' doesn't exist
++            assert 'test_module_internal_error.TestClass' not in error_msg
++
++        finally:
++            # Clean up sys.path
++            if temp_dir in sys.path:
++                sys.path.remove(temp_dir)
++
++
+ @pytest.mark.xfail(
+     reason='This fails with pytest bc of the weirdness associated with importing modules in a test, but works in normal usage'
+ )

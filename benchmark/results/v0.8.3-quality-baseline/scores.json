@@ -1,0 +1,132 @@
+{
+  "version": "0.8.3",
+  "date": "2026-04-07",
+  "note": "Baseline captured from local main build before hybrid sampling / pattern validation improvements",
+  "repos": [
+    {
+      "repo": "calcom/cal.com",
+      "type": "monorepo-app",
+      "language": "TypeScript",
+      "files": 10457,
+      "output_chars": 5815,
+      "gen_ms": 1364,
+      "scores": {
+        "pattern_detection": { "grade": "EXCELLENT", "score": 5, "notes": "21 findings. Next.js, tRPC, Zod, React Query, Vitest, Prisma, Tailwind, NextAuth, i18n all correctly detected. Monorepo + barrel exports + co-located tests all correct." },
+        "repo_mode": { "grade": "PASS", "score": 4, "notes": "Monorepo correctly detected. Stack='Next.js, Tailwind CSS, TypeScript' is accurate." },
+        "export_conventions": { "grade": "PASS", "score": 5, "notes": "Named exports over default correctly surfaced (26 named vs 2 default). Appropriate for app repo." },
+        "auth_detection": { "grade": "PARTIAL", "score": 3, "notes": "NextAuth.js detected in dominant patterns. But no entrypoint file surfaced (v0.5 had auth-middleware.ts). Auth not in Quick Reference section." },
+        "hub_files_import_graph": { "grade": "EXCELLENT", "score": 5, "notes": "5 hub files with import counts (172→72→60→53→51 dependents). 3 circular dependency chains identified. Blast radius framing is correct." }
+      },
+      "avg_score": 4.4,
+      "bugs": [
+        "Auth entrypoint not surfaced (auth-middleware.ts missing from output)",
+        "i18n missing from Quick Reference (was in prior output)"
+      ]
+    },
+    {
+      "repo": "honojs/hono",
+      "type": "library",
+      "language": "TypeScript",
+      "files": 482,
+      "output_chars": 2864,
+      "gen_ms": 187,
+      "scores": {
+        "pattern_detection": { "grade": "PARTIAL", "score": 2, "notes": "Routing (Hono routes), Vitest, barrel exports correctly detected. BUT Stack='React, Express' is completely wrong — Hono is neither React nor Express. False positive from Express-like API patterns." },
+        "repo_mode": { "grade": "FAIL", "score": 1, "notes": "Library mode not flagged. No mention that this is a publishable npm library. Dead code candidates (12 benchmark files) detected during analysis but not in output." },
+        "export_conventions": { "grade": "PASS", "score": 4, "notes": "No export convention section — correctly suppressed for a library. Good." },
+        "auth_detection": { "grade": "N/A", "score": null, "notes": "Correct — Hono has no built-in auth system." },
+        "hub_files_import_graph": { "grade": "EXCELLENT", "score": 5, "notes": "5 hub files with accurate import counts (47→41→25→21→18). Correct files: types.ts and context.ts are genuinely central. 3 circular dependency chains detected." }
+      },
+      "avg_score": 3.0,
+      "bugs": [
+        "MAJOR: Stack='React, Express' is a false positive — Hono is a TypeScript web framework, not React/Express",
+        "Library mode not detected",
+        "Dead code candidates surfaced in CLI output but not written to CLAUDE.md"
+      ]
+    },
+    {
+      "repo": "pydantic/pydantic",
+      "type": "library",
+      "language": "Python",
+      "files": 765,
+      "output_chars": 1791,
+      "gen_ms": 196,
+      "scores": {
+        "pattern_detection": { "grade": "PARTIAL", "score": 2, "notes": "Pydantic BaseModel and pytest detected. Separate test/ structure correct. But only 4 findings for 765 files. No mypy plugin, no Rust core, no __init__.py exports detected. Very thin for a complex library." },
+        "repo_mode": { "grade": "FAIL", "score": 1, "notes": "Library mode not flagged. Stack='Python' is technically correct but provides zero signal. No 'this is a package you publish' guidance." },
+        "export_conventions": { "grade": "PASS", "score": 4, "notes": "No TS-style export conventions shown (correct — Python library). Python __init__.py pattern not surfaced but absence is acceptable." },
+        "auth_detection": { "grade": "N/A", "score": null, "notes": "Correct — pydantic is a validation library with no auth." },
+        "hub_files_import_graph": { "grade": "FAIL", "score": 1, "notes": "No hub files listed. No import graph. Python import analysis not implemented. For a library this is a significant miss — pydantic/main.py, pydantic/fields.py are highly central." }
+      },
+      "avg_score": 2.0,
+      "bugs": [
+        "No Python import graph / hub file analysis",
+        "Library mode not detected",
+        "Only 4 findings for 765-file complex library",
+        "Build command 'make' is correct but dev workflow not described",
+        "FALSE POSITIVE in harness run (not fresh clone): 'API endpoints use FastAPI endpoints' appeared due to doc/example files importing FastAPI — examples/ filter not covering docs/"
+      ]
+    },
+    {
+      "repo": "fastapi/fastapi",
+      "type": "library",
+      "language": "Python",
+      "files": 2984,
+      "output_chars": 2318,
+      "gen_ms": 312,
+      "scores": {
+        "pattern_detection": { "grade": "EXCELLENT", "score": 5, "notes": "9 findings: FastAPI, Pydantic, SQLAlchemy/SQLModel, pytest, DI pattern, route directories all correctly detected. Best Python output in the set." },
+        "repo_mode": { "grade": "PARTIAL", "score": 2, "notes": "Stack='FastAPI' is technically correct but ambiguous. No library mode flag. Route directories identified (fastapi, fastapi/security, fastapi/openapi) is good." },
+        "export_conventions": { "grade": "PASS", "score": 4, "notes": "No export conventions shown — correct for a Python library." },
+        "auth_detection": { "grade": "FAIL", "score": 1, "notes": "fastapi.security (OAuth2, HTTP Bearer, API keys) is a significant module in FastAPI but not surfaced. Route directory fastapi/security detected but not called out as the auth system." },
+        "hub_files_import_graph": { "grade": "FAIL", "score": 1, "notes": "No hub files listed despite 2984 files. Python import graph not implemented. fastapi/routing.py, fastapi/applications.py are deeply central." }
+      },
+      "avg_score": 2.6,
+      "bugs": [
+        "No Python import graph / hub file analysis",
+        "fastapi.security not flagged as auth system",
+        "Library mode not detected",
+        "Route directory 'fastapi/security' noted but connection to auth not made"
+      ]
+    },
+    {
+      "repo": "sindresorhus/ora",
+      "type": "library",
+      "language": "TypeScript/ESM",
+      "files": 20,
+      "output_chars": 1398,
+      "gen_ms": 104,
+      "scores": {
+        "pattern_detection": { "grade": "FAIL", "score": 1, "notes": "0 frameworks detected, 1 finding (git history warning). ESM-only (type:module), xo linter, node:test runner all missed. For a 20-file library these are the most important conventions. Test command IS correctly captured from package.json." },
+        "repo_mode": { "grade": "PARTIAL", "score": 2, "notes": "No library mode flag, but output is minimal which is appropriate for size. index.js as hub file is correct." },
+        "export_conventions": { "grade": "PASS", "score": 5, "notes": "No export conventions shown — correct for a library. This is properly suppressed." },
+        "auth_detection": { "grade": "N/A", "score": null, "notes": "N/A — terminal spinner library." },
+        "hub_files_import_graph": { "grade": "PASS", "score": 4, "notes": "index.js correctly identified as the single hub. Appropriate for a 20-file library." }
+      },
+      "avg_score": 3.0,
+      "bugs": [
+        "ESM-only convention not detected (type:module in package.json)",
+        "xo linter not detected",
+        "node:test runner not detected (uses non-standard test runner)",
+        "Library mode not flagged"
+      ]
+    }
+  ],
+  "aggregate": {
+    "pattern_detection_avg": 3.0,
+    "repo_mode_avg": 2.0,
+    "export_conventions_avg": 4.4,
+    "auth_detection_avg": 2.0,
+    "hub_files_avg": 3.2,
+    "overall_avg": 3.0
+  },
+  "top_issues": [
+    { "priority": 1, "issue": "Hono Stack false positive: 'React, Express' for a TypeScript web framework", "affected": ["honojs/hono"], "severity": "HIGH" },
+    { "priority": 2, "issue": "Library mode not detected for any library repo — no repoMode=library flag, no library-specific guidance", "affected": ["honojs/hono", "pydantic/pydantic", "fastapi/fastapi", "sindresorhus/ora"], "severity": "HIGH" },
+    { "priority": 3, "issue": "Python import graph missing — no hub file analysis for Python repos", "affected": ["pydantic/pydantic", "fastapi/fastapi"], "severity": "HIGH" },
+    { "priority": 4, "issue": "Auth detection incomplete for cal.com — NextAuth identified but no entrypoint file", "affected": ["calcom/cal.com"], "severity": "MEDIUM" },
+    { "priority": 5, "issue": "fastapi.security not surfaced as auth system despite being a core FastAPI module", "affected": ["fastapi/fastapi"], "severity": "MEDIUM" },
+    { "priority": 6, "issue": "ora: ESM-only, xo linter, node:test runner all missed on a 20-file library", "affected": ["sindresorhus/ora"], "severity": "LOW" },
+    { "priority": 7, "issue": "Dead code candidates detected in CLI output but not written to CLAUDE.md (hono benchmark files)", "affected": ["honojs/hono"], "severity": "LOW" }
+  ]
+}

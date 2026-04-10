@@ -1,0 +1,5 @@
+ CLAUDE.md                                          | 110 ++++++---------------
+ .../components/EventTypeAppCardInterface.tsx       |   2 +-
+ .../components/EventTypeAppSettingsInterface.tsx   |   6 +-
+ packages/i18n/locales/en/common.json               |   1 +
+ 4 files changed, 35 insertions(+), 84 deletions(-)

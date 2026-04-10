@@ -1,0 +1,64 @@
+You are working on the honojs/hono repository.
+
+## Task
+Fix the following issue:
+
+**parseBody() breaks subsequent text()/json() calls with TypeError**
+
+### What version of Hono are you using?
+
+4.12.8
+
+### What runtime/platform is your app running on? (with version if possible)
+
+Node.js v22 (also reproducible on any runtime)
+
+### What steps can reproduce the bug?
+
+Calling `parseBody()` followed by `text()` or `json()` on the same request throws `TypeError: bodyCache[anyCachedKey].then is not a function`.
+
+This happens when `Content-Type` is **not** `multipart/form-data` or `application/x-www-form-urlencoded` (e.g., `application/json` or no Content-Type header).
+
+**Root cause:**
+`parseBody()` stores a resolved plain object in `bodyCache.parsedBody` (via `??= await parseBody(...)`). When Content-Type is not a form type, `parseBody()` returns `{}` immediately without going through `formData()`, so `parsedBody` is the only key in `bodyCache`.
+
+`#cachedBody()` then picks it up via `Object.keys(bodyCache)[0]` and calls `.then()` on it, assuming every cache entry is a `Promise`.
+
+When Content-Type **is** a form type, `parseBody()` internally calls `request.formData()` which goes through `#cachedBody('formData')`, caching a `Promise` under `bodyCache.formData` first — so `Object.keys()[0]` is `'formData'` and `.then()` succeeds.
+
+**Reproduction:**
+
+```typescript
+import { HonoRequest } from 'hono/request'
+
+const req = new HonoRequest(
+  new Request('http://localhost', {
+    method: 'POST',
+    body: JSON.stringify({ event: 'push' }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+)
+await req.parseBody()  // returns {}, caches plain object in bodyCache.parsedBody
+await req.text()       // TypeError: bodyCache[anyCachedKey].then is not a function
+```
+
+### What is the expected behavior?
+
+`text()` should return the raw request body text regardless of whether `parseBody()` was called first.
+
+### What do you see instead?
+
+`TypeError: bodyCache[anyCachedKey].then is not a function`
+
+### Additional information
+
+**Use case:** A middleware that tries to extract form data if present (without checking Content-Type upfront), t
+
+## Instructions
+- Read the codebase to understand the problem
+- Make the minimal changes needed to fix the issue
+- Follow the existing code conventions and patterns
+- Do not add unnecessary changes
+- Create or modify tests if the fix warrants it
+
+When you are done, stop. Do not run tests unless you are confident they exist and will work.

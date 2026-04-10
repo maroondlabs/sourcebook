@@ -1,0 +1,4 @@
+ AGENTS.md                                       | 244 ------------------------
+ CLAUDE.md                                       |  93 ++++++++-
+ apps/web/modules/auth/oauth2/authorize-view.tsx |  21 +-
+ 3 files changed, 111 insertions(+), 247 deletions(-)

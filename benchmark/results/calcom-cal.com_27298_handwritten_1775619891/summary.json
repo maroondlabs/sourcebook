@@ -1,0 +1,18 @@
+{
+  "repo": "calcom/cal.com",
+  "issue": 27298,
+  "issue_title": "Fix OAuth flow if sign up is required",
+  "condition": "handwritten",
+  "run_id": "calcom-cal.com_27298_handwritten_1775619891",
+  "model": "claude-sonnet-4-20250514",
+  "repo_sha": "4cbbb962e2d33a96cee352b20b8e417eca545edf",
+  "agent_time_ms": 145043,
+  "patch_lines":      157,
+  "files_changed":        2,
+  "input_tokens": 218,
+  "output_tokens": 7304,
+  "tool_calls": 0,
+  "turns": 27,
+  "produced_patch": true,
+  "timestamp": "2026-04-08T03:47:17Z"
+}

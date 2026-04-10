@@ -1,0 +1,56 @@
+=== sourcebook benchmark ===
+Repo:      honojs/hono
+Issue:     #4806
+Condition: sourcebook
+Model:     claude-sonnet-4-20250514
+Run ID:    honojs-hono_4806_sourcebook_1775613801
+
+[1/7] Fetching issue and PR info...
+Issue: parseBody() breaks subsequent text()/json() calls with TypeError
+Base SHA: ...
+[2/7] Setting up honojs/hono at pre-fix state...
+Reusing existing clone at /tmp/sourcebook-bench/honojs-hono
+[3/7] Applying context condition: sourcebook...
+Generating sourcebook context...
+
+sourcebook
+Extracting repo truths...
+
+✓ Scanned project structure
+  482 files, 3 frameworks detected
+✓ Extracted 8 findings
+
+  ● Testing: Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.
+  ● Import conventions: Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.
+    evidence: 11 barrel export files found
+  ● Dominant patterns: API endpoints use Hono routes. Follow this pattern for new routes.
+    evidence: 23 files use Hono routes
+  ● Dominant patterns: Tests use Vitest.
+    evidence: 29 test files
+  ● Git history: Limited git history available (shallow clone). Clone with full history for git insights.
+  ● Core modules: Hub files (most depended on): src/types.ts (imported by 47 files); src/context.ts (imported by 41 files); src/jsx/base.ts (imported by 25 files); src/router.ts (imported by 21 files); src/utils/html.ts (imported by 18 files). Changes here have the widest blast radius.
+  ● Circular dependencies: Circular import chains detected: request.ts → body.ts; compose.ts → types.ts → hono-base.ts; jws.ts → types.ts. Avoid adding to these cycles.
+  ● Dead code candidates: 12 source files have no import connections (potential dead code): benchmarks/webapp/sunder.js, benchmarks/webapp/itty-router.js, benchmarks/webapp/hono.js, benchmarks/utils/src/loop.js, benchmarks/utils/src/get-path.ts, ...
+
+✓ Wrote CLAUDE.md
+
+Review the generated files and edit to add context only you know.
+The best repo truths come from human + machine together.
+
+sourcebook: 716 tokens, 789ms
+[4/7] Creating task prompt...
+[5/7] Running agent...
+{"type":"result","subtype":"success","is_error":false,"duration_ms":264019,"duration_api_ms":255050,"num_turns":37,"result":"## Summary\n\nI have successfully fixed the issue with `parseBody()` breaking subsequent `text()`/`json()` calls. Here's what I did:\n\n### Root Cause\nThe `#cachedBody` method in `src/request.ts` assumed all cached values were Promises and called `.then()` on them without checking. When non-Promise values (like plain objects) got stored in the `bodyCache`, subsequent calls to `text()`, `json()`, etc. would fail with:\n```\nTypeError: bodyCache[anyCachedKey].then is not a function\n```\n\n### The Fix\nI modified the `#cachedBody` method in `src/request.ts` (lines 220-239) to check if cached values are Promises before calling `.then()` on them:\n\n```typescript\n// Check if the cached value is a Promise\nif (cachedValue && typeof cachedValue === 'object' && 'then' in cachedValue) {\n  // Handle Promise (existing logic)\n  return (cachedValue as Promise<BodyInit>).then((body) => {\n    if (anyCachedKey === 'json') {\n      body = JSON.stringify(body)\n    }\n    return new Response(body)[key]()\n  })\n} else {\n  // Handle non-Promise cached values by falling back to raw request\n  return (bodyCache[key] = raw[key]())\n}\n```\n\n### Testing\n- Added a new test case to `src/request.test.ts` that simulates the problematic scenario\n- Verified that all existing body parsing functionality continues to work correctly\n- Tested edge cases including mixed Promise/non-Promise cache values\n\n### Key Benefits\n✅ **Minimal change**: Only modified the problematic assumption in one method  \n✅ **Backward compatible**: All existing functionality preserved  \n✅ **Graceful fallback**: When encountering non-Promise values, falls back to raw request  \n✅ **Robust**: Handles various edge cases safely  \n\nThe fix resolves the TypeError while maintaining all existing behavior for normal use cases.","stop_reason":null,"session_id":"85b6424b-48e1-4731-accf-d420eeffbd52","total_cost_usd":0.92783665,"usage":{"input_tokens":298,"cache_creation_input_tokens":61237,"cache_read_input_tokens":1705043,"output_tokens":12073,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":61237,"ephemeral_5m_input_tokens":0},"inference_geo":"","iterations":[],"speed":"standard"},"modelUsage":{"claude-sonnet-4-20250514":{"inputTokens":298,"outputTokens":12073,"cacheReadInputTokens":1705043,"cacheCreationInputTokens":61237,"webSearchRequests":0,"costUSD":0.9231406500000002,"contextWindow":200000,"maxOutputTokens":32000},"claude-haiku-4-5-20251001":{"inputTokens":3416,"outputTokens":256,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"webSearchRequests":0,"costUSD":0.0046960000000000005,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"uuid":"c29ce865-2f10-46ee-951d-dbec60e6d0d4"}
+[6/7] Capturing results...
+[7/7] Scoring quality...
+
+=== Run complete ===
+Condition:     sourcebook
+Time:          264s
+Input tokens:  3714
+Output tokens: 12329
+Tool calls:    0
+Turns:         37
+Files changed:        2
+Patch lines:         61
+Results:       /Users/rhagent/Documents/sourcebook/benchmark/results/honojs-hono_4806_sourcebook_1775613801
