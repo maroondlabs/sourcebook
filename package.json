@@ -1,7 +1,7 @@
 {
   "name": "sourcebook",
   "mcpName": "io.github.maroondlabs/sourcebook",
-  "version": "0.9.5",
+  "version": "0.10.0",
   "description": "Extract the conventions, constraints, and architectural truths your AI coding agents keep missing.",
   "type": "module",
   "bin": {
