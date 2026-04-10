@@ -11,6 +11,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "stripe": "^21.0.0"
+    "@octokit/auth-app": "^8.2.0",
+    "octokit": "^5.0.5",
+    "sourcebook": "^0.9.1",
+    "stripe": "^21.0.0",
+    "tar": "^7.5.13"
   }
 }
