@@ -2,6 +2,7 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -32,13 +33,46 @@ html.dark .hover\:bg-black:hover{background-color:#fff!important}
 html.dark .hover\:text-white:hover{color:#000!important}
 html.dark .hover\:text-black:hover{color:#000!important}
 </style>
-<title>HOW NEXT.JS WORKS | SOURCEBOOK</title>
-<meta name="description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files."/>
-<link rel="canonical" href="https://sourcebook.run/for/nextjs"/>
-<meta property="og:title" content="How Next.js Works | sourcebook"/>
-<meta property="og:url" content="https://sourcebook.run/for/nextjs"/>
+<title>HOW SHADCN/UI WORKS | SOURCEBOOK</title>
+<meta name="description" content="How the shadcn/ui repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Generated files detected — editing them directly will break builds. Extracted from 7,957 files."/>
+<link rel="canonical" href="https://sourcebook.run/for/shadcn-ui"/>
+<meta property="og:title" content="How shadcn/ui Works | sourcebook"/>
+<meta property="og:description" content="How the shadcn/ui repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Generated files detected — editing them directly will break builds. Extracted from 7,957 files."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/shadcn-ui"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How shadcn/ui Works | sourcebook"/>
+<meta name="twitter:description" content="How the shadcn/ui repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Generated files detected — editing them directly will break builds."/>
+<meta name="twitter:image" content="https://sourcebook.run/og-image.png"/>
 <meta name="robots" content="index, follow"/>
 <link rel="icon" type="image/png" href="/logo.png"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "How shadcn/ui Works",
+  "description": "How the shadcn/ui repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Generated files detected — editing them directly will break builds. Extracted from 7,957 files.",
+  "url": "https://sourcebook.run/for/shadcn-ui",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-07",
+  "author": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "about": {
+    "@type": "SoftwareSourceCode",
+    "name": "shadcn/ui",
+    "codeRepository": "https://github.com/shadcn-ui/ui"
+  }
+}
+</script>
 </head>
 <body class="bg-white text-black antialiased">
 <nav class="bg-white flex justify-between items-center w-full px-6 py-4 border-b border-black/5 sticky top-0 z-50">
@@ -60,16 +94,16 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <section class="mb-12">
   <div class="flex flex-wrap gap-4 mb-4 text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary">
     <span class="bg-black text-white px-2 py-0.5">TypeScript</span>
-    <span>27,423 FILES</span>
-    <span class="text-[#00881d]">8 FINDINGS</span>
+    <span>7,957 FILES</span>
+    <span class="text-[#00881d]">10 FINDINGS</span>
   </div>
   <h1 class="text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-6 leading-none">
-    HOW NEXT.JS<br/>ACTUALLY WORKS
+    HOW SHADCN/UI<br/>ACTUALLY WORKS
   </h1>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <p class="text-lg text-secondary col-span-2 leading-relaxed">The React framework for the web. Conventions, patterns, and architecture extracted from the <a href="https://github.com/vercel/next.js" class="underline">vercel/next.js</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
+    <p class="text-lg text-secondary col-span-2 leading-relaxed">Beautifully designed components built with Radix UI and Tailwind CSS. Conventions, patterns, and architecture extracted from the <a href="https://github.com/shadcn-ui/ui" class="underline">shadcn-ui/ui</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
     <div class="flex items-end justify-end">
-      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/vercel/next.js">
+      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/shadcn-ui/ui">
         VIEW_REPO <span class="material-symbols-outlined">north_east</span>
       </a>
     </div>
@@ -81,7 +115,7 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <section class="mb-12 bg-surface-container-low p-4 flex flex-wrap gap-6 items-center border-l-4 border-black">
   <span class="text-xs font-bold font-['Space_Grotesk'] uppercase tracking-tighter">QUICK_REF:</span>
   <div class="flex flex-wrap gap-3">
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Testing:</b> Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Testing:</b> Vitest. Test utilities in: packages/tests/src/utils/helpers.ts.</span>
   </div>
 </section>
 
@@ -95,10 +129,6 @@ html.dark .hover\:text-black:hover{color:#000!important}
   <ul class="space-y-6">
     <li class="flex gap-4 items-start">
       <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">TypeScript strict mode is OFF — agents shouldn't add strict type annotations</p>
-    </li>
-    <li class="flex gap-4 items-start">
-      <span class="text-[#00881d] font-bold">→</span>
       <p class="text-sm leading-relaxed">This is a monorepo — check workspace dependencies before modifying shared code</p>
     </li>
     <li class="flex gap-4 items-start">
@@ -107,7 +137,11 @@ html.dark .hover\:text-black:hover{color:#000!important}
     </li>
     <li class="flex gap-4 items-start">
       <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">packages/next/src/shared/lib/invariant-error.ts is a hub file (imported by 54 files) — changes here ripple everywhere</p>
+      <p class="text-sm leading-relaxed">packages/shadcn/src/templates/create-template.ts is a hub file (imported by 9 files) — changes here ripple everywhere</p>
+    </li>
+    <li class="flex gap-4 items-start">
+      <span class="text-[#00881d] font-bold">→</span>
+      <p class="text-sm leading-relaxed">Circular import chains detected — avoid adding to these cycles</p>
     </li>
   </ul>
 </div>
@@ -120,20 +154,6 @@ html.dark .hover\:text-black:hover{color:#000!important}
   <div class="space-y-4">
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Strict mode is OFF. Don't add strict type annotations that would break existing patterns.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Path aliases configured: development-sandbox, next-test-utils, next-webdriver, e2e-utils, test-data-service, test-log, router-act, @next/playwright. Use these instead of relative imports.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
         <p class="font-medium text-sm">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
@@ -141,39 +161,60 @@ html.dark .hover\:text-black:hover{color:#000!important}
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">4 test files</code>
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Generated files detected (test/integration/relay-graphql-swc-single-project/queries/__generated__/pagesQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-b/__generated__/pagesBQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-a/__generated__/pagesAQuery.graphql.ts, examples/with-xata/utils/xata.codegen.ts, examples/with-typescript-graphql/codegen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">19 generated files</code>
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Hub files (most depended on): packages/next/src/shared/lib/invariant-error.ts (imported by 54 files); packages/next/src/server/config-shared.ts (imported by 49 files); packages/next/src/server/route-modules/app-page/module.compiled.js (imported by 48 files); packages/next/src/server/request/params.ts (imported by 45 files); packages/next/src/shared/lib/app-router-types.ts (imported by 42 files). Changes here have the widest blast radius.</p>
+        <p class="font-medium text-sm">Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Circular import chains detected: describe.ts → compose.ts → index.ts → runner.ts; index.ts → runner.ts; module.js. Avoid adding to these cycles.</p>
+        <p class="font-medium text-sm">Tests use Vitest. Test utilities in: packages/tests/src/utils/helpers.ts.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">12 test files</code>
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Styling uses Tailwind CSS utility classes. Custom design tokens defined in packages/shadcn/test/fixtures/next-src/tailwind.config.js — use these instead of arbitrary values.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">39 files</code>
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Generated files detected (packages/tests/fixtures/next-app-init/app/layout.tsx, packages/tests/fixtures/next-app/app/layout.tsx, packages/shadcn/test/fixtures/next-app-js/app/layout.js, packages/shadcn/test/fixtures/frameworks/t3-pages/src/pages/index.tsx, templates/start-monorepo/apps/web/src/routeTree.gen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">6 generated files</code>
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Hub files (most depended on): packages/shadcn/src/templates/create-template.ts (imported by 9 files); apps/v4/registry/icons/create-icon-loader.tsx (imported by 5 files). Changes here have the widest blast radius.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Circular import chains detected: routeTree.gen.ts → router.tsx; routeTree.gen.ts → router.tsx. Avoid adding to these cycles.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       
     </div>
     
     <details class="mt-4">
-      <summary class="text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary cursor-pointer hover:text-black">+ 1 MORE FINDINGS (MEDIUM CONFIDENCE)</summary>
+      <summary class="text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary cursor-pointer hover:text-black">+ 2 MORE FINDINGS (MEDIUM CONFIDENCE)</summary>
       <div class="mt-4 space-y-4">
         <div class="border-l-4 border-yellow-400 bg-white p-6">
           <div class="flex justify-between items-start mb-2">
-            <p class="font-medium text-sm">UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.</p>
+            <p class="font-medium text-sm">Project prefers default exports. Use `export default` for main module exports.</p>
+            <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
+          </div>
+          <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">58 default vs 5 named exports in sampled files</code>
+        </div>
+        <div class="border-l-4 border-yellow-400 bg-white p-6">
+          <div class="flex justify-between items-start mb-2">
+            <p class="font-medium text-sm">UI components live in: templates/vite-monorepo/apps/web/src/components, templates/vite-app/src/components, templates/next-monorepo/apps/web/components. Add new components here.</p>
             <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
           </div>
           <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">3 component directories</code>
@@ -213,57 +254,51 @@ Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and
 
 ## Quick Reference
 
-- **testing:** Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.
+- **testing:** Tests use Vitest. Test utilities in: packages/tests/src/utils/helpers.ts.
+- **components:** UI components live in: templates/vite-monorepo/apps/web/src/components, templates/vite-app/src/components, templates/next-monorepo/apps/web/components. Add new components here.
 
 ## Commands
 
-- **Dev:** `turbo run dev --parallel --filter=&quot;!@next/bundle-analyzer-ui&quot;`
-- **Build:** `turbo run build --remote-cache-timeout 60 --summarize true`
-- **Test:** `pnpm test-webpack`
-- **Lint:** `run-p test-types lint-typescript prettier-check &quot;lint-eslint .&quot; lint-ast-grep lint-language check-unused-turbo-tasks`
-- **test-deploy-inner:** `cross-env NEXT_TEST_MODE=deploy pnpm testheadless`
-- **test-deploy:** `pnpm run test-deploy-webpack`
-- **test-deploy-webpack:** `pnpm run with-webpack pnpm test-deploy-inner`
-- **test-deploy-turbo:** `pnpm run with-turbo pnpm test-deploy-inner`
-- **testonly-deploy-inner:** `cross-env NEXT_TEST_MODE=deploy pnpm testonly`
-- **testonly-deploy:** `pnpm run testonly-deploy-webpack`
-- **testonly-deploy-webpack:** `pnpm run with-webpack pnpm run testonly-deploy-inner`
-- **testonly-deploy-turbo:** `pnpm run with-turbo pnpm testonly-deploy-inner`
+- **Dev:** `turbo run dev --parallel`
+- **Build:** `turbo run build`
+- **Test:** `start-server-and-test v4:dev http://localhost:4000 test:dev`
+- **Lint:** `turbo run lint`
+- **typecheck:** `turbo run typecheck`
 
 ## Critical Constraints
 
-- **TypeScript:** Strict mode is OFF. Don't add strict type annotations that would break existing patterns.
-- **Critical constraints:** Generated files detected (test/integration/relay-graphql-swc-single-project/queries/__generated__/pagesQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-b/__generated__/pagesBQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-a/__generated__/pagesAQuery.graphql.ts, examples/with-xata/utils/xata.codegen.ts, examples/with-typescript-graphql/codegen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.
-- **Core modules:** Hub files (most depended on): packages/next/src/shared/lib/invariant-error.ts (imported by 54 files); packages/next/src/server/config-shared.ts (imported by 49 files); packages/next/src/server/route-modules/app-page/module.compiled.js (imported by 48 files); packages/next/src/server/request/params.ts (imported by 45 files); packages/next/src/shared/lib/app-router-types.ts (imported by 42 files). Changes here have the widest blast radius.
-- **Circular dependencies:** Circular import chains detected: describe.ts → compose.ts → index.ts → runner.ts; index.ts → runner.ts; module.js. Avoid adding to these cycles.
+- **Testing:** Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.
+- **Critical constraints:** Generated files detected (packages/tests/fixtures/next-app-init/app/layout.tsx, packages/tests/fixtures/next-app/app/layout.tsx, packages/shadcn/test/fixtures/next-app-js/app/layout.js, packages/shadcn/test/fixtures/frameworks/t3-pages/src/pages/index.tsx, templates/start-monorepo/apps/web/src/routeTree.gen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.
+- **Core modules:** Hub files (most depended on): packages/shadcn/src/templates/create-template.ts (imported by 9 files); apps/v4/registry/icons/create-icon-loader.tsx (imported by 5 files). Changes here have the widest blast radius.
+- **Circular dependencies:** Circular import chains detected: routeTree.gen.ts → router.tsx; routeTree.gen.ts → router.tsx. Avoid adding to these cycles.
 
 ## Stack
 
-Next.js, Expo, Supabase, Tailwind CSS, Express, TypeScript
+Next.js, Tailwind CSS, TypeScript
 
 ## Project Structure
 
-- `test/` — Tests
 - `scripts/` — Build / utility scripts
-- `docs/` — Documentation
 
 ## Core Modules (by structural importance)
 
-- `turbopack/crates/turbopack-tests/tests/execution/turbopack/chunking/combinations/input/d.js`
-- `packages/next/src/shared/lib/invariant-error.ts`
-- `packages/next/src/shared/lib/app-router-types.ts`
-- `packages/next/src/shared/lib/segment-cache/vary-params-decoding.ts`
-- `turbopack/packages/devlow-bench/src/runner.ts`
+- `packages/shadcn/src/templates/create-template.ts`
+- `apps/v4/registry/icons/create-icon-loader.tsx`
+- `packages/shadcn/src/registry/api.ts`
+- `packages/shadcn/src/utils/transformers/transform-css-vars.ts`
+- `packages/shadcn/src/templates/monorepo.ts`
 
 ## Conventions &amp; Patterns
 
-- **TypeScript imports:** Path aliases configured: development-sandbox, next-test-utils, next-webdriver, e2e-utils, test-data-service, test-log, router-act, @next/playwright. Use these instead of relative imports.
 - **Project structure:** This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
-- **Dominant patterns:** Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.
+- **Dominant patterns:**
+  - Tests use Vitest. Test utilities in: packages/tests/src/utils/helpers.ts.
+  - Styling uses Tailwind CSS utility classes. Custom design tokens defined in packages/shadcn/test/fixtures/next-src/tailwind.config.js — use these instead of arbitrary values.
 
 ## Additional Context
 
-- **Dominant patterns:** UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.
+- **Export conventions:** Project prefers default exports. Use `export default` for main module exports.
+- **Dominant patterns:** UI components live in: templates/vite-monorepo/apps/web/src/components, templates/vite-app/src/components, templates/next-monorepo/apps/web/components. Add new components here.
 
 ## Before Making Changes
 
@@ -301,13 +336,28 @@ The most valuable context is what only you know. Add:
   </a>
 </section>
 
+<!-- From the blog -->
+<section class="mt-12">
+  <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">FROM_THE_BLOG</h3>
+  <div class="flex flex-col sm:flex-row gap-3">
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/we-benchmarked-ai-context-files">
+      <span class="uppercase tracking-tight">Why AI agents fail on real codebases</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/why-auto-generated-context-makes-agents-worse">
+      <span class="uppercase tracking-tight">Why auto-generated context makes agents worse</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
 
 <!-- Related -->
 <section class="mt-12">
   <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">RELATED_REPOS</h3>
   <div class="flex flex-wrap gap-3">
-    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/calcom">CAL.COM</a>
-    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/supabase">SUPABASE</a>
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/nextjs">NEXT.JS</a>
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/create-t3-app">CREATE T3 APP</a>
   </div>
 </section>
 

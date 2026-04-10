@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>What We Found Scanning 15 Open-Source Repos With 100,000+ Files — sourcebook</title>
+<meta name="description" content="We ran sourcebook on 15 major open-source repos — Next.js, Cal.com, Supabase, Django, and more. Here's what the data says about hub files, invisible coupling, and the traps agents fall into."/>
+<meta property="og:title" content="What We Found Scanning 15 Open-Source Repos With 100,000+ Files"/>
+<meta property="og:description" content="Hub files, invisible coupling, generated file traps, and what 15 repos reveal about how codebases actually work."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/blog/what-we-found-scanning-15-open-source-repos"/>
+<meta property="article:published_time" content="2026-04-07"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="What We Found Scanning 15 Open-Source Repos With 100,000+ Files"/>
+<link rel="canonical" href="https://sourcebook.run/blog/what-we-found-scanning-15-open-source-repos"/>
+<link rel="icon" type="image/png" href="../logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "electric-green": "#00FF41",
+                    "terminal-black": "#0D0D0D",
+                    "error": "#ba1a1a",
+                },
+                fontFamily: {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "What We Found Scanning 15 Open-Source Repos With 100,000+ Files",
+  "description": "We ran sourcebook on 15 major open-source repos — Next.js, Cal.com, Supabase, Django, and more. Here's what the data says about hub files, invisible coupling, and the traps agents fall into.",
+  "url": "https://sourcebook.run/blog/what-we-found-scanning-15-open-source-repos",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-07",
+  "author": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" },
+  "publisher": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" }
+}
+</script>
+</head>
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
+
+<!-- Nav -->
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="../logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main>
+
+<!-- Article Header -->
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">ANALYSIS · APRIL 2026</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+What we found scanning 15 open-source repos with 100,000+ files
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">Next.js, Cal.com, Supabase, Django, FastAPI, and 10 more — what the data says about how real codebases are structured.</p>
+</div>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
+
+<!-- Article Body -->
+<article class="max-w-[720px] mx-auto px-6 py-16">
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We wanted to know what sourcebook actually finds when pointed at repos it's never seen before. Not toy projects — the real ones. The repos that power production apps, that have hundreds of contributors, that have been refactored and patched and hotfixed for years.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+So we ran it on 15 open-source repositories. The smallest was Gin at 130 files. The largest was Next.js at 27,423. Combined: over 85,000 files scanned, 135 findings extracted, zero API keys used, everything local.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The repos: <strong>Next.js</strong>, <strong>Cal.com</strong>, <strong>Supabase</strong>, <strong>Django</strong>, <strong>FastAPI</strong>, <strong>Express</strong>, <strong>Flask</strong>, <strong>Hono</strong>, <strong>Fastify</strong>, <strong>Gin</strong>, <strong>Hugo</strong>, <strong>Pydantic</strong>, <strong>shadcn/ui</strong>, <strong>Create T3 App</strong>, and <strong>SQLModel</strong>.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Here's what we found.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">Every repo has hub files — and agents don't know about them</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Every single repo had between 2 and 5 files imported by 10 or more other files. In Next.js, the number was higher — several modules had 40+ dependents. Cal.com had <code class="bg-terminal-black text-electric-green px-1 font-mono">types.ts</code> files imported by dozens of packages across its monorepo.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+These are the files that break everything when changed. An agent editing a utility function and editing a core type definition should behave very differently — but without structural analysis, it treats them the same. It has no idea that changing one file cascades through 30 others.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+This showed up in every repo we scanned. Not some — every one. Hub files are a universal feature of codebases past a certain size, and they're invisible to agents that read files one at a time.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">TypeScript strict mode is off in repos you'd expect to have it on</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Next.js and Cal.com both run without TypeScript strict mode. This matters for agents because strict mode changes what's valid TypeScript. An agent that adds <code class="bg-terminal-black text-electric-green px-1 font-mono">strictNullChecks</code>-style assertions to a non-strict codebase is writing code that's technically correct but stylistically wrong — and it'll look out of place in every PR review.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+This is the kind of convention an agent can't learn from reading a single file. It needs to see the <code class="bg-terminal-black text-electric-green px-1 font-mono">tsconfig.json</code> and understand its implications across the codebase. sourcebook flags this automatically, and it's one of the findings agents use most.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">Co-change coupling is real and invisible</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+In Cal.com, we found file pairs that changed together in over 80% of commits — but had no import relationship. They lived in different directories. No static analysis would connect them. The only signal was in the git history: when one changes, the other always changes too.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Supabase had a similar pattern between its auth helpers and its database types. Django showed it between settings modules and URL configurations. This is the coupling that causes agents to submit PRs that pass CI but break something three directories away.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+You can't find this by reading imports. You need git forensics — looking at which files move together across hundreds of commits. That's what sourcebook does, and it was one of the most consistently valuable findings across all 15 repos.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">Convention counts vary wildly</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Cal.com produced 21 findings. Pydantic produced 4. Express and Fastify each had 4. This makes sense — Cal.com is a monorepo with multiple apps, custom testing patterns, Prisma schemas, tRPC routers, and Tailwind. Pydantic is a focused library with a tight scope.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The takeaway: the size of the repo doesn't determine how much context an agent needs. Complexity does. A 3,000-file library with a clean architecture might need less context than a 3,000-file app with three ORMs and two test frameworks.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">The same 5 patterns, everywhere</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Across all 15 repos, we saw the same tooling patterns repeat: <strong>pytest or Vitest</strong> for testing, <strong>Prisma or SQLAlchemy</strong> for database access, <strong>tRPC or REST</strong> for API layers, <strong>Tailwind</strong> for styling, and some form of barrel exports for module organization.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+This is useful because it means convention detection doesn't need to handle infinite variety. The ecosystem has converged. What matters is which combination a specific repo uses and what deviations it has from the default setup — those deviations are the non-discoverable information agents need.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">Generated files are a trap</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Several repos had files that look like hand-written code but are actually auto-generated. Supabase has generated TypeScript types from its database schema. Next.js has generated route manifests. Django has auto-generated migration files.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+An agent that edits these files will produce a working diff that gets overwritten on the next build. It's wasted work at best — and a confusing regression at worst, if someone commits the agent's changes and then a build clobbers them. sourcebook detects generated file markers and flags them so agents know not to touch them.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">What this means for agent context</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The six findings above have one thing in common: none of them are discoverable by reading a single file. Hub file importance requires graph analysis. Co-change coupling requires git mining. Convention deviations require cross-file comparison. Generated file detection requires pattern matching against known markers.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+This is exactly what should go in a context file — and exactly what most hand-written context files leave out. Nobody writes "types.ts is imported by 15 files, treat it carefully" in their CLAUDE.md. They write "this is a Next.js project using TypeScript." The agent already knows that.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The data from these 15 repos reinforces the core principle: <strong>the only context that helps is what the agent can't figure out on its own</strong>. Everything else is noise.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+You can explore all 15 repos yourself at <a href="/for/" class="underline hover:text-electric-green">sourcebook.run/for</a>.
+</p>
+
+</article>
+
+<!-- CTA Section -->
+<section class="w-full bg-white dark:bg-[#050505] border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-24 px-6 text-center">
+<div class="max-w-2xl mx-auto">
+<h2 class="font-headline font-extrabold text-4xl mb-10 tracking-tight uppercase dark:text-white">TRY_IT_YOURSELF</h2>
+<div class="bg-terminal-black py-6 px-8 inline-block mb-10">
+<code class="font-mono text-electric-green text-xl">npx sourcebook init</code>
+</div>
+<div class="flex flex-col items-center gap-6">
+<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black dark:border-white dark:text-white px-12 py-4 font-headline font-bold text-sm tracking-[0.2em] hover:bg-black hover:text-white dark:hover:bg-[#00FF41] dark:hover:text-black dark:hover:border-[#00FF41] uppercase">
+VIEW_SOURCE
+</a>
+<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-sm tracking-wide">
+No API keys. No LLM. Everything runs locally. BSL-1.1 licensed.
+</p>
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- More from sourcebook -->
+<section class="max-w-3xl mx-auto px-8 pb-16">
+  <h3 class="font-headline text-xs tracking-widest uppercase text-[#5F5E5E] mb-6">MORE_FROM_SOURCEBOOK</h3>
+  <div class="flex flex-col gap-4">
+    <a href="/blog/why-auto-generated-context-makes-agents-worse" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Why auto-generated CLAUDE.md files make your AI agents worse</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/blog/we-benchmarked-ai-context-files" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">We explored why AI agents fail on real codebases</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/for/" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Explore: How open-source repos actually work</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/research/15-repo-scan" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Research: 15 repos raw scan data and methodology</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="../logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+BSL-1.1 © 2026
+</div>
+</footer>
+
+<script>
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+// Apply saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
+  }
+})();
+</script>
+</body></html>

@@ -2,6 +2,7 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -32,25 +33,64 @@ html.dark .hover\:bg-black:hover{background-color:#fff!important}
 html.dark .hover\:text-white:hover{color:#000!important}
 html.dark .hover\:text-black:hover{color:#000!important}
 </style>
-<title>HOW FASTAPI WORKS | SOURCEBOOK</title>
-<meta name="description" content="How the FastAPI repo actually works: Uses FastAPI endpoints for routing — follow this pattern, don't add REST routes directly. Extracted from 2,984 files."/>
-<link rel="canonical" href="https://sourcebook.run/for/fastapi"/>
-<meta property="og:title" content="How FastAPI Works | sourcebook"/>
-<meta property="og:url" content="https://sourcebook.run/for/fastapi"/>
+<title>HOW VLLM WORKS | SOURCEBOOK</title>
+<meta name="description" content="How the vllm-project/vllm repo actually works: This is a publishable library, not an application. Focus changes on the public API surface. Extracted by sourcebo"/>
+<link rel="canonical" href="https://sourcebook.run/for/vllm"/>
+<meta property="og:title" content="How VLLM Works | sourcebook"/>
+<meta property="og:description" content="How the vllm-project/vllm repo actually works: This is a publishable library, not an application. Focus changes on the public API surface. Extracted by sourcebo"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/vllm"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How VLLM Works | sourcebook"/>
+<meta name="twitter:description" content="How the vllm-project/vllm repo actually works: This is a publishable library, not an application. Focus changes on the public API surface. Extracted by sourcebo"/>
+<meta name="twitter:image" content="https://sourcebook.run/og-image.png"/>
 <meta name="robots" content="index, follow"/>
 <link rel="icon" type="image/png" href="/logo.png"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "How VLLM Works",
+  "description": "How the vllm-project/vllm repo actually works: This is a publishable library, not an application. Focus changes on the public API surface. Extracted by sourcebook.",
+  "url": "https://sourcebook.run/for/vllm",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-09",
+  "author": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "about": {
+    "@type": "SoftwareSourceCode",
+    "name": "VLLM",
+    "codeRepository": "https://github.com/vllm-project/vllm"
+  }
+}
+</script>
 </head>
 <body class="bg-white text-black antialiased">
-<nav class="bg-white flex justify-between items-center w-full px-6 py-4 border-b border-black/5 sticky top-0 z-50">
-<div class="flex items-center gap-8">
-<a href="/" class="text-xl font-bold text-black font-['Space_Grotesk'] uppercase tracking-tighter">SOURCEBOOK</a>
-<div class="hidden md:flex gap-4">
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-xs text-black border-b-2 border-black" href="/for/">EXPLORE</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-xs text-gray-500 hover:bg-[#00FF41] hover:text-black transition-none px-1" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="/logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="/logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
 </div>
-</div>
-<div class="flex items-center gap-4">
-<button onclick="toggleTheme()" class="material-symbols-outlined text-black hover:text-[#00FF41] transition-none" aria-label="Toggle dark mode">dark_mode</button>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
 </div>
 </nav>
 
@@ -60,36 +100,33 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <section class="mb-12">
   <div class="flex flex-wrap gap-4 mb-4 text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary">
     <span class="bg-black text-white px-2 py-0.5">Python</span>
-    <span>2,984 FILES</span>
-    <span class="text-[#00881d]">8 FINDINGS</span>
+    <span>2,841 FILES</span>
+    <span class="text-[#00881d]">5 FINDINGS</span>
   </div>
   <h1 class="text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-6 leading-none">
-    HOW FASTAPI<br/>ACTUALLY WORKS
+    HOW VLLM<br/>ACTUALLY WORKS
   </h1>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <p class="text-lg text-secondary col-span-2 leading-relaxed">Modern Python web framework for building APIs. Conventions, patterns, and architecture extracted from the <a href="https://github.com/fastapi/fastapi" class="underline">fastapi/fastapi</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
+    <p class="text-lg text-secondary col-span-2 leading-relaxed">A high-throughput and memory-efficient inference and serving engine for LLMs. Conventions, patterns, and architecture extracted from the <a href="https://github.com/vllm-project/vllm" class="underline">vllm-project/vllm</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
     <div class="flex items-end justify-end">
-      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/fastapi/fastapi">
+      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/vllm-project/vllm">
         VIEW_REPO <span class="material-symbols-outlined">north_east</span>
       </a>
     </div>
   </div>
 </section>
 
-
 <!-- Quick Reference -->
 <section class="mb-12 bg-surface-container-low p-4 flex flex-wrap gap-6 items-center border-l-4 border-black">
   <span class="text-xs font-bold font-['Space_Grotesk'] uppercase tracking-tighter">QUICK_REF:</span>
   <div class="flex flex-wrap gap-3">
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Routing:</b> FastAPI endpoints</span>
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Validation:</b> Pydantic BaseModel</span>
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Testing:</b> pytest.</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Testing:</b> pytest</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Validation:</b> @dataclass</span>
   </div>
 </section>
 
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
 <section class="lg:col-span-8">
-
 
 <!-- What Matters -->
 <div class="p-8 bg-surface-container-low border border-outline-variant/20 mb-12">
@@ -97,7 +134,7 @@ html.dark .hover\:text-black:hover{color:#000!important}
   <ul class="space-y-6">
     <li class="flex gap-4 items-start">
       <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">Uses FastAPI endpoints for routing — follow this pattern, don't add REST routes directly</p>
+      <p class="text-sm leading-relaxed">This is a publishable library, not an application. Focus changes on the public API surface.</p>
     </li>
   </ul>
 </div>
@@ -110,67 +147,50 @@ html.dark .hover\:text-black:hover{color:#000!important}
   <div class="space-y-4">
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">FastAPI project. Use Pydantic models for request/response schemas, not raw dicts.</p>
+        <p class="font-medium text-sm">This is a publishable library, not an application. Focus changes on the public API surface.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Uses SQLAlchemy/SQLModel for ORM. Database sessions must be properly closed (use dependency injection).</p>
+        <p class="font-medium text-sm">Hub files: vllm/logger.py (imported by 599 files), vllm/config/__init__.py (imported by 467 files). Changes here have the widest blast radius.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Uses pytest. Test files should be named `test_*.py` or `*_test.py`.</p>
+        <p class="font-medium text-sm">Uses __init__.py as barrel exports. Import from the package, not from internal modules.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Tests live in a separate test/ directory, mirroring src/ structure. New tests go there, not next to source files.</p>
+        <p class="font-medium text-sm">Use @dataclass for data structures. This is the project's standard validation approach.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">API endpoints use FastAPI endpoints. Follow this pattern for new routes.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">96 files use FastAPI endpoints</code>
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Use Pydantic BaseModel for data classes. This is the project's standard validation approach.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">36 files use Pydantic</code>
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Tests use pytest.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">32 test files</code>
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Route definitions live in: fastapi, fastapi/security, fastapi/openapi. Add new endpoints here.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">3 route directories</code>
     </div>
     
+    <details class="mt-4">
+      <summary class="text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary cursor-pointer hover:text-black">+ 1 MORE FINDINGS (MEDIUM CONFIDENCE)</summary>
+      <div class="mt-4 space-y-4">
+        <div class="border-l-4 border-yellow-400 bg-white p-6">
+          <div class="flex justify-between items-start mb-2">
+            <p class="font-medium text-sm">Third-party integrations live under vllm/plugins/. Each integration has its own directory.</p>
+            <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
+          </div>
+          <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">Plugin dirs: lora_resolvers, io_processors</code>
+        </div>
+      </div>
+    </details>
   </div>
 </div>
 
 </section>
 <aside class="lg:col-span-4 space-y-8">
-
 
 <!-- AI Tools Sidebar -->
 <div class="bg-black p-6 text-[#00FF41] border border-[#00FF41]/20">
@@ -178,8 +198,8 @@ html.dark .hover\:text-black:hover{color:#000!important}
     <span class="material-symbols-outlined text-sm">smart_toy</span> USING_AI_TOOLS
   </h3>
   <ul class="space-y-4 font-['Space_Grotesk'] text-xs uppercase tracking-wider leading-loose">
-    <li class="flex gap-3"><span>→</span><span>don't guess routing patterns — check first</span></li>
-    <li class="flex gap-3"><span>→</span><span>follow existing patterns listed in quick reference</span></li>
+    <li class="flex gap-3"><span>→</span><span>check blast radius before editing logger.py or config/</span></li>
+    <li class="flex gap-3"><span>→</span><span>use @dataclass, not Pydantic, for new data structures</span></li>
   </ul>
 </div>
 
@@ -192,61 +212,22 @@ html.dark .hover\:text-black:hover{color:#000!important}
   <div class="p-4 pt-0">
     <pre class="bg-white border border-outline-variant/30 p-3 font-mono text-[10px] leading-relaxed text-secondary overflow-y-auto max-h-64 whitespace-pre-wrap"># CLAUDE.md
 
-This file provides guidance to Claude Code when working with this codebase.
-Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit — the best context comes from human + machine together.
+Generated by sourcebook.
 
 ## Quick Reference
 
-- **routing:** API endpoints use FastAPI endpoints
-- **validation:** Use Pydantic BaseModel for data classes
 - **testing:** Tests use pytest.
-
-## Critical Constraints
-
-- **FastAPI:** Uses SQLAlchemy/SQLModel for ORM. Database sessions must be properly closed (use dependency injection).
+- **validation:** Use @dataclass for data structures.
 
 ## Stack
 
-FastAPI
+Python
 
-## Project Structure
+## Conventions
 
-- `tests/` — Tests
-- `scripts/` — Build / utility scripts
-- `docs/` — Documentation
-
-## Conventions &amp; Patterns
-
-- **FastAPI:** FastAPI project. Use Pydantic models for request/response schemas, not raw dicts.
-- **Testing:**
-  - Uses pytest. Test files should be named `test_*.py` or `*_test.py`.
-  - Tests live in a separate test/ directory, mirroring src/ structure. New tests go there, not next to source files.
-- **Dominant patterns:**
-  - API endpoints use FastAPI endpoints. Follow this pattern for new routes.
-  - Use Pydantic BaseModel for data classes. This is the project's standard validation approach.
-  - Tests use pytest.
-  - Route definitions live in: fastapi, fastapi/security, fastapi/openapi. Add new endpoints here.
-
-## Before Making Changes
-
-- **Follow existing patterns.** This project has established conventions (listed above). Match them instead of introducing new approaches.
-- **Respect constraints.** Review the Critical Constraints section before making structural changes.
-
-If the sourcebook MCP server is available (`sourcebook serve`), verify before acting:
-- `get_blast_radius` — check what breaks if you edit a hub file
-- `query_conventions` — confirm the right pattern before adding new code
-- `get_pressing_questions` — get a briefing before editing an unfamiliar file
-
-## What to Add Manually
-
-The most valuable context is what only you know. Add:
-
-- Architectural decisions and why they were made
-- Past incidents that shaped current conventions
-- Deprecated patterns to avoid in new code
-- Domain-specific rules or terminology
-- Environment setup beyond what .env.example shows
-</pre>
+- Uses __init__.py as barrel exports.
+- Tests use pytest.
+- Third-party integrations live under vllm/plugins/.</pre>
   </div>
 </details>
 
@@ -262,12 +243,26 @@ The most valuable context is what only you know. Add:
   </a>
 </section>
 
+<!-- From the blog -->
+<section class="mt-12">
+  <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">FROM_THE_BLOG</h3>
+  <div class="flex flex-col sm:flex-row gap-3">
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/we-benchmarked-ai-context-files">
+      <span class="uppercase tracking-tight">Why AI agents fail on real codebases</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/why-auto-generated-context-makes-agents-worse">
+      <span class="uppercase tracking-tight">Why auto-generated context makes agents worse</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
 
 <!-- Related -->
 <section class="mt-12">
   <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">RELATED_REPOS</h3>
   <div class="flex flex-wrap gap-3">
-    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/django">DJANGO</a>
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/polars">POLARS</a>
   </div>
 </section>
 
@@ -275,7 +270,7 @@ The most valuable context is what only you know. Add:
 <footer class="bg-white flex justify-between items-center w-full px-6 py-8 border-t border-black/5">
 <div class="flex items-center gap-4">
 <span class="font-bold text-black font-['Space_Grotesk'] uppercase tracking-widest text-xs">SOURCEBOOK</span>
-<span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.8.3</span>
+<span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.9.4</span>
 </div>
 <a class="font-['Space_Grotesk'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00FF41]" href="/">PROJECT KNOWLEDGE FOR CODING AGENTS</a>
 </footer>

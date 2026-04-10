@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>sourcebook vs GitNexus — sourcebook Research</title>
+<meta name="description" content="Both tools give agents AGENTS.md and runtime MCP tools. The difference is what knowledge they provide: graph-derived structure vs convention-derived project knowledge."/>
+<meta property="og:title" content="sourcebook vs GitNexus"/>
+<meta property="og:description" content="Same architecture — AGENTS.md + MCP tools. Different intelligence: graph-derived structure vs convention-derived project knowledge."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/research/sourcebook-vs-gitnexus"/>
+<meta property="article:published_time" content="2026-04-08"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="sourcebook vs GitNexus"/>
+<meta name="twitter:description" content="Same architecture — AGENTS.md + MCP tools. Different intelligence: graph-derived structure vs convention-derived project knowledge."/>
+<link rel="canonical" href="https://sourcebook.run/research/sourcebook-vs-gitnexus"/>
+<link rel="icon" type="image/png" href="../../logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "electric-green": "#00FF41",
+                    "terminal-black": "#0D0D0D",
+                    "error": "#ba1a1a",
+                },
+                fontFamily: {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .compare-table { width: 100%; border-collapse: collapse; font-family: 'Space Grotesk', monospace; font-size: 13px; }
+    .compare-table th { background: #0D0D0D; color: #00FF41; padding: 12px 10px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; border-bottom: 1px solid #1A1A1A; }
+    .compare-table td { background: #141414; color: #E0E0E0; padding: 10px; border-bottom: 1px solid #1A1A1A; }
+    .compare-table tr:hover td { background: #1A1A1A; }
+    .compare-table .dim-label { color: #00FF41; font-weight: 600; }
+    .compare-table .metric-val { font-family: 'Space Grotesk', monospace; }
+    html:not(.dark) .compare-table th { background: #1a1a1a; }
+    html:not(.dark) .compare-table td { background: #141414; color: #E0E0E0; }
+    .edge-tag { display: inline-block; font-family: 'Space Grotesk', monospace; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 8px; }
+    .edge-gn { background: #1A1A1A; color: #A0A0A0; }
+    .edge-sb { background: #0D0D0D; color: #00FF41; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "sourcebook vs GitNexus",
+  "description": "Both tools give agents AGENTS.md and runtime MCP tools. The difference is what knowledge they provide: graph-derived structure vs convention-derived project knowledge.",
+  "url": "https://sourcebook.run/research/sourcebook-vs-gitnexus",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-08",
+  "author": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" },
+  "publisher": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" }
+}
+</script>
+</head>
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
+
+<!-- Nav -->
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="../../logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="../../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main>
+
+<!-- Article Header -->
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">COMPARISON &middot; APRIL 2026</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+sourcebook vs GitNexus
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">Both tools give agents AGENTS.md and runtime MCP tools. The difference is what knowledge they provide.</p>
+</div>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
+
+<!-- Article Body -->
+<article class="max-w-[720px] mx-auto px-6 py-16">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-0 uppercase dark:text-white">What both tools do</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+GitNexus and sourcebook solve the same problem: coding agents need context about a codebase before they can work effectively. Both tools provide the same two-layer architecture:
+</p>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li><strong>AGENTS.md</strong> &mdash; a static context file the agent reads upfront before starting work.</li>
+<li><strong>Runtime MCP server</strong> &mdash; tools the agent can query mid-task for deeper information.</li>
+</ul>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Both install via <code class="bg-terminal-black text-electric-green px-1 font-mono text-sm">npx</code>. Neither requires an LLM or API key. Both run locally. The interface is the same &mdash; the intelligence behind it is different.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">The difference</h2>
+
+</article>
+
+<!-- Wide comparison table -->
+<div class="max-w-[900px] mx-auto px-6 mb-16">
+<div class="overflow-x-auto">
+<table class="compare-table">
+<thead>
+<tr>
+<th style="min-width:160px;">Dimension</th>
+<th>GitNexus</th>
+<th>sourcebook</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="dim-label">AGENTS.md content</td>
+<td class="metric-val">Graph-derived structure (dependencies, call chains, clusters)</td>
+<td class="metric-val">Conventions, constraints, hub files, git forensics</td>
+</tr>
+<tr>
+<td class="dim-label">MCP tools</td>
+<td class="metric-val">Graph queries: symbol lookup, call chains, blast radius, rename, raw Cypher</td>
+<td class="metric-val">Project knowledge: conventions, file context, blast radius, git insights, pressing questions</td>
+</tr>
+<tr>
+<td class="dim-label">Knowledge type</td>
+<td class="metric-val">Structural &mdash; what&rsquo;s connected to what</td>
+<td class="metric-val">Behavioral &mdash; how the project actually works</td>
+</tr>
+<tr>
+<td class="dim-label">Focus</td>
+<td class="metric-val">Navigation (help agent explore the codebase)</td>
+<td class="metric-val">Correctness (help agent avoid mistakes)</td>
+</tr>
+<tr>
+<td class="dim-label">Runtime dependency</td>
+<td class="metric-val">MCP server + graph database must be running</td>
+<td class="metric-val">MCP server optional &mdash; AGENTS.md works standalone</td>
+</tr>
+<tr>
+<td class="dim-label">Analysis method</td>
+<td class="metric-val">Tree-sitter parse &rarr; knowledge graph (KuzuDB / LadybugDB)</td>
+<td class="metric-val">Static analysis + import graph PageRank + git history mining</td>
+</tr>
+<tr>
+<td class="dim-label">Portability</td>
+<td class="metric-val">Tied to local indexed database</td>
+<td class="metric-val">AGENTS.md works in CI, any editor, any machine</td>
+</tr>
+<tr>
+<td class="dim-label">License</td>
+<td class="metric-val">PolyForm Noncommercial 1.0.0</td>
+<td class="metric-val">BSL 1.1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<article class="max-w-[720px] mx-auto px-6">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Two kinds of knowledge</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>GitNexus</strong> helps agents understand <em>what&rsquo;s connected</em> &mdash; call chains, dependencies, symbol relationships. It parses the codebase into a knowledge graph and exposes it through MCP tools. When an agent asks &ldquo;what calls this function?&rdquo; or &ldquo;what breaks if I change this file?&rdquo;, that&rsquo;s structural navigation.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>sourcebook</strong> helps agents understand <em>how the project actually works</em> &mdash; conventions, constraints, patterns, what to avoid. It analyzes the import graph, mines git history, and infers behavioral patterns. When an agent needs to know &ldquo;this project uses Vitest not Jest&rdquo; or &ldquo;src/types.ts is the hub file with 15 dependents&rdquo;, that&rsquo;s project knowledge.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Structural knowledge answers: <em>what is this code connected to?</em><br/>
+Project knowledge answers: <em>how should I write code here?</em>
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Where each approach shines</h2>
+
+<div class="mb-10 border-l-4 border-[#1A1A1A] pl-6">
+<p class="font-headline font-bold text-sm uppercase tracking-tight mb-2 dark:text-white">&ldquo;Trace all callers of this function&rdquo;</p>
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-2">
+<strong>GitNexus:</strong> graph query returns the complete call chain instantly.<br/>
+<strong>sourcebook:</strong> agent uses standard code search (grep/find).
+</p>
+<p><span class="edge-tag edge-gn">Edge: GitNexus</span></p>
+</div>
+
+<div class="mb-10 border-l-4 border-[#00FF41] pl-6">
+<p class="font-headline font-bold text-sm uppercase tracking-tight mb-2 dark:text-white">&ldquo;Add i18n strings following the existing pattern&rdquo;</p>
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-2">
+<strong>GitNexus:</strong> agent can see file dependencies but doesn&rsquo;t know the i18n convention.<br/>
+<strong>sourcebook:</strong> AGENTS.md tells the agent the i18n pattern, which files to touch, and the naming convention.
+</p>
+<p><span class="edge-tag edge-sb">Edge: sourcebook</span></p>
+</div>
+
+<div class="mb-10 border-l-4 border-[#1A1A1A] pl-6">
+<p class="font-headline font-bold text-sm uppercase tracking-tight mb-2 dark:text-white">&ldquo;Rename this exported function across the codebase&rdquo;</p>
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-2">
+<strong>GitNexus:</strong> <code class="bg-terminal-black text-electric-green px-1 font-mono text-sm">rename</code> tool coordinates multi-file changes via the graph.<br/>
+<strong>sourcebook:</strong> agent uses standard find-and-replace.
+</p>
+<p><span class="edge-tag edge-gn">Edge: GitNexus</span></p>
+</div>
+
+<div class="mb-10 border-l-4 border-[#00FF41] pl-6">
+<p class="font-headline font-bold text-sm uppercase tracking-tight mb-2 dark:text-white">&ldquo;Add an API endpoint following existing patterns&rdquo;</p>
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-2">
+<strong>GitNexus:</strong> agent can see what existing endpoints connect to.<br/>
+<strong>sourcebook:</strong> AGENTS.md specifies the routing pattern, validation approach, and where endpoints live.
+</p>
+<p><span class="edge-tag edge-sb">Edge: sourcebook</span></p>
+</div>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">The insight</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+These approaches are complementary, not competing. Graphs help agents <strong>explore</strong> a codebase. Project knowledge helps agents <strong>decide</strong> what to do once they get there.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The failure mode without structural knowledge: an agent makes a change that breaks something downstream &mdash; it didn&rsquo;t see the dependency chain.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The failure mode without project knowledge: an agent writes code that <em>works</em> but violates conventions, uses the wrong patterns, or spends minutes exploring before finding the right file &mdash; it didn&rsquo;t know how the project operates.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+In practice, the second failure mode is far more common. Agents rarely break downstream code because most coding tools already have basic dependency awareness. What agents consistently get wrong is orientation: which file to edit, which pattern to follow, what not to touch.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">What we&rsquo;ve observed</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We benchmarked different context strategies on real GitHub issues across Cal.com, Hono, and Pydantic. Agents with upfront project knowledge targeted the right files faster and produced more thorough patches. The biggest gains came from knowing conventions and constraints before starting &mdash; knowledge agents can&rsquo;t infer by reading code.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We haven&rsquo;t benchmarked GitNexus directly yet. When we do, we&rsquo;ll update this page with head-to-head results on the same tasks. For now, the comparison is architectural: what kind of knowledge each tool provides, and when each matters.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<a href="/research/benchmark" class="underline hover:text-electric-green transition-colors">Full benchmark methodology and results &rarr;</a>
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">When to use which</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Use GitNexus</strong> when your agent needs to trace call chains, understand blast radius of changes, or coordinate multi-file renames via the dependency graph. Best for large refactors, navigation-heavy tasks, and understanding downstream impact.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Use sourcebook</strong> when your agent needs to understand project conventions, know which files matter most, and write code that follows existing patterns. Best for feature work, bug fixes, and onboarding new agents to a repo.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Use both</strong> when working on a large, unfamiliar codebase where the agent needs both orientation (sourcebook) and navigation (GitNexus). The tools don&rsquo;t conflict &mdash; they provide different layers of the same stack.
+</p>
+
+</article>
+
+<!-- CTA -->
+<section class="bg-white dark:bg-[#050505] border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-24 px-6">
+<div class="max-w-2xl mx-auto text-center">
+<div class="bg-terminal-black py-6 px-8 mb-12 text-center">
+<code class="text-electric-green font-mono text-xl">$ npx sourcebook init</code>
+</div>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black dark:border-white text-black dark:text-white px-8 py-4 font-headline font-bold text-sm uppercase tracking-[0.2em] hover:bg-[#00FF41] hover:text-black hover:border-[#00FF41] transition-colors text-center">VIEW_ON_GITHUB</a>
+<a href="/research" class="border-2 border-[#C6C6C6]/30 dark:border-[#1A1A1A] text-[#5F5E5E] px-8 py-4 font-headline font-bold text-sm uppercase tracking-[0.2em] hover:border-[#00FF41] hover:text-[#00FF41] transition-colors text-center">ALL_RESEARCH</a>
+</div>
+</div>
+</section>
+
+<!-- More -->
+<section class="max-w-3xl mx-auto px-8 pb-16">
+  <h3 class="font-headline text-xs tracking-widest uppercase text-[#5F5E5E] mb-6">MORE_FROM_SOURCEBOOK</h3>
+  <div class="flex flex-col gap-4">
+    <a href="/research/sourcebook-vs-repomix" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">sourcebook vs Repomix</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/research/sourcebook-vs-handwritten" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">sourcebook vs hand-written context files</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/research/benchmark" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Benchmark methodology and full results</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="../../logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+BSL-1.1 &copy; 2026
+</div>
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
+  }
+})();
+</script>
+</body></html>

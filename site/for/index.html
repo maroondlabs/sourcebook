@@ -39,16 +39,22 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <link rel="icon" type="image/png" href="/logo.png"/>
 </head>
 <body class="bg-white text-black antialiased">
-<nav class="bg-white flex justify-between items-center w-full px-6 py-4 border-b border-black/5 sticky top-0 z-50">
-<div class="flex items-center gap-8">
-<a href="/" class="text-xl font-bold text-black font-['Space_Grotesk'] uppercase tracking-tighter">SOURCEBOOK</a>
-<div class="hidden md:flex gap-4">
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-xs text-black border-b-2 border-black" href="/for/">EXPLORE</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-xs text-gray-500 hover:bg-[#00FF41] hover:text-black transition-none px-1" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="/logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="/logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
 </div>
-</div>
-<div class="flex items-center gap-4">
-<button onclick="toggleTheme()" class="material-symbols-outlined text-black hover:text-[#00FF41] transition-none" aria-label="Toggle dark mode">dark_mode</button>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
 </div>
 </nav>
 
@@ -70,6 +76,110 @@ html.dark .hover\:text-black:hover{color:#000!important}
         <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
       </div>
       <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The React framework for the web</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/astro" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">withastro/astro</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The web framework for content-driven websites</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/sveltekit" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">sveltejs/kit</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Web development, streamlined</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/remix" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">remix-run/remix</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Build better websites</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/hono" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">honojs/hono</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Web framework built on Web Standards</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/elysia" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">elysiajs/elysia</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The fastest TypeScript framework for Bun</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/express" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">expressjs/express</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Fast, unopinionated web framework for Node.js</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">JavaScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/fastify" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">fastify/fastify</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Fast and low overhead web framework for Node.js</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">JavaScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/wasp" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">wasp-lang/wasp</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The fastest way to develop full-stack web apps with React and Node.js</p>
       <div class="flex flex-wrap gap-2 mb-10">
         <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
       </div>
@@ -103,6 +213,45 @@ html.dark .hover\:text-black:hover{color:#000!important}
         <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
       </div>
     </a>
+    <a href="/for/flask" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">pallets/flask</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The Python micro framework for building web applications</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Python</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/reflex" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">reflex-dev/reflex</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Build full-stack web apps in pure Python</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Python</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/pydantic" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">pydantic/pydantic</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Data validation using Python type annotations</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Python</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
     <a href="/for/calcom" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
       <div class="flex justify-between items-start mb-6">
         <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">calcom/cal.com</h3>
@@ -124,6 +273,214 @@ html.dark .hover\:text-black:hover{color:#000!important}
       <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The open-source Firebase alternative</p>
       <div class="flex flex-wrap gap-2 mb-10">
         <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/shadcn-ui" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">shadcn-ui/ui</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Beautifully designed components built with Radix UI and Tailwind CSS</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/gin" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">gin-gonic/gin</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">HTTP web framework written in Go</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Go</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/create-t3-app" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">t3-oss/create-t3-app</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The best way to start a full-stack, typesafe Next.js app</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/sqlmodel" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">fastapi/sqlmodel</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">SQL databases in Python, designed for simplicity</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Python</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/hugo" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">gohugoio/hugo</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The world's fastest framework for building websites</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Go</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/esbuild" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">evanw/esbuild</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">An extremely fast bundler for the web</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Go</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/vllm" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">vllm-project/vllm</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">High-throughput LLM inference and serving engine</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Python</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/polars" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">pola-rs/polars</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Dataframes powered by a multithreaded, vectorized query engine</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Rust + Python</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/biome" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">biomejs/biome</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">A toolchain for web projects — format, lint, and more</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Rust + TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/convex" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">get-convex/convex-backend</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The reactive backend-as-a-service for web developers</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript + Rust</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/fern" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">fern-api/fern</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Generate SDKs and API documentation from your API definition</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/hatchet" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">hatchet-dev/hatchet</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Distributed, fault-tolerant task queue for background jobs</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Go + TypeScript</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/baml" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">boundaryml/baml</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Get structured data from LLMs — build reliable AI applications</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript + Rust</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/deno-std" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">denoland/std</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">The Deno standard library</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript (Deno)</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/schemathesis" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">schemathesis/schemathesis</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Automate your API testing — OpenAPI and GraphQL</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">Python</span>
+      </div>
+      <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
+        <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
+      </div>
+    </a>
+    <a href="/for/sponsorblock" class="block border-r border-b border-outline-variant/20 p-8 hover:border-l-4 hover:border-l-[#00FF41] group transition-all duration-100 bg-white cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-2xl font-bold font-['Space_Grotesk'] uppercase tracking-tight">ajayyy/SponsorBlock</h3>
+        <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_outward</span>
+      </div>
+      <p class="text-secondary font-['Inter'] mb-8 text-sm leading-relaxed">Skip sponsors and annoying parts of YouTube videos</p>
+      <div class="flex flex-wrap gap-2 mb-10">
+        <span class="bg-surface-container text-black px-2 py-1 text-[10px] font-bold font-['Space_Grotesk'] uppercase">TypeScript + React</span>
       </div>
       <div class="flex justify-between items-center text-[10px] font-['Space_Grotesk'] uppercase tracking-widest text-secondary group-hover:text-black">
         <span class="text-primary font-bold">_VIEW_ANALYSIS</span>
@@ -162,7 +519,7 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <footer class="bg-white flex justify-between items-center w-full px-6 py-8 border-t border-black/5">
 <div class="flex items-center gap-4">
 <span class="font-bold text-black font-['Space_Grotesk'] uppercase tracking-widest text-xs">SOURCEBOOK</span>
-<span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.8.3</span>
+<span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.9.4</span>
 </div>
 <a class="font-['Space_Grotesk'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00FF41]" href="/">PROJECT KNOWLEDGE FOR CODING AGENTS</a>
 </footer>

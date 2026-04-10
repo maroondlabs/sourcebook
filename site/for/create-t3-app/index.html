@@ -2,6 +2,7 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -32,13 +33,46 @@ html.dark .hover\:bg-black:hover{background-color:#fff!important}
 html.dark .hover\:text-white:hover{color:#000!important}
 html.dark .hover\:text-black:hover{color:#000!important}
 </style>
-<title>HOW CAL.COM WORKS | SOURCEBOOK</title>
-<meta name="description" content="How the Cal.com repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Generated files detected — editing them directly will break builds. Extracted from 10,458 files."/>
-<link rel="canonical" href="https://sourcebook.run/for/calcom"/>
-<meta property="og:title" content="How Cal.com Works | sourcebook"/>
-<meta property="og:url" content="https://sourcebook.run/for/calcom"/>
+<title>HOW CREATE T3 APP WORKS | SOURCEBOOK</title>
+<meta name="description" content="How the Create T3 App repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Uses tRPC routers for routing — follow this pattern, don't add REST routes directly. Extracted from 544 files."/>
+<link rel="canonical" href="https://sourcebook.run/for/create-t3-app"/>
+<meta property="og:title" content="How Create T3 App Works | sourcebook"/>
+<meta property="og:description" content="How the Create T3 App repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Uses tRPC routers for routing — follow this pattern, don't add REST routes directly. Extracted from 544 files."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/create-t3-app"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How Create T3 App Works | sourcebook"/>
+<meta name="twitter:description" content="How the Create T3 App repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Uses tRPC routers for routing — follow this pattern, don't add REST routes directly."/>
+<meta name="twitter:image" content="https://sourcebook.run/og-image.png"/>
 <meta name="robots" content="index, follow"/>
 <link rel="icon" type="image/png" href="/logo.png"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "How Create T3 App Works",
+  "description": "How the Create T3 App repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. Uses tRPC routers for routing — follow this pattern, don't add REST routes directly. Extracted from 544 files.",
+  "url": "https://sourcebook.run/for/create-t3-app",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-07",
+  "author": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "about": {
+    "@type": "SoftwareSourceCode",
+    "name": "Create T3 App",
+    "codeRepository": "https://github.com/t3-oss/create-t3-app"
+  }
+}
+</script>
 </head>
 <body class="bg-white text-black antialiased">
 <nav class="bg-white flex justify-between items-center w-full px-6 py-4 border-b border-black/5 sticky top-0 z-50">
@@ -60,16 +94,16 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <section class="mb-12">
   <div class="flex flex-wrap gap-4 mb-4 text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary">
     <span class="bg-black text-white px-2 py-0.5">TypeScript</span>
-    <span>10,458 FILES</span>
-    <span class="text-[#00881d]">20 FINDINGS</span>
+    <span>544 FILES</span>
+    <span class="text-[#00881d]">14 FINDINGS</span>
   </div>
   <h1 class="text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-6 leading-none">
-    HOW CAL.COM<br/>ACTUALLY WORKS
+    HOW CREATE T3 APP<br/>ACTUALLY WORKS
   </h1>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <p class="text-lg text-secondary col-span-2 leading-relaxed">Open-source scheduling infrastructure. Conventions, patterns, and architecture extracted from the <a href="https://github.com/calcom/cal.com" class="underline">calcom/cal.com</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
+    <p class="text-lg text-secondary col-span-2 leading-relaxed">The best way to start a full-stack, typesafe Next.js app. Conventions, patterns, and architecture extracted from the <a href="https://github.com/t3-oss/create-t3-app" class="underline">t3-oss/create-t3-app</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
     <div class="flex items-end justify-end">
-      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/calcom/cal.com">
+      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/t3-oss/create-t3-app">
         VIEW_REPO <span class="material-symbols-outlined">north_east</span>
       </a>
     </div>
@@ -81,12 +115,12 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <section class="mb-12 bg-surface-container-low p-4 flex flex-wrap gap-6 items-center border-l-4 border-black">
   <span class="text-xs font-bold font-['Space_Grotesk'] uppercase tracking-tighter">QUICK_REF:</span>
   <div class="flex flex-wrap gap-3">
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Routing:</b> tRPC routers</span>
     <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Validation:</b> Zod schemas</span>
     <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Data:</b> React Query</span>
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Testing:</b> Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.</span>
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Styling:</b> Tailwind CSS utility classes.</span>
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Database:</b> Prisma. Schema/models defined in packages/prisma/schema.prisma.</span>
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Routing:</b> Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Auth:</b> better-auth.</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Styling:</b> Tailwind CSS utility classes. Custom design tokens defined in www/tailwind.config.ts — use these instead of arbitrary values.</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Database:</b> Prisma. Look</span>
   </div>
 </section>
 
@@ -104,15 +138,15 @@ html.dark .hover\:text-black:hover{color:#000!important}
     </li>
     <li class="flex gap-4 items-start">
       <span class="text-[#00881d] font-bold">→</span>
+      <p class="text-sm leading-relaxed">Uses tRPC routers for routing — follow this pattern, don't add REST routes directly</p>
+    </li>
+    <li class="flex gap-4 items-start">
+      <span class="text-[#00881d] font-bold">→</span>
       <p class="text-sm leading-relaxed">Generated files detected — editing them directly will break builds</p>
     </li>
     <li class="flex gap-4 items-start">
       <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">packages/trpc/server/types.ts is a hub file (imported by 172 files) — changes here ripple everywhere</p>
-    </li>
-    <li class="flex gap-4 items-start">
-      <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">Circular import chains detected — avoid adding to these cycles</p>
+      <p class="text-sm leading-relaxed">www/src/config.ts is a hub file (imported by 6 files) — changes here ripple everywhere</p>
     </li>
   </ul>
 </div>
@@ -132,119 +166,91 @@ html.dark .hover\:text-black:hover{color:#000!important}
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.</p>
+        <p class="font-medium text-sm">Project strongly prefers path alias imports (@/ or ~/) over relative imports. Use aliases for cross-directory imports.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">40 barrel export files found</code>
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Environment variables are documented in .env.example. Copy it to .env.local before running the project.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">61 alias imports vs 17 relative imports in sampled files</code>
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
         <p class="font-medium text-sm">Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">26 named vs 2 default exports in sampled files</code>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">82 named vs 16 default exports in sampled files</code>
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
         <p class="font-medium text-sm">Use Zod schemas for validation. This is the project's standard validation approach.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">7 files use Zod</code>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">8 files use Zod</code>
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.</p>
+        <p class="font-medium text-sm">Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">12 test files</code>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">9 files</code>
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Styling uses Tailwind CSS utility classes.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">12 files</code>
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Database access uses Prisma. Schema/models defined in packages/prisma/schema.prisma.</p>
+        <p class="font-medium text-sm">Auth uses better-auth.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">19 files</code>
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Generated files detected (vitest-mocks/tailwind.generated.css, packages/app-store/video.adapters.generated.ts, packages/app-store/redirect-apps.generated.ts, packages/app-store/payment.services.generated.ts, packages/app-store/crm.apps.generated.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
+        <p class="font-medium text-sm">Styling uses Tailwind CSS utility classes. Custom design tokens defined in www/tailwind.config.ts — use these instead of arbitrary values.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">11 files</code>
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Database access uses Prisma. Look for schemas in prisma/schema.prisma.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">8 files</code>
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Generated files detected (cli/template/extras/src/app/layout/with-tw.tsx, cli/template/extras/src/pages/index/with-better-auth-trpc.tsx, cli/template/extras/src/pages/index/with-tw.tsx, cli/template/extras/src/app/layout/base.tsx, cli/template/extras/src/app/layout/with-trpc-tw.tsx, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">14 generated files</code>
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.</p>
+        <p class="font-medium text-sm">Route definitions live in: cli/template/extras/src/server/api, cli/template/extras/src/server/api/trpc-pages, cli/template/extras/src/server/api/trpc-app. Add new endpoints here.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">3 route directories</code>
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Third-party integrations live under packages/app-store/ (zoomvideo, zohocrm, zohocalendar, zoho-bigin, zapier, wordpress, ...). Each integration has its own directory with components, lib, and API code.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">107 integrations found</code>
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Hub files (most depended on): packages/trpc/server/types.ts (imported by 172 files); packages/platform/atoms/lib/http.ts (imported by 72 files); packages/features/di/di.ts (imported by 60 files); packages/app-store/_utils/getAppKeysFromSlug.ts (imported by 53 files); packages/emails/src/renderEmail.ts (imported by 51 files). Changes here have the widest blast radius.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Circular import chains detected: bookingScenario.ts → getMockRequestDataForBooking.ts; create-event-type.input.ts → CantHaveRecurrenceAndBookerActiveBookingsLimit.ts; handleMarkNoShow.ts → handleSendingAttendeeNoShowDataToApps.ts. Avoid adding to these cycles.</p>
+        <p class="font-medium text-sm">Hub files (most depended on): www/src/config.ts (imported by 6 files). Changes here have the widest blast radius.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
       
     </div>
     
     <details class="mt-4">
-      <summary class="text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary cursor-pointer hover:text-black">+ 3 MORE FINDINGS (MEDIUM CONFIDENCE)</summary>
+      <summary class="text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary cursor-pointer hover:text-black">+ 2 MORE FINDINGS (MEDIUM CONFIDENCE)</summary>
       <div class="mt-4 space-y-4">
         <div class="border-l-4 border-yellow-400 bg-white p-6">
           <div class="flex justify-between items-start mb-2">
-            <p class="font-medium text-sm">4 env vars detected. Public (browser-exposed): NEXT_PUBLIC_WEBAPP_URL. Private (server-only): CI, PLAYWRIGHT_HEADLESS, PWDEBUG.</p>
+            <p class="font-medium text-sm">API endpoints use tRPC routers. Follow this pattern for new routes.</p>
             <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
           </div>
-          
+          <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">5 files use tRPC routers</code>
         </div>
         <div class="border-l-4 border-yellow-400 bg-white p-6">
           <div class="flex justify-between items-start mb-2">
-            <p class="font-medium text-sm">Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.</p>
+            <p class="font-medium text-sm">UI components live in: www/src/components. Add new components here.</p>
             <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
           </div>
-          <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">6 files</code>
-        </div>
-        <div class="border-l-4 border-yellow-400 bg-white p-6">
-          <div class="flex justify-between items-start mb-2">
-            <p class="font-medium text-sm">UI components live in: packages/ui, packages/ui/components, packages/trpc/components. Add new components here.</p>
-            <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
-          </div>
-          <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">3 component directories</code>
+          <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">1 component directories</code>
         </div>
       </div>
     </details>
@@ -261,6 +267,7 @@ html.dark .hover\:text-black:hover{color:#000!important}
     <span class="material-symbols-outlined text-sm">smart_toy</span> USING_AI_TOOLS
   </h3>
   <ul class="space-y-4 font-['Space_Grotesk'] text-xs uppercase tracking-wider leading-loose">
+    <li class="flex gap-3"><span>→</span><span>don't guess routing patterns — check first</span></li>
     <li class="flex gap-3"><span>→</span><span>avoid editing generated files — modify the source/schema instead</span></li>
     <li class="flex gap-3"><span>→</span><span>check file importance before editing hub files</span></li>
     <li class="flex gap-3"><span>→</span><span>follow existing patterns listed in quick reference</span></li>
@@ -281,69 +288,54 @@ Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and
 
 ## Quick Reference
 
+- **routing:** API endpoints use tRPC routers
 - **validation:** Use Zod schemas for validation
 - **data fetching:** Data fetching uses React Query (useQuery/useMutation)
-- **testing:** Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.
-- **styling:** Styling uses Tailwind CSS utility classes.
-- **routing:** Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.
-- **components:** UI components live in: packages/ui, packages/ui/components, packages/trpc/components. Add new components here.
+- **auth:** Auth uses better-auth.
+- **styling:** Styling uses Tailwind CSS utility classes. Custom design tokens defined in www/tailwind.config.ts — use these instead of arbitrary values.
+- **components:** UI components live in: www/src/components. Add new components here.
 
 ## Commands
 
-- **Dev:** `turbo run dev --filter=&quot;@calcom/web&quot;`
-- **Build:** `turbo run build --filter=@calcom/web...`
-- **Test:** `TZ=UTC vitest run`
-- **Lint:** `turbo lint`
-- **db-deploy:** `turbo run db-deploy`
-- **db-seed:** `turbo run db-seed`
-- **deploy:** `turbo run deploy`
-- **deploy:trigger:prod:** `turbo run deploy:trigger:prod --filter=&quot;@calcom/features&quot;`
-- **deploy:trigger:staging:** `turbo run deploy:trigger:staging --filter=&quot;@calcom/features&quot;`
+- **Build:** `turbo build`
+- **Lint:** `turbo lint &amp;&amp; manypkg check`
+- **typecheck:** `turbo typecheck`
 
 ## Critical Constraints
 
-- **Testing:** Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern -- don't create a separate test/ directory.
-- **Critical constraints:** Generated files detected (vitest-mocks/tailwind.generated.css, packages/app-store/video.adapters.generated.ts, packages/app-store/redirect-apps.generated.ts, packages/app-store/payment.services.generated.ts, packages/app-store/crm.apps.generated.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.
-- **Core modules:** Hub files (most depended on): packages/trpc/server/types.ts (imported by 172 files); packages/platform/atoms/lib/http.ts (imported by 72 files); packages/features/di/di.ts (imported by 60 files); packages/app-store/_utils/getAppKeysFromSlug.ts (imported by 53 files); packages/emails/src/renderEmail.ts (imported by 51 files). Changes here have the widest blast radius.
-- **Circular dependencies:** Circular import chains detected: bookingScenario.ts → getMockRequestDataForBooking.ts; create-event-type.input.ts → CantHaveRecurrenceAndBookerActiveBookingsLimit.ts; handleMarkNoShow.ts → handleSendingAttendeeNoShowDataToApps.ts. Avoid adding to these cycles.
+- **Critical constraints:** Generated files detected (cli/template/extras/src/app/layout/with-tw.tsx, cli/template/extras/src/pages/index/with-better-auth-trpc.tsx, cli/template/extras/src/pages/index/with-tw.tsx, cli/template/extras/src/app/layout/base.tsx, cli/template/extras/src/app/layout/with-trpc-tw.tsx, ...). Do NOT edit these directly — modify the source/schema they are generated from.
+- **Core modules:** Hub files (most depended on): www/src/config.ts (imported by 6 files). Changes here have the widest blast radius.
 
 ## Stack
 
 Next.js, Tailwind CSS, TypeScript
 
-## Project Structure
-
-- `scripts/` — Build / utility scripts
-- `docs/` — Documentation
-
 ## Core Modules (by structural importance)
 
-- `packages/trpc/server/types.ts`
-- `packages/features/webhooks/lib/dto/types.ts`
-- `packages/features/webhooks/lib/interface/IWebhookRepository.ts`
-- `packages/platform/atoms/lib/http.ts`
-- `packages/app-store/_utils/getAppKeysFromSlug.ts`
+- `www/src/config.ts`
+- `cli/template/extras/src/trpc/query-client.ts`
+- `cli/src/utils/removeTrailingSlash.ts`
+- `www/src/languages.ts`
+- `cli/src/installers/dependencyVersionMap.ts`
 
 ## Conventions &amp; Patterns
 
 - **Project structure:** This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
-- **Import conventions:** Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.
-- **Environment:** Environment variables are documented in .env.example. Copy it to .env.local before running the project.
+- **Import conventions:** Project strongly prefers path alias imports (@/ or ~/) over relative imports. Use aliases for cross-directory imports.
 - **Export conventions:** Project strongly prefers named exports over default exports. Use `export function` / `export const`, not `export default`.
 - **Dominant patterns:**
   - Use Zod schemas for validation. This is the project's standard validation approach.
-  - Tests use Vitest. Test utilities in: packages/testing/src/lib/fixtures/fixtures.ts.
-  - Styling uses Tailwind CSS utility classes.
-  - Database access uses Prisma. Schema/models defined in packages/prisma/schema.prisma.
-  - Route definitions live in: packages/trpc/server/routers, packages/trpc/server/routers/viewer/workflows, packages/trpc/server/routers/viewer/webhook. Add new endpoints here.
-  - Third-party integrations live under packages/app-store/ (zoomvideo, zohocrm, zohocalendar, zoho-bigin, zapier, wordpress, ...). Each integration has its own directory with components, lib, and API code.
+  - Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.
+  - Auth uses better-auth.
+  - Styling uses Tailwind CSS utility classes. Custom design tokens defined in www/tailwind.config.ts — use these instead of arbitrary values.
+  - Database access uses Prisma. Look for schemas in prisma/schema.prisma.
+  - Route definitions live in: cli/template/extras/src/server/api, cli/template/extras/src/server/api/trpc-pages, cli/template/extras/src/server/api/trpc-app. Add new endpoints here.
 
 ## Additional Context
 
-- **Environment:** 4 env vars detected. Public (browser-exposed): NEXT_PUBLIC_WEBAPP_URL. Private (server-only): CI, PLAYWRIGHT_HEADLESS, PWDEBUG.
 - **Dominant patterns:**
-  - Data fetching uses React Query (useQuery/useMutation). Follow this pattern for new data operations.
-  - UI components live in: packages/ui, packages/ui/components, packages/trpc/components. Add new components here.
+  - API endpoints use tRPC routers. Follow this pattern for new routes.
+  - UI components live in: www/src/components. Add new components here.
 
 ## Before Making Changes
 
@@ -381,13 +373,28 @@ The most valuable context is what only you know. Add:
   </a>
 </section>
 
+<!-- From the blog -->
+<section class="mt-12">
+  <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">FROM_THE_BLOG</h3>
+  <div class="flex flex-col sm:flex-row gap-3">
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/we-benchmarked-ai-context-files">
+      <span class="uppercase tracking-tight">Why AI agents fail on real codebases</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/why-auto-generated-context-makes-agents-worse">
+      <span class="uppercase tracking-tight">Why auto-generated context makes agents worse</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
 
 <!-- Related -->
 <section class="mt-12">
   <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">RELATED_REPOS</h3>
   <div class="flex flex-wrap gap-3">
     <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/nextjs">NEXT.JS</a>
-    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/supabase">SUPABASE</a>
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/shadcn-ui">SHADCN/UI</a>
   </div>
 </section>
 

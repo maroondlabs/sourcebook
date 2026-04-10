@@ -2,18 +2,19 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Blog — sourcebook</title>
-<meta name="description" content="Research, techniques, and insights on AI coding agent context — from the team behind sourcebook."/>
-<link rel="canonical" href="https://sourcebook.run/blog"/>
-<link rel="icon" type="image/png" href="../logo.png"/>
-<meta property="og:title" content="Blog — sourcebook"/>
-<meta property="og:description" content="Research, techniques, and insights on AI coding agent context."/>
+<title>Research — sourcebook</title>
+<meta name="description" content="Comparisons, benchmarks, and raw findings data from sourcebook. Dense, factual reference material on AI coding agent context."/>
+<meta property="og:title" content="Research — sourcebook"/>
+<meta property="og:description" content="Comparisons, benchmarks, and raw findings data from sourcebook."/>
 <meta property="og:type" content="website"/>
-<meta property="og:url" content="https://sourcebook.run/blog"/>
+<meta property="og:url" content="https://sourcebook.run/research"/>
 <meta property="og:image" content="https://sourcebook.run/og-image.png"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Blog — sourcebook"/>
-<meta name="twitter:description" content="Research, techniques, and insights on AI coding agent context."/>
+<meta name="twitter:title" content="Research — sourcebook"/>
+<meta name="twitter:description" content="Comparisons, benchmarks, and raw findings data from sourcebook."/>
+<link rel="canonical" href="https://sourcebook.run/research"/>
+<link rel="icon" type="image/png" href="../logo.png"/>
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script>
@@ -24,6 +25,7 @@
                 colors: {
                     "electric-green": "#00FF41",
                     "terminal-black": "#0D0D0D",
+                    "error": "#ba1a1a",
                 },
                 fontFamily: {
                     "headline": ["Space Grotesk"],
@@ -35,6 +37,7 @@
     }
 </script>
 <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
     html.dark body { background-color: #000000; color: #FFFFFF; }
     html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
@@ -43,6 +46,16 @@
     .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Research — sourcebook",
+  "description": "Comparisons, benchmarks, and raw findings data from sourcebook.",
+  "url": "https://sourcebook.run/research",
+  "publisher": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" }
+}
+</script>
 </head>
 <body class="antialiased bg-white dark:bg-black text-black dark:text-white">
 
@@ -55,9 +68,10 @@
 </a>
 <div class="hidden md:flex gap-8 items-center ml-12">
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/blog">BLOG</a>
-<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/research">RESEARCH</a>
 <a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+
 </div>
 <div class="flex items-center gap-2 md:gap-4 ml-auto">
 <button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
@@ -71,79 +85,101 @@
 <!-- Header -->
 <header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
 <div class="max-w-screen-xl mx-auto">
-<h1 class="font-headline font-bold text-6xl md:text-8xl tracking-tighter text-black dark:text-white mb-4">BLOG</h1>
-<p class="font-body text-lg text-[#5F5E5E] dark:text-[#A0A0A0]">Research, techniques, and field notes on building for agents.</p>
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">RESEARCH</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+Comparisons, benchmarks, and findings data
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">Dense reference material with tables, methodology, and concrete numbers. The pages LLMs cite and developers bookmark.</p>
+</div>
 </div>
 </header>
 <div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
 
-<!-- Post List -->
+<!-- Research List -->
 <section class="max-w-screen-xl mx-auto px-6 py-16">
 
-<a href="/blog/we-scanned-30-repos-heres-what-broke" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
+<a href="/research/sourcebook-vs-gitnexus" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 <div class="flex-1">
-<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">ENGINEERING · APRIL 2026</span>
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">COMPARISON · APRIL 2026</span>
 <h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 dark:text-white group-hover:text-electric-green transition-colors">
-We Scanned 30+ Repos. Here's What Broke (And What We Fixed).
+sourcebook vs GitNexus
 </h2>
 <p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-base max-w-2xl">
-esbuild, vLLM, Polars, Biome, and 25 more. 12 scanner bugs found, 69 QA assertions added, and an engine that stopped hallucinating about codebases.
+Same architecture &mdash; AGENTS.md + MCP tools. Different intelligence: graph-derived structure vs convention-derived project knowledge. Where each approach shines.
 </p>
 </div>
 <div class="font-headline text-xs tracking-widest text-[#5F5E5E] uppercase mt-2 md:mt-8 whitespace-nowrap">
-READ →
+READ &rarr;
 </div>
 </div>
 </a>
 
-<a href="/blog/what-we-found-scanning-15-open-source-repos" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
+<a href="/research/sourcebook-vs-repomix" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 <div class="flex-1">
-<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">ANALYSIS · APRIL 2026</span>
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">COMPARISON · APRIL 2026</span>
 <h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 dark:text-white group-hover:text-electric-green transition-colors">
-What We Found Scanning 15 Open-Source Repos With 100,000+ Files
+sourcebook vs Repomix
 </h2>
 <p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-base max-w-2xl">
-Next.js, Cal.com, Supabase, Django, and 10 more — hub files, invisible coupling, and the traps agents fall into.
+Head-to-head comparison on approach, output format, benchmark performance, and when to use which. Tested on real GitHub issues across 3 repos.
 </p>
 </div>
 <div class="font-headline text-xs tracking-widest text-[#5F5E5E] uppercase mt-2 md:mt-8 whitespace-nowrap">
-READ →
+READ &rarr;
 </div>
 </div>
 </a>
 
-<a href="/blog/we-benchmarked-ai-context-files" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
+<a href="/research/sourcebook-vs-handwritten" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
+<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+<div class="flex-1">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">COMPARISON · APRIL 2026</span>
+<h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 dark:text-white group-hover:text-electric-green transition-colors">
+sourcebook vs Hand-Written Context Files
+</h2>
+<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-base max-w-2xl">
+How auto-generated context compares to manually written CLAUDE.md files. Version progression from v0.3 to v0.5, benchmark results, and what each approach captures.
+</p>
+</div>
+<div class="font-headline text-xs tracking-widest text-[#5F5E5E] uppercase mt-2 md:mt-8 whitespace-nowrap">
+READ &rarr;
+</div>
+</div>
+</a>
+
+<a href="/research/15-repo-scan" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
+<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+<div class="flex-1">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">DATA · APRIL 2026</span>
+<h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 dark:text-white group-hover:text-electric-green transition-colors">
+15 Open-Source Repos: Raw Scan Data
+</h2>
+<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-base max-w-2xl">
+Methodology, per-repo statistics, finding breakdowns, and hub file analysis from scanning Next.js, Cal.com, Django, and 12 more repos totaling 85,000+ files.
+</p>
+</div>
+<div class="font-headline text-xs tracking-widest text-[#5F5E5E] uppercase mt-2 md:mt-8 whitespace-nowrap">
+READ &rarr;
+</div>
+</div>
+</a>
+
+<a href="/research/benchmark" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 <div class="flex-1">
 <span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">BENCHMARK · MARCH 2026</span>
 <h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 dark:text-white group-hover:text-electric-green transition-colors">
-We Benchmarked AI Context Files on Real GitHub Issues. Handwritten Briefs Won. Then We Caught Up.
+Benchmark Methodology and Full Results
 </h2>
 <p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-base max-w-2xl">
-We tested four context strategies on real codebases — no context, handwritten briefs, repo dumps, and sourcebook. Here's what happened when we measured real patches on real issues.
+22 benchmark runs across 3 repos and 4 context conditions. Full methodology, task selection, version progression, and an honest assessment of what the data proves.
 </p>
 </div>
 <div class="font-headline text-xs tracking-widest text-[#5F5E5E] uppercase mt-2 md:mt-8 whitespace-nowrap">
-READ →
-</div>
-</div>
-</a>
-
-<a href="/blog/why-auto-generated-context-makes-agents-worse" class="block group border-b border-[#C6C6C6]/30 dark:border-[#1A1A1A] pb-12 mb-12 hover:border-electric-green transition-colors">
-<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-<div class="flex-1">
-<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-4">RESEARCH · MARCH 2026</span>
-<h2 class="font-headline font-bold text-2xl md:text-3xl tracking-tight mb-4 dark:text-white group-hover:text-electric-green transition-colors">
-Why auto-generated CLAUDE.md files make your AI agents worse
-</h2>
-<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-base max-w-2xl">
-ETH Zurich research shows auto-generated context files hurt performance by 2-3%. The only context that helps is what agents can't figure out alone. Three techniques that extract what they miss.
-</p>
-</div>
-<div class="font-headline text-xs tracking-widest text-[#5F5E5E] uppercase mt-2 md:mt-8 whitespace-nowrap">
-READ →
+READ &rarr;
 </div>
 </div>
 </a>
@@ -171,7 +207,7 @@ READ →
 <a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
 </div>
 <div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
-BSL-1.1 © 2026
+BSL-1.1 &copy; 2026
 </div>
 </footer>
 

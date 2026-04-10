@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-tint":"#006e16","outline-variant":"#c6c6c6","surface-container":"#eeeeee","surface-container-low":"#f3f3f3","surface-container-high":"#e8e8e8","surface-container-highest":"#e2e2e2","surface":"#f9f9f9","on-surface":"#1b1b1b","secondary":"#5f5e5e","outline":"#777777","primary":"#000000","on-primary":"#72ff70","background":"#f9f9f9"},borderRadius:{DEFAULT:"0px",lg:"0px",xl:"0px",full:"0px"},fontFamily:{headline:["Space Grotesk"],body:["Inter"],label:["Space Grotesk"]}}}}
+</script>
+<style>
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+body{font-family:'Inter',sans-serif}
+h1,h2,h3,h4,.label-mono{font-family:'Space Grotesk',sans-serif}
+html.dark body{background-color:#000;color:#fff}
+html.dark .bg-white{background-color:#000!important}
+html.dark .text-black{color:#fff!important}
+html.dark .border-black{border-color:#fff!important}
+html.dark .border-black\/5{border-color:rgba(255,255,255,0.05)!important}
+html.dark .border-outline-variant\/20{border-color:rgba(255,255,255,0.1)!important}
+html.dark .border-outline-variant\/10{border-color:rgba(255,255,255,0.05)!important}
+html.dark .border-outline-variant\/30{border-color:rgba(255,255,255,0.15)!important}
+html.dark .border-outline-variant\/40{border-color:rgba(255,255,255,0.2)!important}
+html.dark .bg-surface-container-low{background-color:#0D0D0D!important}
+html.dark .bg-surface-container{background-color:#111!important}
+html.dark .bg-surface-container-high{background-color:#1a1a1a!important}
+html.dark .text-secondary{color:#888!important}
+html.dark .text-gray-400{color:#666!important}
+html.dark .text-gray-500{color:#555!important}
+html.dark .bg-black{background-color:#000!important}
+html.dark .hover\:bg-black:hover{background-color:#fff!important}
+html.dark .hover\:text-white:hover{color:#000!important}
+html.dark .hover\:text-black:hover{color:#000!important}
+</style>
+<title>HOW FERN WORKS | SOURCEBOOK</title>
+<meta name="description" content="How the fern-api/fern repo actually works: This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modify Extracted by sou"/>
+<link rel="canonical" href="https://sourcebook.run/for/fern"/>
+<meta property="og:title" content="How FERN Works | sourcebook"/>
+<meta property="og:description" content="How the fern-api/fern repo actually works: This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modify Extracted by sou"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/fern"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How FERN Works | sourcebook"/>
+<meta name="twitter:description" content="How the fern-api/fern repo actually works: This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modify Extracted by sou"/>
+<meta name="twitter:image" content="https://sourcebook.run/og-image.png"/>
+<meta name="robots" content="index, follow"/>
+<link rel="icon" type="image/png" href="/logo.png"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "How FERN Works",
+  "description": "How the fern-api/fern repo actually works: This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modify Extracted by sourcebook.",
+  "url": "https://sourcebook.run/for/fern",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-09",
+  "author": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "about": {
+    "@type": "SoftwareSourceCode",
+    "name": "FERN",
+    "codeRepository": "https://github.com/fern-api/fern"
+  }
+}
+</script>
+</head>
+<body class="bg-white text-black antialiased">
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="/logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="/logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-6 pt-16 pb-12">
+
+<!-- Hero -->
+<section class="mb-12">
+  <div class="flex flex-wrap gap-4 mb-4 text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary">
+    <span class="bg-black text-white px-2 py-0.5">TypeScript</span>
+    <span>4,200 FILES</span>
+    <span class="text-[#00881d]">5 FINDINGS</span>
+  </div>
+  <h1 class="text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-6 leading-none">
+    HOW FERN<br/>ACTUALLY WORKS
+  </h1>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <p class="text-lg text-secondary col-span-2 leading-relaxed">Generate SDKs and API documentation from your API definition. Conventions, patterns, and architecture extracted from the <a href="https://github.com/fern-api/fern" class="underline">fern-api/fern</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
+    <div class="flex items-end justify-end">
+      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/fern-api/fern">
+        VIEW_REPO <span class="material-symbols-outlined">north_east</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Reference -->
+<section class="mb-12 bg-surface-container-low p-4 flex flex-wrap gap-6 items-center border-l-4 border-black">
+  <span class="text-xs font-bold font-['Space_Grotesk'] uppercase tracking-tighter">QUICK_REF:</span>
+  <div class="flex flex-wrap gap-3">
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Testing:</b> Vitest + co-located</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Exports:</b> Named + barrel</span>
+  </div>
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+<section class="lg:col-span-8">
+
+<!-- What Matters -->
+<div class="p-8 bg-surface-container-low border border-outline-variant/20 mb-12">
+  <h2 class="text-xl font-bold uppercase mb-6 font-['Space_Grotesk']">WHAT_MATTERS</h2>
+  <ul class="space-y-6">
+    <li class="flex gap-4 items-start">
+      <span class="text-[#00881d] font-bold">→</span>
+      <p class="text-sm leading-relaxed">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying.</p>
+    </li>
+  </ul>
+</div>
+
+<!-- Key Findings -->
+<div class="mb-12">
+  <h2 class="text-2xl font-bold uppercase mb-6 flex items-center gap-2 font-['Space_Grotesk']">
+    <span class="w-8 h-1 bg-black"></span> KEY_FINDINGS
+  </h2>
+  <div class="space-y-4">
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Generated files detected — do NOT edit these directly. Modify the source/schema they are generated from.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Hub files: packages/ir-sdk/src/sdk/api/index.ts (imported by 732 files). Changes here have the widest blast radius.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      
+    </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">Uses Conventional Commits (feat/fix/docs/etc). Common scopes: python, go, csharp, java, rust.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
+      </div>
+      
+    </div>
+    
+    <details class="mt-4">
+      <summary class="text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary cursor-pointer hover:text-black">+ 1 MORE FINDINGS (MEDIUM CONFIDENCE)</summary>
+      <div class="mt-4 space-y-4">
+        <div class="border-l-4 border-yellow-400 bg-white p-6">
+          <div class="flex justify-between items-start mb-2">
+            <p class="font-medium text-sm">23 reverted commits in the last year. Check anti-patterns before attempting similar changes.</p>
+            <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
+          </div>
+          
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+</section>
+<aside class="lg:col-span-4 space-y-8">
+
+<!-- AI Tools Sidebar -->
+<div class="bg-black p-6 text-[#00FF41] border border-[#00FF41]/20">
+  <h3 class="font-['Space_Grotesk'] font-bold text-xs uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+    <span class="material-symbols-outlined text-sm">smart_toy</span> USING_AI_TOOLS
+  </h3>
+  <ul class="space-y-4 font-['Space_Grotesk'] text-xs uppercase tracking-wider leading-loose">
+    <li class="flex gap-3"><span>→</span><span>never edit generated files — modify the source schema</span></li>
+    <li class="flex gap-3"><span>→</span><span>ir-sdk/api/index.ts has 732 importers — extreme blast radius</span></li>
+  </ul>
+</div>
+
+<!-- CLAUDE.md -->
+<details class="group bg-surface-container-low border border-outline-variant/20 overflow-hidden">
+  <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-container-high transition-none list-none">
+    <span class="text-xs font-bold font-['Space_Grotesk'] uppercase">CLAUDE.MD</span>
+    <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+  </summary>
+  <div class="p-4 pt-0">
+    <pre class="bg-white border border-outline-variant/30 p-3 font-mono text-[10px] leading-relaxed text-secondary overflow-y-auto max-h-64 whitespace-pre-wrap"># CLAUDE.md
+
+Generated by sourcebook.
+
+## Quick Reference
+
+- **testing:** Tests use Vitest, co-located.
+- **commits:** Conventional Commits with language scopes.
+
+## Stack
+
+TypeScript + Express
+
+## Conventions
+
+- Monorepo with turbo.
+- Barrel exports + named exports.
+- Generated files — don't edit directly.</pre>
+  </div>
+</details>
+
+</aside>
+</div>
+
+<!-- CTA -->
+<section class="py-16 border-y border-outline-variant/20 flex flex-col items-center text-center">
+  <span class="text-[10px] font-['Space_Grotesk'] uppercase tracking-[0.3em] mb-4 text-secondary">GENERATED IN ~3 SECONDS WITH</span>
+  <h2 class="text-4xl md:text-6xl font-bold font-['Space_Grotesk'] mb-8 tracking-tighter">npx sourcebook init</h2>
+  <a class="bg-black text-white px-10 py-4 font-bold uppercase tracking-widest hover:bg-[#00FF41] hover:text-black transition-none flex items-center gap-4 font-['Space_Grotesk']" href="https://github.com/maroondlabs/sourcebook">
+    VIEW ON GITHUB <span class="material-symbols-outlined">star</span>
+  </a>
+</section>
+
+<!-- From the blog -->
+<section class="mt-12">
+  <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">FROM_THE_BLOG</h3>
+  <div class="flex flex-col sm:flex-row gap-3">
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/we-benchmarked-ai-context-files">
+      <span class="uppercase tracking-tight">Why AI agents fail on real codebases</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/why-auto-generated-context-makes-agents-worse">
+      <span class="uppercase tracking-tight">Why auto-generated context makes agents worse</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
+<!-- Related -->
+<section class="mt-12">
+  <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">RELATED_REPOS</h3>
+  <div class="flex flex-wrap gap-3">
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/hono">HONO</a>
+  </div>
+</section>
+
+</main>
+<footer class="bg-white flex justify-between items-center w-full px-6 py-8 border-t border-black/5">
+<div class="flex items-center gap-4">
+<span class="font-bold text-black font-['Space_Grotesk'] uppercase tracking-widest text-xs">SOURCEBOOK</span>
+<span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.9.4</span>
+</div>
+<a class="font-['Space_Grotesk'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00FF41]" href="/">PROJECT KNOWLEDGE FOR CODING AGENTS</a>
+</footer>
+<script>
+function toggleTheme(){var h=document.documentElement,d=h.classList.contains('dark');h.classList.remove('light','dark');h.classList.add(d?'light':'dark');localStorage.setItem('theme',d?'light':'dark');document.querySelector('[onclick="toggleTheme()"]').textContent=d?'dark_mode':'light_mode'}
+(function(){var s=localStorage.getItem('theme');if(s==='dark'){document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');var t=document.querySelector('[onclick="toggleTheme()"]');if(t)t.textContent='light_mode'}})();
+</script>
+</body></html>

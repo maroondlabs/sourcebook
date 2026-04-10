@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Benchmark Methodology and Full Results — sourcebook Research</title>
+<meta name="description" content="Full benchmark methodology and results. 22 runs across 3 repos, 4 context conditions, version progression from v0.3 to v0.5. Honest assessment of what the data proves and what it doesn't."/>
+<meta property="og:title" content="Benchmark Methodology and Full Results"/>
+<meta property="og:description" content="22 benchmark runs, 4 context conditions, 3 repos. Full methodology, results, and honest limitations."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/research/benchmark"/>
+<meta property="article:published_time" content="2026-03-26"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Benchmark Methodology and Full Results"/>
+<meta name="twitter:description" content="22 benchmark runs, 4 context conditions, 3 repos. Full methodology, results, and honest limitations."/>
+<link rel="canonical" href="https://sourcebook.run/research/benchmark"/>
+<link rel="icon" type="image/png" href="../../logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: { "electric-green": "#00FF41", "terminal-black": "#0D0D0D", "error": "#ba1a1a" },
+                fontFamily: { "headline": ["Space Grotesk"], "body": ["Inter"] },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .benchmark-table { width: 100%; border-collapse: collapse; font-family: 'Space Grotesk', monospace; font-size: 13px; }
+    .benchmark-table th { background: #0D0D0D; color: #00FF41; padding: 12px 10px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table td { background: #141414; color: #E0E0E0; padding: 10px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table tr:hover td { background: #1A1A1A; }
+    .benchmark-table .task-label { color: #00FF41; font-weight: 600; }
+    .benchmark-table .metric-val { font-family: 'Space Grotesk', monospace; }
+    .benchmark-table .best { color: #00FF41; font-weight: 700; }
+    html:not(.dark) .benchmark-table th { background: #1a1a1a; }
+    html:not(.dark) .benchmark-table td { background: #141414; color: #E0E0E0; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Benchmark Methodology and Full Results",
+  "description": "Full benchmark methodology and results. 22 runs across 3 repos, 4 context conditions, version progression from v0.3 to v0.5.",
+  "url": "https://sourcebook.run/research/benchmark",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-03-26",
+  "author": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" },
+  "publisher": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" }
+}
+</script>
+</head>
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
+
+<!-- Nav -->
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="../../logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="../../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main>
+
+<!-- Article Header -->
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">BENCHMARK &middot; MARCH 2026</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+Benchmark methodology and full results
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">22 runs across 3 repos and 4 context conditions. How we tested, what we measured, and an honest accounting of what the data proves.</p>
+</div>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
+
+<!-- Article Body -->
+<article class="max-w-[720px] mx-auto px-6 py-16">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-0 uppercase dark:text-white">Setup</h2>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li><strong>Harness:</strong> Custom benchmark harness v0.2.0</li>
+<li><strong>Model:</strong> claude-sonnet-4-20250514 (pinned, consistent across all runs)</li>
+<li><strong>Repos:</strong> Cal.com (calcom/cal.com), Hono (honojs/hono), Pydantic (pydantic/pydantic)</li>
+<li><strong>Tasks:</strong> 5 real GitHub issues (1 excluded due to checkout bug)</li>
+<li><strong>Conditions:</strong> none (no context file), handwritten (human-authored CLAUDE.md), Repomix (repo dump), sourcebook (auto-generated brief)</li>
+</ul>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Task selection</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Tasks were selected from real, closed GitHub issues. Criteria: the issue had a merged PR, the fix was non-trivial (touched 1+ files, 20+ lines changed), and the task was self-contained enough that an agent could attempt it given only the issue description.
+</p>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li><strong>cal.com #27298</strong> &mdash; OAuth flow untranslated strings (i18n fix)</li>
+<li><strong>cal.com #27907</strong> &mdash; PayPal untranslated strings (i18n fix)</li>
+<li><strong>hono #4806</strong> &mdash; Request body caching (runtime behavior fix)</li>
+<li><strong>pydantic #12715</strong> &mdash; JSON schema generation (type system fix)</li>
+<li><del>pydantic #12424</del> &mdash; Model rebuild (excluded: checkout bug meant the issue was already resolved in the checked-out code)</li>
+</ul>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">What we measured</h2>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li><strong>Time:</strong> Wall clock seconds from task start to patch output</li>
+<li><strong>Tokens:</strong> Total input + output tokens consumed</li>
+<li><strong>Files changed:</strong> Number of files in the generated patch</li>
+<li><strong>Patch lines:</strong> Total lines in the diff (adds + deletes)</li>
+</ul>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We did <strong>not</strong> measure correctness (tests passing, lint clean, match with reference PR). This is the most important limitation. More patch lines doesn't necessarily mean better — it could mean more thorough coverage, or it could mean unnecessary changes.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Full results (initial run &mdash; v0.3)</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-4">
+Format: <code class="bg-terminal-black text-electric-green px-1 font-mono text-sm">time / files / patch lines / tokens</code>
+</p>
+
+</article>
+
+<div class="max-w-[900px] mx-auto px-6 mb-16">
+<div class="overflow-x-auto">
+<table class="benchmark-table">
+<thead>
+<tr>
+<th style="min-width:160px;">Task</th>
+<th>None</th>
+<th>Handwritten</th>
+<th>Repomix</th>
+<th>sourcebook v0.3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="task-label">cal.com #27298<br><span class="text-[#5F5E5E] text-[11px] font-normal">OAuth i18n</span></td>
+<td class="metric-val">241s / 5f / 381L / 22K</td>
+<td class="metric-val best">120s / 3f / 321L / 13K</td>
+<td class="metric-val">176s / 3f / 283L / 20K</td>
+<td class="metric-val">140s / 3f / 350L / 16K</td>
+</tr>
+<tr>
+<td class="task-label">cal.com #27907<br><span class="text-[#5F5E5E] text-[11px] font-normal">PayPal i18n</span></td>
+<td class="metric-val best">94s / 5f / 314L / 11K</td>
+<td class="metric-val">115s / 5f / 362L / 15K</td>
+<td class="metric-val">121s / 5f / 314L / 13K</td>
+<td class="metric-val">103s / 5f / 390L / 14K</td>
+</tr>
+<tr>
+<td class="task-label">hono #4806<br><span class="text-[#5F5E5E] text-[11px] font-normal">Body caching</span></td>
+<td class="metric-val best">253s / 1f / 31L / 21K</td>
+<td class="metric-val">323s / 2f / 86L / 29K</td>
+<td class="metric-val">245s / 2f / 82L / 27K</td>
+<td class="metric-val">274s / 2f / 82L / 28K</td>
+</tr>
+<tr>
+<td class="task-label">pydantic #12715<br><span class="text-[#5F5E5E] text-[11px] font-normal">JSON schema</span></td>
+<td class="metric-val">312s / 1f / 99L / 35K</td>
+<td class="metric-val best">180s / 2f / 83L / 19K</td>
+<td class="metric-val">208s / 1f / 35L / 23K</td>
+<td class="metric-val">315s / 1f / 28L / 34K</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<article class="max-w-[720px] mx-auto px-6">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Aggregate (4 valid tasks, initial run)</h2>
+
+</article>
+
+<div class="max-w-[900px] mx-auto px-6 mb-16">
+<div class="overflow-x-auto">
+<table class="benchmark-table">
+<thead>
+<tr>
+<th>Condition</th>
+<th>Avg tokens</th>
+<th>Avg time</th>
+<th>Avg patch lines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="task-label">none</td>
+<td class="metric-val">22,133</td>
+<td class="metric-val">225s</td>
+<td class="metric-val">206</td>
+</tr>
+<tr>
+<td class="task-label best">handwritten</td>
+<td class="metric-val best">18,966</td>
+<td class="metric-val best">185s</td>
+<td class="metric-val">213</td>
+</tr>
+<tr>
+<td class="task-label">repomix</td>
+<td class="metric-val">20,958</td>
+<td class="metric-val">188s</td>
+<td class="metric-val">178</td>
+</tr>
+<tr>
+<td class="task-label">sourcebook v0.3</td>
+<td class="metric-val">22,720</td>
+<td class="metric-val">208s</td>
+<td class="metric-val best">213</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<article class="max-w-[720px] mx-auto px-6">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Version progression (sourcebook only)</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-4">
+We re-ran the sourcebook condition with v0.4.1 and v0.5 on the same tasks to track improvement.
+</p>
+
+</article>
+
+<div class="max-w-[900px] mx-auto px-6 mb-16">
+<div class="overflow-x-auto">
+<table class="benchmark-table">
+<thead>
+<tr>
+<th style="min-width:160px;">Task</th>
+<th>Handwritten</th>
+<th>sb v0.3</th>
+<th>sb v0.4.1</th>
+<th>sb v0.5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="task-label">cal.com #27298</td>
+<td class="metric-val">120s / 3f / 321L</td>
+<td class="metric-val">140s / 3f / 350L</td>
+<td class="metric-val">139s / 5f / 438L</td>
+<td class="metric-val best">136s / 6f / 469L</td>
+</tr>
+<tr>
+<td class="task-label">cal.com #27907</td>
+<td class="metric-val">115s / 5f / 362L</td>
+<td class="metric-val">103s / 5f / 390L</td>
+<td class="metric-val">116s / 6f / 423L</td>
+<td class="metric-val best">113s / 6f / 458L</td>
+</tr>
+<tr>
+<td class="task-label">hono #4806</td>
+<td class="metric-val">323s / 2f / 86L</td>
+<td class="metric-val">274s / 2f / 82L</td>
+<td class="metric-val" style="color:#5F5E5E">&mdash;</td>
+<td class="metric-val best">267s / 2f / 101L</td>
+</tr>
+<tr>
+<td class="task-label">pydantic #12715</td>
+<td class="metric-val best">180s / 2f / 83L</td>
+<td class="metric-val">315s / 1f / 28L</td>
+<td class="metric-val" style="color:#5F5E5E">&mdash;</td>
+<td class="metric-val">308s / 2f / 117L</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="font-body text-xs text-[#5F5E5E] mt-3">v0.4.1 added dominant pattern detection (convention scanning). v0.5 added repo-mode specialization (app vs library analysis). Dash indicates version was not tested on that task.</p>
+</div>
+
+<article class="max-w-[720px] mx-auto px-6">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">What the data shows</h2>
+
+<ol class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-decimal pl-6 space-y-3">
+<li><strong>sourcebook is closing the gap with handwritten.</strong> v0.5 is within ~6% of handwritten speed on Cal.com and beats it on 2 of 4 tasks by time.</li>
+<li><strong>Patch thoroughness consistently exceeds handwritten.</strong> Across all 4 tasks, v0.5 produces more patch lines and touches equal or more files. Average: +36% more lines.</li>
+<li><strong>Library repos improved significantly.</strong> Pydantic went from 1 file / 28 lines (v0.3) to 2 files / 117 lines (v0.5) after repo-mode specialization.</li>
+<li><strong>Cal.com is essentially solved.</strong> Both tasks are within noise range on time, with sourcebook producing more thorough patches for fewer tokens on #27907.</li>
+<li><strong>sourcebook may have better judgment.</strong> On the excluded pydantic task, sourcebook correctly identified no work was needed — while the no-context and handwritten conditions blindly wrote 54-55 line patches for an already-fixed issue.</li>
+</ol>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">What the data does not show</h2>
+
+<ol class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-decimal pl-6 space-y-3">
+<li><strong>"More thorough" is not yet proven "more correct."</strong> More patch lines could mean better coverage, or it could mean unnecessary changes. Correctness scoring (tests pass, lint clean, match with reference PR) is the most important next step.</li>
+<li><strong>sourcebook is not proven more efficient overall.</strong> Pydantic still uses ~2x tokens compared to handwritten.</li>
+<li><strong>Single runs, no statistical confidence.</strong> Each data point is one run. Variance between runs is unknown.</li>
+<li><strong>Small task set.</strong> 4 valid tasks across 3 repos. More diversity is needed to generalize.</li>
+</ol>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Next steps for the benchmark</h2>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li>Add correctness scoring (tests, lint, file overlap with reference PR)</li>
+<li>Expand to 20-30 tasks with more repo diversity</li>
+<li>Run 2-3 reruns per task/condition for statistical confidence</li>
+<li>Benchmark on a fresh set of tasks (not re-runs) to check for overfitting</li>
+<li>Compare sourcebook output vs handwritten to identify what humans emphasize that sourcebook misses</li>
+</ul>
+
+</article>
+
+<!-- CTA -->
+<section class="bg-white dark:bg-[#050505] border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-24 px-6">
+<div class="max-w-2xl mx-auto text-center">
+<div class="bg-terminal-black py-6 px-8 mb-12 text-center">
+<code class="text-electric-green font-mono text-xl">$ npx sourcebook init</code>
+</div>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black dark:border-white text-black dark:text-white px-8 py-4 font-headline font-bold text-sm uppercase tracking-[0.2em] hover:bg-[#00FF41] hover:text-black hover:border-[#00FF41] transition-colors text-center">VIEW_ON_GITHUB</a>
+<a href="/research" class="border-2 border-[#C6C6C6]/30 dark:border-[#1A1A1A] text-[#5F5E5E] px-8 py-4 font-headline font-bold text-sm uppercase tracking-[0.2em] hover:border-[#00FF41] hover:text-[#00FF41] transition-colors text-center">ALL_RESEARCH</a>
+</div>
+</div>
+</section>
+
+<!-- More -->
+<section class="max-w-3xl mx-auto px-8 pb-16">
+  <h3 class="font-headline text-xs tracking-widest uppercase text-[#5F5E5E] mb-6">MORE_FROM_SOURCEBOOK</h3>
+  <div class="flex flex-col gap-4">
+    <a href="/research/sourcebook-vs-repomix" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">sourcebook vs Repomix</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/research/sourcebook-vs-handwritten" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">sourcebook vs hand-written context files</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/blog/we-benchmarked-ai-context-files" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Blog: We benchmarked AI context files on real GitHub issues</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="../../logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+BSL-1.1 &copy; 2026
+</div>
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
+  }
+})();
+</script>
+</body></html>

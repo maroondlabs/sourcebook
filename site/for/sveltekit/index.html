@@ -2,6 +2,7 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -32,13 +33,46 @@ html.dark .hover\:bg-black:hover{background-color:#fff!important}
 html.dark .hover\:text-white:hover{color:#000!important}
 html.dark .hover\:text-black:hover{color:#000!important}
 </style>
-<title>HOW NEXT.JS WORKS | SOURCEBOOK</title>
-<meta name="description" content="How the Next.js repo actually works: TypeScript strict mode is OFF — agents shouldn't add strict type annotations. This is a monorepo — check workspace dependencies before modifying shared code. Extracted from 27,423 files."/>
-<link rel="canonical" href="https://sourcebook.run/for/nextjs"/>
-<meta property="og:title" content="How Next.js Works | sourcebook"/>
-<meta property="og:url" content="https://sourcebook.run/for/nextjs"/>
+<title>HOW SVELTEKIT WORKS | SOURCEBOOK</title>
+<meta name="description" content="How the SvelteKit repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. packages/kit/src/utils/filesystem.js is a hub file (imported by 18 files) — changes here ripple everywhere. Extracted from 2,604 files."/>
+<link rel="canonical" href="https://sourcebook.run/for/sveltekit"/>
+<meta property="og:title" content="How SvelteKit Works | sourcebook"/>
+<meta property="og:description" content="How the SvelteKit repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. packages/kit/src/utils/filesystem.js is a hub file (imported by 18 files) — changes here ripple everywhere. Extracted from 2,604 files."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/for/sveltekit"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="How SvelteKit Works | sourcebook"/>
+<meta name="twitter:description" content="How the SvelteKit repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. packages/kit/src/utils/filesystem.js is a hub file (imported by 18 files) — changes here ripple everywhere."/>
+<meta name="twitter:image" content="https://sourcebook.run/og-image.png"/>
 <meta name="robots" content="index, follow"/>
 <link rel="icon" type="image/png" href="/logo.png"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "How SvelteKit Works",
+  "description": "How the SvelteKit repo actually works: This is a monorepo — check workspace dependencies before modifying shared code. packages/kit/src/utils/filesystem.js is a hub file (imported by 18 files) — changes here ripple everywhere. Extracted from 2,604 files.",
+  "url": "https://sourcebook.run/for/sveltekit",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-08",
+  "author": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "sourcebook",
+    "url": "https://sourcebook.run"
+  },
+  "about": {
+    "@type": "SoftwareSourceCode",
+    "name": "SvelteKit",
+    "codeRepository": "https://github.com/sveltejs/kit"
+  }
+}
+</script>
 </head>
 <body class="bg-white text-black antialiased">
 <nav class="bg-white flex justify-between items-center w-full px-6 py-4 border-b border-black/5 sticky top-0 z-50">
@@ -60,16 +94,16 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <section class="mb-12">
   <div class="flex flex-wrap gap-4 mb-4 text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary">
     <span class="bg-black text-white px-2 py-0.5">TypeScript</span>
-    <span>27,423 FILES</span>
-    <span class="text-[#00881d]">8 FINDINGS</span>
+    <span>2,604 FILES</span>
+    <span class="text-[#00881d]">6 FINDINGS</span>
   </div>
   <h1 class="text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-6 leading-none">
-    HOW NEXT.JS<br/>ACTUALLY WORKS
+    HOW SVELTEKIT<br/>ACTUALLY WORKS
   </h1>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <p class="text-lg text-secondary col-span-2 leading-relaxed">The React framework for the web. Conventions, patterns, and architecture extracted from the <a href="https://github.com/vercel/next.js" class="underline">vercel/next.js</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
+    <p class="text-lg text-secondary col-span-2 leading-relaxed">Web development, streamlined. The framework for building Svelte apps. Conventions, patterns, and architecture extracted from the <a href="https://github.com/sveltejs/kit" class="underline">sveltejs/kit</a> repository by <a href="/" class="underline">sourcebook</a>.</p>
     <div class="flex items-end justify-end">
-      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/vercel/next.js">
+      <a class="inline-flex items-center gap-2 border border-black px-6 py-3 hover:bg-[#00FF41] hover:text-black transition-none uppercase font-bold text-sm font-['Space_Grotesk']" href="https://github.com/sveltejs/kit">
         VIEW_REPO <span class="material-symbols-outlined">north_east</span>
       </a>
     </div>
@@ -81,7 +115,8 @@ html.dark .hover\:text-black:hover{color:#000!important}
 <section class="mb-12 bg-surface-container-low p-4 flex flex-wrap gap-6 items-center border-l-4 border-black">
   <span class="text-xs font-bold font-['Space_Grotesk'] uppercase tracking-tighter">QUICK_REF:</span>
   <div class="flex flex-wrap gap-3">
-    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Testing:</b> Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Build:</b> pnpm --filter '@sveltejs/*' -r build</span>
+    <span class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-medium"><b class="font-bold">Lint:</b> pnpm -r lint</span>
   </div>
 </section>
 
@@ -94,20 +129,16 @@ html.dark .hover\:text-black:hover{color:#000!important}
   <h2 class="text-xl font-bold uppercase mb-6 font-['Space_Grotesk']">WHAT_MATTERS</h2>
   <ul class="space-y-6">
     <li class="flex gap-4 items-start">
-      <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">TypeScript strict mode is OFF — agents shouldn't add strict type annotations</p>
+      <span class="text-[#00881d] font-bold">&rarr;</span>
+      <p class="text-sm leading-relaxed">This is a monorepo &mdash; check workspace dependencies before modifying shared code</p>
     </li>
     <li class="flex gap-4 items-start">
-      <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">This is a monorepo — check workspace dependencies before modifying shared code</p>
+      <span class="text-[#00881d] font-bold">&rarr;</span>
+      <p class="text-sm leading-relaxed">packages/kit/src/utils/filesystem.js is a hub file (imported by 18 files) &mdash; changes here ripple everywhere</p>
     </li>
     <li class="flex gap-4 items-start">
-      <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">Generated files detected — editing them directly will break builds</p>
-    </li>
-    <li class="flex gap-4 items-start">
-      <span class="text-[#00881d] font-bold">→</span>
-      <p class="text-sm leading-relaxed">packages/next/src/shared/lib/invariant-error.ts is a hub file (imported by 54 files) — changes here ripple everywhere</p>
+      <span class="text-[#00881d] font-bold">&rarr;</span>
+      <p class="text-sm leading-relaxed">21 dead code candidates detected</p>
     </li>
   </ul>
 </div>
@@ -120,66 +151,47 @@ html.dark .hover\:text-black:hover{color:#000!important}
   <div class="space-y-4">
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Strict mode is OFF. Don't add strict type annotations that would break existing patterns.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Path aliases configured: development-sandbox, next-test-utils, next-webdriver, e2e-utils, test-data-service, test-log, router-act, @next/playwright. Use these instead of relative imports.</p>
-        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
-      </div>
-      
-    </div>
-    <div class="border-l-4 border-[#00FF41] bg-white p-6">
-      <div class="flex justify-between items-start mb-2">
         <p class="font-medium text-sm">This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      
+
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.</p>
+        <p class="font-medium text-sm">Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">4 test files</code>
+
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Generated files detected (test/integration/relay-graphql-swc-single-project/queries/__generated__/pagesQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-b/__generated__/pagesBQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-a/__generated__/pagesAQuery.graphql.ts, examples/with-xata/utils/xata.codegen.ts, examples/with-typescript-graphql/codegen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.</p>
+        <p class="font-medium text-sm">Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">19 generated files</code>
+      <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">19 barrel export files found</code>
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Hub files (most depended on): packages/next/src/shared/lib/invariant-error.ts (imported by 54 files); packages/next/src/server/config-shared.ts (imported by 49 files); packages/next/src/server/route-modules/app-page/module.compiled.js (imported by 48 files); packages/next/src/server/request/params.ts (imported by 45 files); packages/next/src/shared/lib/app-router-types.ts (imported by 42 files). Changes here have the widest blast radius.</p>
+        <p class="font-medium text-sm">Hub files (most depended on): packages/kit/src/utils/filesystem.js (18 files); packages/kit/src/utils/functions.js (17 files); packages/kit/src/core/sync/utils.js (13 files); packages/kit/src/runtime/utils.js (12 files); packages/kit/src/runtime/shared.js (12 files). Changes here have the widest blast radius.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      
+
     </div>
     <div class="border-l-4 border-[#00FF41] bg-white p-6">
       <div class="flex justify-between items-start mb-2">
-        <p class="font-medium text-sm">Circular import chains detected: describe.ts → compose.ts → index.ts → runner.ts; index.ts → runner.ts; module.js. Avoid adding to these cycles.</p>
+        <p class="font-medium text-sm">Circular imports: fetch.js &rarr; respond.js. Avoid adding to these cycles.</p>
         <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-      
+
     </div>
-    
-    <details class="mt-4">
-      <summary class="text-xs font-['Space_Grotesk'] uppercase tracking-widest text-secondary cursor-pointer hover:text-black">+ 1 MORE FINDINGS (MEDIUM CONFIDENCE)</summary>
-      <div class="mt-4 space-y-4">
-        <div class="border-l-4 border-yellow-400 bg-white p-6">
-          <div class="flex justify-between items-start mb-2">
-            <p class="font-medium text-sm">UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.</p>
-            <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">MED</span>
-          </div>
-          <code class="text-[10px] font-['Space_Grotesk'] text-gray-400">3 component directories</code>
-        </div>
+    <div class="border-l-4 border-[#00FF41] bg-white p-6">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-medium text-sm">21 dead code candidates.</p>
+        <span class="bg-[#00FF41] text-black text-[10px] font-bold px-2 py-0.5 uppercase shrink-0 ml-4">HIGH</span>
       </div>
-    </details>
+
+    </div>
+
   </div>
 </div>
 
@@ -193,9 +205,9 @@ html.dark .hover\:text-black:hover{color:#000!important}
     <span class="material-symbols-outlined text-sm">smart_toy</span> USING_AI_TOOLS
   </h3>
   <ul class="space-y-4 font-['Space_Grotesk'] text-xs uppercase tracking-wider leading-loose">
-    <li class="flex gap-3"><span>→</span><span>avoid editing generated files — modify the source/schema instead</span></li>
-    <li class="flex gap-3"><span>→</span><span>check file importance before editing hub files</span></li>
-    <li class="flex gap-3"><span>→</span><span>follow existing patterns listed in quick reference</span></li>
+    <li class="flex gap-3"><span>&rarr;</span><span>this is a monorepo &mdash; check workspace dependencies first</span></li>
+    <li class="flex gap-3"><span>&rarr;</span><span>check file importance before editing hub files</span></li>
+    <li class="flex gap-3"><span>&rarr;</span><span>follow existing barrel export patterns</span></li>
   </ul>
 </div>
 
@@ -209,72 +221,46 @@ html.dark .hover\:text-black:hover{color:#000!important}
     <pre class="bg-white border border-outline-variant/30 p-3 font-mono text-[10px] leading-relaxed text-secondary overflow-y-auto max-h-64 whitespace-pre-wrap"># CLAUDE.md
 
 This file provides guidance to Claude Code when working with this codebase.
-Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit — the best context comes from human + machine together.
-
-## Quick Reference
-
-- **testing:** Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.
+Generated by [sourcebook](https://github.com/maroondlabs/sourcebook). Review and edit &mdash; the best context comes from human + machine together.
 
 ## Commands
 
-- **Dev:** `turbo run dev --parallel --filter=&quot;!@next/bundle-analyzer-ui&quot;`
-- **Build:** `turbo run build --remote-cache-timeout 60 --summarize true`
-- **Test:** `pnpm test-webpack`
-- **Lint:** `run-p test-types lint-typescript prettier-check &quot;lint-eslint .&quot; lint-ast-grep lint-language check-unused-turbo-tasks`
-- **test-deploy-inner:** `cross-env NEXT_TEST_MODE=deploy pnpm testheadless`
-- **test-deploy:** `pnpm run test-deploy-webpack`
-- **test-deploy-webpack:** `pnpm run with-webpack pnpm test-deploy-inner`
-- **test-deploy-turbo:** `pnpm run with-turbo pnpm test-deploy-inner`
-- **testonly-deploy-inner:** `cross-env NEXT_TEST_MODE=deploy pnpm testonly`
-- **testonly-deploy:** `pnpm run testonly-deploy-webpack`
-- **testonly-deploy-webpack:** `pnpm run with-webpack pnpm run testonly-deploy-inner`
-- **testonly-deploy-turbo:** `pnpm run with-turbo pnpm testonly-deploy-inner`
-
-## Critical Constraints
-
-- **TypeScript:** Strict mode is OFF. Don't add strict type annotations that would break existing patterns.
-- **Critical constraints:** Generated files detected (test/integration/relay-graphql-swc-single-project/queries/__generated__/pagesQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-b/__generated__/pagesBQuery.graphql.ts, test/integration/relay-graphql-swc-multi-project/project-a/__generated__/pagesAQuery.graphql.ts, examples/with-xata/utils/xata.codegen.ts, examples/with-typescript-graphql/codegen.ts, ...). Do NOT edit these directly — modify the source/schema they are generated from.
-- **Core modules:** Hub files (most depended on): packages/next/src/shared/lib/invariant-error.ts (imported by 54 files); packages/next/src/server/config-shared.ts (imported by 49 files); packages/next/src/server/route-modules/app-page/module.compiled.js (imported by 48 files); packages/next/src/server/request/params.ts (imported by 45 files); packages/next/src/shared/lib/app-router-types.ts (imported by 42 files). Changes here have the widest blast radius.
-- **Circular dependencies:** Circular import chains detected: describe.ts → compose.ts → index.ts → runner.ts; index.ts → runner.ts; module.js. Avoid adding to these cycles.
+- **Build:** `pnpm --filter '@sveltejs/*' -r build`
+- **Lint:** `pnpm -r lint`
 
 ## Stack
 
-Next.js, Expo, Supabase, Tailwind CSS, Express, TypeScript
-
-## Project Structure
-
-- `test/` — Tests
-- `scripts/` — Build / utility scripts
-- `docs/` — Documentation
+TypeScript
 
 ## Core Modules (by structural importance)
 
-- `turbopack/crates/turbopack-tests/tests/execution/turbopack/chunking/combinations/input/d.js`
-- `packages/next/src/shared/lib/invariant-error.ts`
-- `packages/next/src/shared/lib/app-router-types.ts`
-- `packages/next/src/shared/lib/segment-cache/vary-params-decoding.ts`
-- `turbopack/packages/devlow-bench/src/runner.ts`
+- `packages/kit/src/runtime/utils.js`
+- `packages/kit/src/utils/filesystem.js`
+- `packages/kit/src/utils/functions.js`
+- `packages/kit/src/runtime/client/client.js`
+- `packages/kit/src/utils/url.js`
+
+## Critical Constraints
+
+- **Monorepo:** This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
+- **Testing:** Tests are co-located with source files (*.test.ts next to *.ts). Keep this pattern.
+- **Core modules:** Hub files (most depended on): packages/kit/src/utils/filesystem.js (18 files); packages/kit/src/utils/functions.js (17 files); packages/kit/src/core/sync/utils.js (13 files); packages/kit/src/runtime/utils.js (12 files); packages/kit/src/runtime/shared.js (12 files). Changes here have the widest blast radius.
+- **Circular dependencies:** Circular imports: fetch.js &rarr; respond.js. Avoid adding to these cycles.
 
 ## Conventions &amp; Patterns
 
-- **TypeScript imports:** Path aliases configured: development-sandbox, next-test-utils, next-webdriver, e2e-utils, test-data-service, test-log, router-act, @next/playwright. Use these instead of relative imports.
-- **Project structure:** This is a monorepo. Changes may affect multiple packages. Check workspace dependencies before modifying shared code.
-- **Dominant patterns:** Tests use Jest. Test utilities in: turbopack/crates/turbopack-tracing/tests/node-file-trace/integration/ts-paths/fixtures/root.js.
-
-## Additional Context
-
-- **Dominant patterns:** UI components live in: turbopack/benchmark-apps/mui/components, test/production/typescript-basic/app/components, test/production/pages-dir/production/fixture/components. Add new components here.
+- **Import conventions:** Project uses barrel exports (index.ts files that re-export). Import from the directory, not from deep paths.
 
 ## Before Making Changes
 
-- **Check file importance** before editing. Hub files (listed in Core Modules) affect many other files — changes here have the widest blast radius.
+- **Check file importance** before editing. Hub files (listed in Core Modules) affect many other files &mdash; changes here have the widest blast radius.
 - **Follow existing patterns.** This project has established conventions (listed above). Match them instead of introducing new approaches.
 - **Respect constraints.** Review the Critical Constraints section before making structural changes.
 
 If the sourcebook MCP server is available (`sourcebook serve`), verify before acting:
-- `get_blast_radius` — check what breaks if you edit a hub file
-- `query_conventions` — confirm the right pattern before adding new code
-- `get_pressing_questions` — get a briefing before editing an unfamiliar file
+- `get_blast_radius` &mdash; check what breaks if you edit a hub file
+- `query_conventions` &mdash; confirm the right pattern before adding new code
+- `get_pressing_questions` &mdash; get a briefing before editing an unfamiliar file
 
 ## What to Add Manually
 
@@ -301,13 +287,28 @@ The most valuable context is what only you know. Add:
   </a>
 </section>
 
+<!-- From the blog -->
+<section class="mt-12">
+  <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">FROM_THE_BLOG</h3>
+  <div class="flex flex-col sm:flex-row gap-3">
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/we-benchmarked-ai-context-files">
+      <span class="uppercase tracking-tight">Why AI agents fail on real codebases</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a class="flex-1 flex justify-between items-center px-4 py-3 border border-outline-variant/30 text-xs font-['Space_Grotesk'] hover:border-[#00FF41] transition-none group" href="/blog/why-auto-generated-context-makes-agents-worse">
+      <span class="uppercase tracking-tight">Why auto-generated context makes agents worse</span>
+      <span class="material-symbols-outlined text-sm group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
 
 <!-- Related -->
 <section class="mt-12">
   <h3 class="text-xs font-bold font-['Space_Grotesk'] uppercase mb-6 tracking-widest text-secondary">RELATED_REPOS</h3>
   <div class="flex flex-wrap gap-3">
-    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/calcom">CAL.COM</a>
-    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/supabase">SUPABASE</a>
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/nextjs">NEXT.JS</a>
+    <a class="px-4 py-2 border border-outline-variant/40 text-xs font-['Space_Grotesk'] hover:bg-black hover:text-white transition-none uppercase" href="/for/astro">ASTRO</a>
   </div>
 </section>
 
@@ -315,7 +316,7 @@ The most valuable context is what only you know. Add:
 <footer class="bg-white flex justify-between items-center w-full px-6 py-8 border-t border-black/5">
 <div class="flex items-center gap-4">
 <span class="font-bold text-black font-['Space_Grotesk'] uppercase tracking-widest text-xs">SOURCEBOOK</span>
-<span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.8.3</span>
+<span class="text-[10px] text-gray-500 font-['Space_Grotesk'] uppercase tracking-widest">v0.9.1</span>
 </div>
 <a class="font-['Space_Grotesk'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00FF41]" href="/">PROJECT KNOWLEDGE FOR CODING AGENTS</a>
 </footer>

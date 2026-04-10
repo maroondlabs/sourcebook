@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>sourcebook vs Repomix — sourcebook Research</title>
+<meta name="description" content="Head-to-head comparison of sourcebook and Repomix for AI coding agent context. Approach differences, benchmark results on real GitHub issues, and when to use which."/>
+<meta property="og:title" content="sourcebook vs Repomix"/>
+<meta property="og:description" content="Head-to-head comparison: approach, output, benchmark performance on real GitHub issues."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/research/sourcebook-vs-repomix"/>
+<meta property="article:published_time" content="2026-04-07"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="sourcebook vs Repomix"/>
+<meta name="twitter:description" content="Head-to-head comparison: approach, output, benchmark performance on real GitHub issues."/>
+<link rel="canonical" href="https://sourcebook.run/research/sourcebook-vs-repomix"/>
+<link rel="icon" type="image/png" href="../../logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "electric-green": "#00FF41",
+                    "terminal-black": "#0D0D0D",
+                    "error": "#ba1a1a",
+                },
+                fontFamily: {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .benchmark-table { width: 100%; border-collapse: collapse; font-family: 'Space Grotesk', monospace; font-size: 13px; }
+    .benchmark-table th { background: #0D0D0D; color: #00FF41; padding: 12px 10px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table td { background: #141414; color: #E0E0E0; padding: 10px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table tr:hover td { background: #1A1A1A; }
+    .benchmark-table .task-label { color: #00FF41; font-weight: 600; }
+    .benchmark-table .metric-val { font-family: 'Space Grotesk', monospace; }
+    .benchmark-table .best { color: #00FF41; font-weight: 700; }
+    html:not(.dark) .benchmark-table th { background: #1a1a1a; }
+    html:not(.dark) .benchmark-table td { background: #141414; color: #E0E0E0; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "sourcebook vs Repomix",
+  "description": "Head-to-head comparison of sourcebook and Repomix for AI coding agent context. Approach differences, benchmark results on real GitHub issues, and when to use which.",
+  "url": "https://sourcebook.run/research/sourcebook-vs-repomix",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-07",
+  "author": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" },
+  "publisher": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" }
+}
+</script>
+</head>
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
+
+<!-- Nav -->
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="../../logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="../../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main>
+
+<!-- Article Header -->
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">COMPARISON &middot; APRIL 2026</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+sourcebook vs Repomix
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">Two tools that give AI agents project context. Different approaches, different tradeoffs. Here's the data.</p>
+</div>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
+
+<!-- Article Body -->
+<article class="max-w-[720px] mx-auto px-6 py-16">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-0 uppercase dark:text-white">What each tool does</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Repomix</strong> concatenates your repository into a single file. It walks the file tree, includes each file's contents, and produces one large text document that you paste into an LLM's context window. The output is a repo dump — a comprehensive snapshot of every file the tool decides to include.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>sourcebook</strong> scans your repository and extracts structural knowledge — hub files, import graphs, co-change coupling, build commands, conventions, and anti-patterns. The output is a brief (typically 50-80 lines) that tells an agent <em>how the project works</em> without including the code itself. It generates CLAUDE.md, .cursorrules, or copilot-instructions.md.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Approach comparison</h2>
+
+</article>
+
+<!-- Wide table container -->
+<div class="max-w-[900px] mx-auto px-6 mb-16">
+<div class="overflow-x-auto">
+<table class="benchmark-table">
+<thead>
+<tr>
+<th style="min-width:160px;">Dimension</th>
+<th>Repomix</th>
+<th>sourcebook</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="task-label">Method</td>
+<td class="metric-val">File concatenation</td>
+<td class="metric-val">Static analysis + git history + import graph</td>
+</tr>
+<tr>
+<td class="task-label">Output</td>
+<td class="metric-val">Full repo dump (one text file)</td>
+<td class="metric-val">Structured brief (CLAUDE.md / .cursorrules)</td>
+</tr>
+<tr>
+<td class="task-label">Output size</td>
+<td class="metric-val">Thousands to hundreds of thousands of lines</td>
+<td class="metric-val">50&ndash;80 lines typically</td>
+</tr>
+<tr>
+<td class="task-label">Token cost</td>
+<td class="metric-val">High &mdash; scales with repo size</td>
+<td class="metric-val">Low &mdash; fixed-size brief regardless of repo</td>
+</tr>
+<tr>
+<td class="task-label">Privacy</td>
+<td class="metric-val">Full source code in output</td>
+<td class="metric-val">No source code in output &mdash; only structural facts</td>
+</tr>
+<tr>
+<td class="task-label">What it captures</td>
+<td class="metric-val">Code contents, file tree</td>
+<td class="metric-val">Hub files, coupling, conventions, anti-patterns, build commands</td>
+</tr>
+<tr>
+<td class="task-label">What it misses</td>
+<td class="metric-val">Structural relationships, conventions, git history patterns</td>
+<td class="metric-val">Actual code contents (agent reads files on demand)</td>
+</tr>
+<tr>
+<td class="task-label">Runtime</td>
+<td class="metric-val">Seconds (file walk)</td>
+<td class="metric-val">Seconds (analysis + git)</td>
+</tr>
+<tr>
+<td class="task-label">LLM required</td>
+<td class="metric-val">No</td>
+<td class="metric-val">No &mdash; pure static analysis</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<article class="max-w-[720px] mx-auto px-6">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Benchmark results</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We tested both tools on real GitHub issues using claude-sonnet-4 (pinned). Each condition was given the same task: fix the issue, produce a patch. We measured time to completion, tokens consumed, and patch thoroughness (files changed, lines in diff).
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-4">
+Format below: <code class="bg-terminal-black text-electric-green px-1 font-mono text-sm">time / files changed / patch lines</code>
+</p>
+
+</article>
+
+<div class="max-w-[900px] mx-auto px-6 mb-16">
+<div class="overflow-x-auto">
+<table class="benchmark-table">
+<thead>
+<tr>
+<th style="min-width:160px;">Task</th>
+<th>No context</th>
+<th>Repomix</th>
+<th>sourcebook v0.5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="task-label">cal.com #27298<br><span class="text-[#5F5E5E] text-[11px] font-normal">OAuth i18n strings</span></td>
+<td class="metric-val">241s / 5f / 381L</td>
+<td class="metric-val">176s / 3f / 283L</td>
+<td class="metric-val best">136s / 6f / 469L</td>
+</tr>
+<tr>
+<td class="task-label">cal.com #27907<br><span class="text-[#5F5E5E] text-[11px] font-normal">PayPal i18n strings</span></td>
+<td class="metric-val">94s / 5f / 314L</td>
+<td class="metric-val">121s / 5f / 314L</td>
+<td class="metric-val best">113s / 6f / 458L</td>
+</tr>
+<tr>
+<td class="task-label">hono #4806<br><span class="text-[#5F5E5E] text-[11px] font-normal">Request body caching</span></td>
+<td class="metric-val">253s / 1f / 31L</td>
+<td class="metric-val">245s / 2f / 82L</td>
+<td class="metric-val best">267s / 2f / 101L</td>
+</tr>
+<tr>
+<td class="task-label">pydantic #12715<br><span class="text-[#5F5E5E] text-[11px] font-normal">JSON schema fix</span></td>
+<td class="metric-val">312s / 1f / 99L</td>
+<td class="metric-val">208s / 1f / 35L</td>
+<td class="metric-val">308s / 2f / 117L</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="font-body text-xs text-[#5F5E5E] mt-3">Model: claude-sonnet-4-20250514 (pinned). Single run per condition. <span class="text-[#00FF41] font-bold">Green</span> = best patch thoroughness for that task. <a href="/research/benchmark" class="underline hover:text-electric-green">Full methodology &rarr;</a></p>
+</div>
+
+<article class="max-w-[720px] mx-auto px-6">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">What the numbers show</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+On patch thoroughness, sourcebook v0.5 produced more comprehensive patches on 3 of 4 tasks — more files changed, more lines in the diff. On cal.com #27298, sourcebook's patch was 66% larger than Repomix's (469 vs 283 lines) while completing 23% faster (136s vs 176s).
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+On token efficiency, sourcebook's context file is orders of magnitude smaller. A 70-line brief vs a full repo dump means the agent spends more of its context window on reasoning, not reading.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The one exception: pydantic #12715, where Repomix completed faster (208s vs 308s) though with a much smaller patch (35 lines vs 117 lines). Library repos with deep module hierarchies remain harder for structural analysis than for brute-force inclusion.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">What Repomix includes that sourcebook doesn't</h2>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li><strong>Actual code.</strong> Repomix gives the LLM the file contents. sourcebook doesn't — it expects the agent to read files on demand.</li>
+<li><strong>Complete file tree.</strong> Every file path is visible in the dump. sourcebook surfaces only the structurally important ones.</li>
+<li><strong>No analysis required.</strong> Repomix's output is immediate — no import graph, no git history, no pattern detection.</li>
+</ul>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">What sourcebook captures that Repomix doesn't</h2>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li><strong>Hub files.</strong> Which files are imported by the most other files — the ones where a change has the widest blast radius.</li>
+<li><strong>Co-change coupling.</strong> Files that change together in git history but live in different directories — invisible dependencies.</li>
+<li><strong>Conventions.</strong> Dominant naming patterns, import styles, test frameworks, build commands.</li>
+<li><strong>Anti-patterns.</strong> Reverted commits, fragile files (many rapid edits), circular dependencies.</li>
+<li><strong>Build commands.</strong> Extracted from package.json, Makefile, pyproject.toml — ready-to-run dev/build/test commands.</li>
+</ul>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">When to use which</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Use Repomix</strong> when you need to paste an entire small-to-medium repo into a single LLM prompt — for one-shot questions, code reviews, or when the LLM won't have file access. Best for repos under a few thousand files where token cost isn't a concern.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Use sourcebook</strong> when your agent has file access (Claude Code, Cursor, Copilot) and needs to understand project structure before making changes. Best for large repos, ongoing development, and when you want the agent to reason about architecture rather than just see code.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+They're not mutually exclusive. Repomix gives the code. sourcebook explains how the project works. Different questions, different tools.
+</p>
+
+</article>
+
+<!-- CTA -->
+<section class="bg-white dark:bg-[#050505] border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-24 px-6">
+<div class="max-w-2xl mx-auto text-center">
+<div class="bg-terminal-black py-6 px-8 mb-12 text-center">
+<code class="text-electric-green font-mono text-xl">$ npx sourcebook init</code>
+</div>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black dark:border-white text-black dark:text-white px-8 py-4 font-headline font-bold text-sm uppercase tracking-[0.2em] hover:bg-[#00FF41] hover:text-black hover:border-[#00FF41] transition-colors text-center">VIEW_ON_GITHUB</a>
+<a href="/research" class="border-2 border-[#C6C6C6]/30 dark:border-[#1A1A1A] text-[#5F5E5E] px-8 py-4 font-headline font-bold text-sm uppercase tracking-[0.2em] hover:border-[#00FF41] hover:text-[#00FF41] transition-colors text-center">ALL_RESEARCH</a>
+</div>
+</div>
+</section>
+
+<!-- More -->
+<section class="max-w-3xl mx-auto px-8 pb-16">
+  <h3 class="font-headline text-xs tracking-widest uppercase text-[#5F5E5E] mb-6">MORE_FROM_SOURCEBOOK</h3>
+  <div class="flex flex-col gap-4">
+    <a href="/research/sourcebook-vs-handwritten" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">sourcebook vs hand-written context files</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/research/benchmark" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Benchmark methodology and full results</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/blog/we-benchmarked-ai-context-files" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Blog: We benchmarked AI context files on real GitHub issues</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="../../logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+BSL-1.1 &copy; 2026
+</div>
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
+  }
+})();
+</script>
+</body></html>

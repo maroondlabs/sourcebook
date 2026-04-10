@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>15 Open-Source Repos: Raw Scan Data — sourcebook Research</title>
+<meta name="description" content="Methodology, per-repo statistics, and finding breakdowns from scanning 15 open-source repos with sourcebook. Next.js, Cal.com, Django, FastAPI, and 11 more — 85,000+ files, 135 findings."/>
+<meta property="og:title" content="15 Open-Source Repos: Raw Scan Data"/>
+<meta property="og:description" content="Per-repo statistics, finding breakdowns, and methodology from scanning 85,000+ files across 15 repos."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/research/15-repo-scan"/>
+<meta property="article:published_time" content="2026-04-07"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="15 Open-Source Repos: Raw Scan Data"/>
+<meta name="twitter:description" content="Per-repo statistics, finding breakdowns, and methodology from scanning 85,000+ files across 15 repos."/>
+<link rel="canonical" href="https://sourcebook.run/research/15-repo-scan"/>
+<link rel="icon" type="image/png" href="../../logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: { "electric-green": "#00FF41", "terminal-black": "#0D0D0D", "error": "#ba1a1a" },
+                fontFamily: { "headline": ["Space Grotesk"], "body": ["Inter"] },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .benchmark-table { width: 100%; border-collapse: collapse; font-family: 'Space Grotesk', monospace; font-size: 13px; }
+    .benchmark-table th { background: #0D0D0D; color: #00FF41; padding: 12px 10px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table td { background: #141414; color: #E0E0E0; padding: 10px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table tr:hover td { background: #1A1A1A; }
+    .benchmark-table .task-label { color: #00FF41; font-weight: 600; }
+    .benchmark-table .metric-val { font-family: 'Space Grotesk', monospace; }
+    .benchmark-table .best { color: #00FF41; font-weight: 700; }
+    html:not(.dark) .benchmark-table th { background: #1a1a1a; }
+    html:not(.dark) .benchmark-table td { background: #141414; color: #E0E0E0; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "15 Open-Source Repos: Raw Scan Data",
+  "description": "Methodology, per-repo statistics, and finding breakdowns from scanning 15 open-source repos with sourcebook.",
+  "url": "https://sourcebook.run/research/15-repo-scan",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-07",
+  "author": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" },
+  "publisher": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" }
+}
+</script>
+</head>
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
+
+<!-- Nav -->
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="../../logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="../../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main>
+
+<!-- Article Header -->
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">DATA &middot; APRIL 2026</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+15 open-source repos: raw scan data
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">85,000+ files scanned, 135 findings extracted. Per-repo statistics, methodology, and what the data reveals about real codebase structure.</p>
+</div>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
+
+<!-- Article Body -->
+<article class="max-w-[720px] mx-auto px-6 py-16">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-0 uppercase dark:text-white">Methodology</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Each repository was cloned to a local directory and scanned with sourcebook v0.8.3. The scan runs entirely locally with no API calls. It performs:
+</p>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li><strong>File tree walk</strong> &mdash; inventories all files, detects languages and frameworks from package.json, pyproject.toml, go.mod, etc.</li>
+<li><strong>Import graph construction</strong> &mdash; parses imports/requires across files, builds a dependency graph, ranks files by PageRank score to identify hub files.</li>
+<li><strong>Git history analysis</strong> &mdash; examines recent commits for co-change coupling (files that change together), reverted commits, and fragile files (many rapid edits).</li>
+<li><strong>Pattern matching</strong> &mdash; 50+ regex patterns detect naming conventions, test frameworks, auth patterns, routing approaches, and build tools.</li>
+<li><strong>Hybrid sampling</strong> &mdash; for large repos, samples representative files rather than parsing everything. Ensures scans complete in seconds, not minutes.</li>
+</ul>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Each finding is assigned a confidence level (high or medium) and a "discoverable" flag indicating whether an agent could reasonably find this information on its own. Only non-discoverable findings appear in the output brief.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Repos scanned</h2>
+
+</article>
+
+<div class="max-w-[900px] mx-auto px-6 mb-16">
+<div class="overflow-x-auto">
+<table class="benchmark-table">
+<thead>
+<tr>
+<th style="min-width:140px;">Repo</th>
+<th>Language</th>
+<th>Type</th>
+<th>Explore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="task-label">Next.js</td>
+<td class="metric-val">TypeScript</td>
+<td class="metric-val">Monorepo / Framework</td>
+<td class="metric-val"><a href="/for/nextjs" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Cal.com</td>
+<td class="metric-val">TypeScript</td>
+<td class="metric-val">Monorepo / App</td>
+<td class="metric-val"><a href="/for/calcom" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Supabase</td>
+<td class="metric-val">TypeScript</td>
+<td class="metric-val">Monorepo / Platform</td>
+<td class="metric-val"><a href="/for/supabase" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Django</td>
+<td class="metric-val">Python</td>
+<td class="metric-val">Framework</td>
+<td class="metric-val"><a href="/for/django" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">FastAPI</td>
+<td class="metric-val">Python</td>
+<td class="metric-val">Library</td>
+<td class="metric-val"><a href="/for/fastapi" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Express</td>
+<td class="metric-val">JavaScript</td>
+<td class="metric-val">Library</td>
+<td class="metric-val"><a href="/for/express" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Flask</td>
+<td class="metric-val">Python</td>
+<td class="metric-val">Library</td>
+<td class="metric-val"><a href="/for/flask" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Hono</td>
+<td class="metric-val">TypeScript</td>
+<td class="metric-val">Library</td>
+<td class="metric-val"><a href="/for/hono" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Fastify</td>
+<td class="metric-val">JavaScript</td>
+<td class="metric-val">Library</td>
+<td class="metric-val"><a href="/for/fastify" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Gin</td>
+<td class="metric-val">Go</td>
+<td class="metric-val">Library</td>
+<td class="metric-val"><a href="/for/gin" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Hugo</td>
+<td class="metric-val">Go</td>
+<td class="metric-val">Framework</td>
+<td class="metric-val"><a href="/for/hugo" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Pydantic</td>
+<td class="metric-val">Python</td>
+<td class="metric-val">Library</td>
+<td class="metric-val"><a href="/for/pydantic" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">shadcn/ui</td>
+<td class="metric-val">TypeScript</td>
+<td class="metric-val">Component library</td>
+<td class="metric-val"><a href="/for/shadcn-ui" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">Create T3 App</td>
+<td class="metric-val">TypeScript</td>
+<td class="metric-val">Scaffold / CLI</td>
+<td class="metric-val"><a href="/for/create-t3-app" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+<tr>
+<td class="task-label">SQLModel</td>
+<td class="metric-val">Python</td>
+<td class="metric-val">Library</td>
+<td class="metric-val"><a href="/for/sqlmodel" class="text-electric-green hover:underline">view &rarr;</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="font-body text-xs text-[#5F5E5E] mt-3">Language breakdown: 7 TypeScript, 5 Python, 2 Go, 2 JavaScript (some repos detected as both TS and JS). Repo types: 3 monorepos, 5 libraries, 3 frameworks, 2 apps, 1 component library, 1 scaffold.</p>
+</div>
+
+<article class="max-w-[720px] mx-auto px-6">
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">Aggregate findings</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+135 total findings across 15 repos. The most common categories:
+</p>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-disc pl-6 space-y-2">
+<li><strong>Hub files:</strong> Every repo has them. Files imported by 10+ other modules that most developers don't realize are critical chokepoints. Changing a hub file without understanding its blast radius causes cascading breakage.</li>
+<li><strong>Co-change coupling:</strong> Files that consistently change together in git history but live in different directories. These invisible dependencies are the #1 source of missed changes when agents modify one file without touching its partner.</li>
+<li><strong>Convention variance:</strong> Most repos have a dominant coding style (naming, imports, exports), but 60%+ also have pockets of legacy code that follow a different convention. Agents that learn the dominant pattern may produce inconsistent code in legacy areas.</li>
+<li><strong>Generated file traps:</strong> Auto-generated files (lock files, compiled output, type declarations) that look like source code. Agents that try to edit these waste tokens and produce broken patches.</li>
+<li><strong>Fragile code:</strong> Files that required many rapid edits in recent history — usually indicating areas that are hard to get right. Agents should approach these with extra caution.</li>
+</ul>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-6 mt-12 uppercase dark:text-white">What the scan doesn't capture</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+sourcebook's scan is structural, not semantic. It doesn't understand what the code <em>does</em> — only how it's organized, what depends on what, and how it's changed over time. It won't tell you that a function has a subtle off-by-one error, or that a particular API endpoint is deprecated. For that, you still need human judgment or a code-understanding LLM.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The scan also doesn't capture runtime behavior, test coverage percentages, or deployment configuration. It works with what's in the repo — source files and git history.
+</p>
+
+</article>
+
+<!-- CTA -->
+<section class="bg-white dark:bg-[#050505] border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-24 px-6">
+<div class="max-w-2xl mx-auto text-center">
+<div class="bg-terminal-black py-6 px-8 mb-12 text-center">
+<code class="text-electric-green font-mono text-xl">$ npx sourcebook init</code>
+</div>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<a href="/for/" class="border-2 border-black dark:border-white text-black dark:text-white px-8 py-4 font-headline font-bold text-sm uppercase tracking-[0.2em] hover:bg-[#00FF41] hover:text-black hover:border-[#00FF41] transition-colors text-center">EXPLORE_ALL_REPOS</a>
+<a href="/research" class="border-2 border-[#C6C6C6]/30 dark:border-[#1A1A1A] text-[#5F5E5E] px-8 py-4 font-headline font-bold text-sm uppercase tracking-[0.2em] hover:border-[#00FF41] hover:text-[#00FF41] transition-colors text-center">ALL_RESEARCH</a>
+</div>
+</div>
+</section>
+
+<!-- More -->
+<section class="max-w-3xl mx-auto px-8 pb-16">
+  <h3 class="font-headline text-xs tracking-widest uppercase text-[#5F5E5E] mb-6">MORE_FROM_SOURCEBOOK</h3>
+  <div class="flex flex-col gap-4">
+    <a href="/blog/what-we-found-scanning-15-open-source-repos" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Blog: What we found scanning 15 open-source repos</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/research/benchmark" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Benchmark methodology and full results</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/research/sourcebook-vs-repomix" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">sourcebook vs Repomix</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="../../logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+BSL-1.1 &copy; 2026
+</div>
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
+  }
+})();
+</script>
+</body></html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>We Scanned 30+ Repos. Here's What Broke (And What We Fixed) — sourcebook</title>
+<meta name="description" content="We ran sourcebook on 30+ open-source repos including esbuild, vLLM, Polars, Biome, and Convex. 12 scanner bugs found, 69 QA assertions added, and an engine that stopped lying about codebases."/>
+<meta property="og:title" content="We Scanned 30+ Repos. Here's What Broke (And What We Fixed)"/>
+<meta property="og:description" content="12 scanner bugs found across 30+ repos. False positives, framework ghosts, and the QA loop that turned them into regression tests."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/blog/we-scanned-30-repos-heres-what-broke"/>
+<meta property="article:published_time" content="2026-04-09"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="We Scanned 30+ Repos. Here's What Broke (And What We Fixed)"/>
+<link rel="canonical" href="https://sourcebook.run/blog/we-scanned-30-repos-heres-what-broke"/>
+<link rel="icon" type="image/png" href="../logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "electric-green": "#00FF41",
+                    "terminal-black": "#0D0D0D",
+                    "error": "#ba1a1a",
+                },
+                fontFamily: {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "We Scanned 30+ Repos. Here's What Broke (And What We Fixed)",
+  "description": "We ran sourcebook on 30+ open-source repos. 12 scanner bugs found, 69 QA assertions added, and an engine that stopped lying about codebases.",
+  "url": "https://sourcebook.run/blog/we-scanned-30-repos-heres-what-broke",
+  "image": "https://sourcebook.run/og-image.png",
+  "datePublished": "2026-04-09",
+  "author": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" },
+  "publisher": { "@type": "Organization", "name": "sourcebook", "url": "https://sourcebook.run" }
+}
+</script>
+</head>
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
+
+<!-- Nav -->
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="../logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main>
+
+<!-- Article Header -->
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">ENGINEERING · APRIL 2026</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+We scanned 30+ repos. Here's what broke (and what we fixed).
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">esbuild, vLLM, Polars, Biome, Convex, Fern, and 25 more. 12 scanner bugs found, 69 QA assertions added, and an engine that stopped hallucinating about codebases.</p>
+</div>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
+
+<!-- Article Body -->
+<article class="max-w-[720px] mx-auto px-6 py-16">
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+sourcebook generates project knowledge files for coding agents. It reads your repo's structure, git history, and conventions, then outputs an AGENTS.md that tells the agent what actually matters before it starts editing.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We'd already scanned 15 major repos and written about what we found. But 15 repos is a controlled environment. We wanted to know what happens when you push the scanner into hostile territory — repos that look nothing like the typical Next.js or Django app.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+So we scanned 30+ more. And the scanner broke. Repeatedly. Each break taught us something.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">The false positive problem</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The first thing that broke was framework detection. We scanned <strong>Schemathesis</strong> — an API testing tool written in Python — and the output said it was a FastAPI application. It's not. Schemathesis <em>tests</em> FastAPI apps. It imports FastAPI in its test fixtures, and our scanner saw the import and made an assumption.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Same thing with <strong>SQLModel</strong>. It's an ORM library that integrates with FastAPI — so it imports FastAPI, has FastAPI in its docs, and uses FastAPI in examples. But it's not a FastAPI project. The scanner said it was.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+This is the worst kind of bug in a context file: <strong>a confident lie</strong>. The agent reads "this is a FastAPI project" and starts generating FastAPI-style code in a library that has nothing to do with web serving. The fix was adding stack-vs-dependency distinction — checking whether the framework appears in source code or only in test/doc files.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">Ghost frameworks</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Scanning <strong>Hono</strong> (a TypeScript web framework) produced an AGENTS.md that mentioned Zod validation. Hono doesn't use Zod. But one test file — a single test — imported a Zod adapter to test compatibility. That was enough for the scanner to declare Zod as a project convention.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We found the same pattern with DRF (Django REST Framework) appearing in Go codebases. The scanner was matching regex patterns too broadly — a Go file with <code class="bg-terminal-black text-electric-green px-1 font-mono">permission</code> and <code class="bg-terminal-black text-electric-green px-1 font-mono">auth</code> keywords was enough to trigger the DRF detector. We had to scope auth detection to Python files only and require multiple signals before flagging a framework.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">The adversarial batch</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+After fixing the obvious bugs, we deliberately chose repos designed to confuse a scanner:
+</p>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-none space-y-3">
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>esbuild</strong> — a Go binary with JS/TS wrapper code. Is it a Go project or a Node project?</li>
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>Biome</strong> — a Rust linter with Vue, Svelte, and React test fixtures. Should the scanner detect these as project dependencies?</li>
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>SponsorBlock</strong> — a browser extension, not a web app. Express routes? No. React components? Sort of.</li>
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>vLLM</strong> — an ML engine that uses FastAPI for its serving layer, but isn't a FastAPI project.</li>
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>Polars</strong> — a Rust engine with Python bindings. Two languages, two ecosystems, one repo.</li>
+</ul>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Each of these repos exposed a different category of assumption in the scanner. esbuild taught us that the primary language isn't always the one with the most files. Biome taught us that test fixtures aren't dependencies. vLLM taught us the difference between "uses FastAPI" and "is a FastAPI project."
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">12 bugs, 69 assertions</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Every bug became a regression test. We now have a QA suite that clones 15 repos and runs 69 assertions against the scanner output. Each assertion checks for a specific known issue:
+</p>
+
+<div class="bg-terminal-black p-6 mb-8 overflow-x-auto">
+<pre class="font-mono text-sm text-electric-green leading-relaxed">
+<span class="text-white opacity-50">$</span> bash test/qa-repos.sh
+
+honojs/hono (TS framework, library):
+  <span class="text-green-400">PASS</span> Should detect: Hono routes (found)
+  <span class="text-green-400">PASS</span> Should detect: Vitest (found)
+  <span class="text-green-400">PASS</span> Should NOT detect: Zod (correctly absent)
+  <span class="text-green-400">PASS</span> Should NOT detect: FastAPI (correctly absent)
+
+vllm-project/vllm (ML engine, NOT FastAPI app):
+  <span class="text-green-400">PASS</span> Should detect: library (found)
+  <span class="text-green-400">PASS</span> Should NOT detect: 'FastAPI project' (correctly absent)
+
+biomejs/biome (Rust linter, NOT a web framework):
+  <span class="text-green-400">PASS</span> Should NOT detect: React routes (correctly absent)
+  <span class="text-green-400">PASS</span> Should NOT detect: Vue (correctly absent)
+  <span class="text-green-400">PASS</span> Should NOT detect: Svelte (correctly absent)
+
+========================================
+RESULTS: <span class="text-green-400">69 passed</span>, <span class="text-red-400">0 failed</span>, 0 skipped
+========================================</pre>
+</div>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The pattern that emerged: scanning more repos doesn't just find more findings — it finds more <em>categories of error</em>. Repos 1-15 found the happy-path bugs. Repos 16-30 found the adversarial bugs. After repo 25, we stopped finding new bug classes entirely. The engine converged.
+</p>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">What the data actually shows</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Across 30+ repos, here's what we consistently found:
+</p>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 list-none space-y-3">
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>Every repo has hub files.</strong> Files imported by 10+ others that an agent should treat carefully. vLLM's logger.py is imported by 599 files. Fern's API index is imported by 732.</li>
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>Circular imports are everywhere.</strong> Found in 80%+ of repos over 1,000 files. Agents need to know about these before adding new imports.</li>
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>Reverted commits are a goldmine.</strong> Convex had 34 reverted commits. Fern had 23. FiftyOne had 19. These are approaches the team explicitly rejected — and an agent shouldn't re-attempt them.</li>
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>Generated files are traps.</strong> BAML, Fern, and FiftyOne all had generated files that look hand-written. An agent editing them produces a diff that gets overwritten on the next build.</li>
+<li class="flex gap-3"><span class="text-electric-green font-bold">→</span> <strong>Multi-language repos need different rules per layer.</strong> esbuild (Go+JS), Polars (Rust+Python), Hatchet (Go+TS+Python) — each layer has its own conventions. A single set of instructions doesn't work.</li>
+</ul>
+
+<h2 class="font-headline font-bold text-2xl tracking-tight text-black dark:text-white mb-6 mt-12 uppercase">Why this matters for context files</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+A context file that lies is worse than no context file at all. If AGENTS.md says "this is a FastAPI project" and the agent follows that instruction, it will generate FastAPI-style code in a library that doesn't serve HTTP requests. The agent trusted the file and produced confidently wrong output.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+That's why we scan adversarially. Not just "does it detect the right things?" but "does it avoid saying wrong things?" The 69 assertions in our QA suite are split roughly 50/50 between should-detect and should-NOT-detect checks. Precision matters as much as recall.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+You can explore all 32 repos at <a href="/for/" class="underline hover:text-electric-green">sourcebook.run/for</a>, or run it on your own repo in about 3 seconds:
+</p>
+
+<div class="bg-terminal-black p-6 mb-8 text-center">
+<code class="font-mono text-electric-green text-xl">npx sourcebook init</code>
+</div>
+
+</article>
+
+<!-- CTA Section -->
+<section class="w-full bg-white dark:bg-[#050505] border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-24 px-6 text-center">
+<div class="max-w-2xl mx-auto">
+<h2 class="font-headline font-extrabold text-4xl mb-10 tracking-tight uppercase dark:text-white">TRY_IT_YOURSELF</h2>
+<div class="bg-terminal-black py-6 px-8 inline-block mb-10">
+<code class="font-mono text-electric-green text-xl">npx sourcebook init</code>
+</div>
+<div class="flex flex-col items-center gap-6">
+<a href="https://github.com/maroondlabs/sourcebook" class="border-2 border-black dark:border-white dark:text-white px-12 py-4 font-headline font-bold text-sm tracking-[0.2em] hover:bg-black hover:text-white dark:hover:bg-[#00FF41] dark:hover:text-black dark:hover:border-[#00FF41] uppercase">
+VIEW_SOURCE
+</a>
+<p class="font-body text-[#5F5E5E] dark:text-[#A0A0A0] text-sm tracking-wide">
+No API keys. No LLM. Everything runs locally.
+</p>
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- More from sourcebook -->
+<section class="max-w-3xl mx-auto px-8 pb-16">
+  <h3 class="font-headline text-xs tracking-widest uppercase text-[#5F5E5E] mb-6">MORE_FROM_SOURCEBOOK</h3>
+  <div class="flex flex-col gap-4">
+    <a href="/blog/what-we-found-scanning-15-open-source-repos" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">What we found scanning 15 open-source repos</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/blog/why-auto-generated-context-makes-agents-worse" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Why auto-generated context makes agents worse</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+    <a href="/for/" class="flex justify-between items-center border border-[#C6C6C6]/20 dark:border-[#1A1A1A] p-4 hover:border-[#00FF41] transition-none group">
+      <span class="font-headline text-sm uppercase tracking-tight">Explore: How 32 open-source repos actually work</span>
+      <span class="material-symbols-outlined group-hover:text-[#00FF41]">arrow_forward</span>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="../logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+BSL-1.1 © 2026
+</div>
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
+  }
+})();
+</script>
+</body></html>
