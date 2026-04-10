@@ -3,6 +3,7 @@
 </p>
 
 # sourcebook
+<!-- smoke test: github app webhook -->
 
 **AI can read your code. It still doesn't know how your project works.**
 
