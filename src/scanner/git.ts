@@ -28,18 +28,24 @@ export async function analyzeGitHistory(dir: string): Promise<GitAnalysis> {
     return { findings, activeAreas, revertedPatterns, coChangeClusters };
   }
 
-  // Check for shallow clone — git history will be truncated
+  // Check for shallow clone — warn but still analyze if enough history exists
   if (isShallowClone(dir)) {
-    findings.push({
-      category: "Git history",
-      description:
-        "Limited git history available (shallow clone). Clone with full history for git insights.",
-      rationale:
-        "Shallow clones truncate commit history, which prevents git-based analysis from finding patterns, anti-patterns, and co-change coupling.",
-      confidence: "high",
-      discoverable: false,
-    });
-    return { findings, activeAreas, revertedPatterns, coChangeClusters };
+    // Count available commits to decide whether to proceed
+    const commitCount = git(dir, ["rev-list", "--count", "HEAD"]).trim();
+    const count = parseInt(commitCount, 10) || 0;
+
+    if (count < 50) {
+      findings.push({
+        category: "Git history",
+        description:
+          "Limited git history available (shallow clone). Clone with full history for git insights.",
+        rationale:
+          "Shallow clones truncate commit history, which prevents git-based analysis from finding patterns, anti-patterns, and co-change coupling.",
+        confidence: "high",
+        discoverable: false,
+      });
+      return { findings, activeAreas, revertedPatterns, coChangeClusters };
+    }
   }
 
   // 1. Reverted commits -- "don't do this" signals
@@ -370,7 +376,7 @@ function detectCoChangeCoupling(
   const significantPairs: { files: [string, string]; count: number; strength: number }[] = [];
 
   for (const [pairKey, count] of pairCounts) {
-    if (count < 4) continue; // Need at least 4 co-occurrences
+    if (count < 3) continue; // Need at least 3 co-occurrences
 
     const [fileA, fileB] = pairKey.split("|||");
     const countA = fileCounts.get(fileA) || 0;
