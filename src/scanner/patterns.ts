@@ -803,7 +803,7 @@ function detectDominantPatterns(
     { pattern: "passport\\.authenticate", name: "Passport.js", count: 0, files: [] },
     { pattern: "jwt\\.verify|jwt\\.sign|jsonwebtoken", name: "JWT (jsonwebtoken)", count: 0, files: [] },
     { pattern: "@login_required|LoginRequiredMixin", name: "Django login_required", count: 0, files: [] },
-    { pattern: "IsAuthenticated|AllowAny|BasePermission", name: "DRF permissions", count: 0, files: [] },
+    { pattern: "\\bIsAuthenticated\\b|\\bAllowAny\\b|\\bBasePermission\\b", name: "DRF permissions", count: 0, files: [] },
     { pattern: "next-auth|NextAuth\\(|authOptions.*NextAuth", name: "NextAuth.js", count: 0, files: [] },
     { pattern: "better-auth|betterAuth\\(|from ['\"]better-auth", name: "better-auth", count: 0, files: [] },
     { pattern: "supabase\\.auth|useSupabaseClient", name: "Supabase Auth", count: 0, files: [] },
@@ -812,6 +812,8 @@ function detectDominantPatterns(
   ];
 
   for (const [file, content] of allContents) {
+    // Only check auth patterns in JS/TS/Python files — not Go/Rust/CSS where false positives occur
+    if (!/\.(js|jsx|ts|tsx|py|mjs|cjs)$/.test(file)) continue;
     for (const p of authPatterns) {
       if (new RegExp(p.pattern).test(content)) {
         p.count++;

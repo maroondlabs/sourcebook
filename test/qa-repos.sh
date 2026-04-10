@@ -18,7 +18,11 @@ WARN=0
 
 check() {
   local repo=$1
+  # Support both qa-* and adv-* prefixed repos
   local file="/tmp/qa-$repo/AGENTS.md"
+  if [ ! -f "$file" ]; then
+    file="/tmp/$repo/AGENTS.md"
+  fi
   local desc=$2
   local pattern=$3
   local should_exist=$4  # "yes" or "no"
@@ -199,6 +203,51 @@ check "fiftyone" "Should detect: __init__.py barrel" "__init__.py" "yes"
 check "fiftyone" "Should detect: generated files" "Generated files" "yes"
 check "fiftyone" "Should NOT detect: FastAPI" "FastAPI" "no"
 check "fiftyone" "Should NOT detect: shallow clone" "shallow clone" "no"
+echo ""
+
+# ═══════════════════════════════════════
+# ADVERSARIAL REPOS (stress tests)
+# ═══════════════════════════════════════
+
+# ─── esbuild (Go binary with JS wrapper, NOT a web app) ───
+echo "evanw/esbuild (Go binary, NOT a web app):"
+check "adv-esbuild" "Should detect: Go module" "Module path" "yes"
+check "adv-esbuild" "Should detect: Go testing" "Go testing" "yes"
+check "adv-esbuild" "Should NOT detect: DRF permissions" "DRF permissions" "no"
+check "adv-esbuild" "Should NOT detect: Express" "Express" "no"
+check "adv-esbuild" "Should NOT detect: React routes/components" "React Query\|React Router\|UI components" "no"
+echo ""
+
+# ─── Biome (Rust linter, has JS/TS/Vue/Svelte test fixtures) ───
+echo "biomejs/biome (Rust linter, NOT a web framework):"
+check "adv-biome" "Should detect: monorepo" "monorepo" "yes"
+check "adv-biome" "Should NOT detect: React routes/components" "React Query\|React Router\|UI components" "no"
+check "adv-biome" "Should NOT detect: Vue" "Vue" "no"
+check "adv-biome" "Should NOT detect: Svelte" "Svelte" "no"
+check "adv-biome" "Should NOT detect: FastAPI" "FastAPI" "no"
+echo ""
+
+# ─── SponsorBlock (browser extension, NOT a web app) ───
+echo "ajayyy/SponsorBlock (browser extension):"
+check "adv-sponsorblock" "Should detect: Jest" "Jest" "yes"
+check "adv-sponsorblock" "Should detect: named exports" "named exports" "yes"
+check "adv-sponsorblock" "Should NOT detect: Express" "Express" "no"
+check "adv-sponsorblock" "Should NOT detect: FastAPI" "FastAPI" "no"
+echo ""
+
+# ─── vLLM (ML engine with FastAPI serving, NOT a FastAPI app) ───
+echo "vllm-project/vllm (ML engine, NOT FastAPI app):"
+check "adv-vllm" "Should detect: library" "publishable library" "yes"
+check "adv-vllm" "Should detect: pytest" "pytest" "yes"
+check "adv-vllm" "Should detect: dataclasses" "dataclass" "yes"
+check "adv-vllm" "Should NOT detect: 'FastAPI project'" "FastAPI project" "no"
+echo ""
+
+# ─── Polars (Rust DataFrame with Python bindings) ───
+echo "pola-rs/polars (Rust engine with Python bindings):"
+check "adv-polars" "Should detect: pytest" "pytest" "yes"
+check "adv-polars" "Should detect: __init__.py barrel" "__init__.py" "yes"
+check "adv-polars" "Should NOT detect: FastAPI" "FastAPI" "no"
 echo ""
 
 # ─── Summary ───
