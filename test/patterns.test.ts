@@ -253,6 +253,13 @@ describe("testing patterns", () => {
             assert True
       `;
     }
+    // Need enough Python source files to pass the pytest guard (min 5)
+    for (let i = 0; i < 6; i++) {
+      files[`src/module${i}.py`] = `
+        def handler():
+            return "ok"
+      `;
+    }
     const findings = await detectWithFiles(files);
     const testing = findByDescription(findings, "pytest");
     expect(testing).toBeDefined();
