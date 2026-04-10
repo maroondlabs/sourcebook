@@ -1,3 +1,4 @@
+// PR review bot test — this comment triggers blast radius detection
 export interface Finding {
   /** Category of the finding */
   category: string;
