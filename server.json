@@ -3,7 +3,7 @@
   "id": "io.github.maroondlabs/sourcebook",
   "name": "io.github.maroondlabs/sourcebook",
   "description": "Live codebase intelligence for AI agents: conventions, blast radius, import graphs, git insights.",
-  "version": "0.6.0",
+  "version": "0.9.5",
   "homepage": "https://sourcebook.run",
   "repository": {
     "url": "https://github.com/maroondlabs/sourcebook",
