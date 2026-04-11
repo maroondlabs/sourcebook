@@ -10,57 +10,66 @@ RESULTS_DIR="$SCRIPT_DIR/results"
 mkdir -p "$RESULTS_DIR"
 
 # Task definitions: repo issue_number
-TASKS_CAL=(
-  "calcom/cal.com 27907"   # CAL-1: i18n
-  "calcom/cal.com 27298"   # CAL-2: OAuth flow
-  "calcom/cal.com 27963"   # CAL-3: Duration conversion
-  "calcom/cal.com 27988"   # CAL-4: Booking limits
-  "calcom/cal.com 20358"   # CAL-5: Localhost URL
-  "calcom/cal.com 28393"   # CAL-6: Verify email button
-  "calcom/cal.com 13010"   # CAL-7: Phone label
-  "calcom/cal.com 28468"   # CAL-8: Alt text
-  "calcom/cal.com 22238"   # CAL-9: Keycloak OIDC
-  "calcom/cal.com 28034"   # CAL-10: JSON name prefill
+# Diverse task set: 5 TypeScript, 4 Python, 4 Go, 2 Rust
+
+TASKS_TS=(
+  "calcom/cal.com 27907"         # TS-1: PayPal i18n strings
+  "calcom/cal.com 27298"         # TS-2: OAuth flow sign-up
+  "honojs/hono 4806"             # TS-3: parseBody breaks text()/json()
+  "vercel/ai 13988"              # TS-4: config/string fix
+  "vercel/ai 13354"              # TS-5: logic error
+  "vercel/ai 13839"              # TS-6: perf regression
+  "vercel/next.js 74843"         # TS-7: encoding bug
+  "drizzle-team/drizzle-orm 4421"  # TS-8: type error
 )
 
-TASKS_PYDANTIC=(
-  "pydantic/pydantic 12715"  # PYD-1: JSON schema
-  "pydantic/pydantic 12424"  # PYD-2: Model rebuild
-  "pydantic/pydantic 12061"  # PYD-3: Generic resolution
-  "pydantic/pydantic 11748"  # PYD-4: Serialization
-  "pydantic/pydantic 11768"  # PYD-5: mypy plugin
-  "pydantic/pydantic 11248"  # PYD-6: Discriminated union
-  "pydantic/pydantic 10411"  # PYD-7: Validator override
-  "pydantic/pydantic 9394"   # PYD-8: Custom types
-  "pydantic/pydantic 9936"   # PYD-9: Field validation
-  "pydantic/pydantic 9872"   # PYD-10: Computed fields
+TASKS_PY=(
+  "pydantic/pydantic 12715"     # PY-1: ImportString validation
+  "pydantic/pydantic 13051"     # PY-2: model equality with runtime extra
+  "fastapi/fastapi 14454"       # PY-3: logic error
+  "fastapi/fastapi 14508"       # PY-4: regression
+  "fastapi/fastapi 14483"       # PY-5: regression
 )
 
-TASKS_HONO=(
-  "honojs/hono 4806"  # HON-1: Request body caching
-  "honojs/hono 4440"  # HON-2: URL parsing
-  "honojs/hono 4769"  # HON-3: JSX streaming
-  "honojs/hono 4731"  # HON-4: RPC serialization
-  "honojs/hono 4727"  # HON-5: Router matching
-  "honojs/hono 4582"  # HON-6: Middleware lifecycle
-  "honojs/hono 4294"  # HON-7: Language detection
+TASKS_GO=(
+  "gin-gonic/gin 2959"          # GO-1: panic on invalid HTTP method
+  "gin-gonic/gin 4468"          # GO-2: ClientIP X-Forwarded-For
+  "go-chi/chi 954"              # GO-3: Mux.Find nested routes (PR-only, no issue)
+  "charmbracelet/bubbletea 1322"  # GO-4: last line rendering bug
+)
+
+TASKS_RS=(
+  "clap-rs/clap 6201"           # RS-1: symlink path completions
+  "clap-rs/clap 6275"           # RS-2: --help with ignore_errors
 )
 
 CONDITIONS=("none" "handwritten" "repomix" "sourcebook")
 
-# Quick mode: only first 5 tasks
+# Quick mode: 1 task per language (4 tasks x 4 conditions = 16 runs)
 if [[ "${1:-}" == "--quick" ]]; then
-  echo "=== QUICK MODE: 5 tasks ==="
+  echo "=== QUICK MODE: 4 tasks ==="
   ALL_TASKS=(
-    "${TASKS_CAL[0]}"
-    "${TASKS_CAL[1]}"
-    "${TASKS_PYDANTIC[0]}"
-    "${TASKS_PYDANTIC[1]}"
-    "${TASKS_HONO[0]}"
+    "${TASKS_TS[0]}"
+    "${TASKS_PY[0]}"
+    "${TASKS_GO[1]}"
+    "${TASKS_RS[1]}"
+  )
+# Medium mode: core tasks (8 tasks x 4 conditions = 32 runs)
+elif [[ "${1:-}" == "--medium" ]]; then
+  echo "=== MEDIUM MODE: 8 tasks ==="
+  ALL_TASKS=(
+    "${TASKS_TS[0]}"
+    "${TASKS_TS[2]}"
+    "${TASKS_PY[0]}"
+    "${TASKS_PY[2]}"
+    "${TASKS_GO[0]}"
+    "${TASKS_GO[1]}"
+    "${TASKS_RS[0]}"
+    "${TASKS_RS[1]}"
   )
 else
-  echo "=== FULL BENCHMARK: 27 tasks ==="
-  ALL_TASKS=("${TASKS_CAL[@]}" "${TASKS_PYDANTIC[@]}" "${TASKS_HONO[@]}")
+  echo "=== FULL BENCHMARK: 19 tasks ==="
+  ALL_TASKS=("${TASKS_TS[@]}" "${TASKS_PY[@]}" "${TASKS_GO[@]}" "${TASKS_RS[@]}")
 fi
 
 TOTAL_TASKS=${#ALL_TASKS[@]}

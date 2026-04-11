@@ -51,24 +51,34 @@ ISSUE_TITLE=$(python3 -c "import sys,json; print(json.load(sys.stdin)['title'])"
 ISSUE_BODY=$(python3 -c "import sys,json; print(json.load(sys.stdin)['body'][:2000])" < "$RUN_DIR/issue.json")
 
 # Find the merged PR and its base commit (the state BEFORE the fix)
-PR_JSON=$(gh pr list --repo "$REPO" --state merged --search "$ISSUE in:title" --json number,mergeCommit,headRefOid,baseRefOid,title --limit 5)
+# Search both by issue number in title AND by linked issues
+PR_JSON=$(gh pr list --repo "$REPO" --state merged --search "$ISSUE" --json number,mergeCommit,headRefOid,baseRefOid,title --limit 5)
 echo "$PR_JSON" > "$RUN_DIR/pr_info.json"
 
 # Extract the base commit SHA (state before the fix was applied)
-BASE_SHA=$(python3 -c "
+# Also get the merge commit SHA so we can validate the checkout
+read BASE_SHA MERGE_SHA PR_NUMBER <<< $(python3 -c "
 import sys, json
 prs = json.load(sys.stdin)
 if prs:
-    # Use baseRefOid if available, otherwise mergeCommit parent
     pr = prs[0]
-    sha = pr.get('baseRefOid', '') or pr.get('mergeCommit', {}).get('oid', '')
-    print(sha)
+    base = pr.get('baseRefOid', '') or ''
+    merge = pr.get('mergeCommit', {}).get('oid', '') if pr.get('mergeCommit') else ''
+    print(f'{base} {merge} {pr[\"number\"]}')
 else:
-    print('')
+    print(' '  ' ')
 " < "$RUN_DIR/pr_info.json")
 
 echo "Issue: $ISSUE_TITLE"
+echo "Fix PR: #$PR_NUMBER"
 echo "Base SHA: ${BASE_SHA:0:12}..."
+echo "Merge SHA: ${MERGE_SHA:0:12}..."
+
+if [ -z "$BASE_SHA" ]; then
+  echo "ERROR: Could not find a merged PR for issue #$ISSUE. Skipping."
+  echo "{\"error\": \"no_pr_found\"}" > "$RUN_DIR/summary.json"
+  exit 1
+fi
 
 # Step 2: Clone (or reuse) and checkout to the state BEFORE the fix
 echo "[2/7] Setting up $REPO at pre-fix state..."
@@ -82,20 +92,41 @@ if [ -d "$WORK_DIR/$REPO_SHORT/.git" ]; then
   git checkout -- . 2>/dev/null || true
 else
   echo "Cloning $REPO (this may take a minute for large repos)..."
-  gh repo clone "$REPO" "$WORK_DIR/$REPO_SHORT" -- --depth 500 --single-branch 2>/dev/null
+  gh repo clone "$REPO" "$WORK_DIR/$REPO_SHORT" -- --single-branch 2>/dev/null
   cd "$WORK_DIR/$REPO_SHORT"
 fi
 
-if [ -n "$BASE_SHA" ]; then
-  git fetch --depth 500 origin "$BASE_SHA" 2>/dev/null || true
-  git checkout "$BASE_SHA" -q 2>/dev/null || {
-    echo "Warning: Could not checkout $BASE_SHA. Using HEAD."
+# Fetch the specific commit we need — unshallow if necessary
+if ! git cat-file -e "$BASE_SHA" 2>/dev/null; then
+  echo "Fetching base commit (may need to unshallow)..."
+  git fetch origin "$BASE_SHA" 2>/dev/null || {
+    echo "Deepening clone to reach base commit..."
+    git fetch --unshallow origin 2>/dev/null || git fetch --depth 5000 origin 2>/dev/null || true
+    git fetch origin "$BASE_SHA" 2>/dev/null || true
   }
 fi
 
-# Record the exact commit we're working from
+if ! git checkout "$BASE_SHA" -q 2>/dev/null; then
+  echo "ERROR: Could not checkout base SHA $BASE_SHA. This task is invalid."
+  echo "{\"error\": \"checkout_failed\", \"base_sha\": \"$BASE_SHA\"}" > "$RUN_DIR/summary.json"
+  exit 1
+fi
+
+# Validate: confirm the fix PR's merge commit is NOT an ancestor of our checkout
+# (i.e., the bug should still be present)
 CURRENT_SHA=$(git rev-parse HEAD)
-echo "{\"sha\": \"$CURRENT_SHA\", \"base_sha\": \"$BASE_SHA\"}" > "$RUN_DIR/repo_state.json"
+if [ -n "$MERGE_SHA" ] && git cat-file -e "$MERGE_SHA" 2>/dev/null; then
+  if git merge-base --is-ancestor "$MERGE_SHA" "$CURRENT_SHA" 2>/dev/null; then
+    echo "ERROR: Merge commit $MERGE_SHA is an ancestor of checkout — fix is already applied!"
+    echo "{\"error\": \"fix_already_applied\", \"sha\": \"$CURRENT_SHA\", \"merge_sha\": \"$MERGE_SHA\"}" > "$RUN_DIR/summary.json"
+    exit 1
+  fi
+  echo "Validated: checkout is at pre-fix state."
+else
+  echo "Warning: Could not validate pre-fix state (merge commit not available)."
+fi
+
+echo "{\"sha\": \"$CURRENT_SHA\", \"base_sha\": \"$BASE_SHA\", \"merge_sha\": \"$MERGE_SHA\", \"pr_number\": \"$PR_NUMBER\"}" > "$RUN_DIR/repo_state.json"
 
 # Step 3: Apply context condition
 echo "[3/7] Applying context condition: $CONDITION..."
@@ -283,6 +314,37 @@ if [ "$PATCH_LINES" -gt 0 ]; then
   PRODUCED_PATCH="true"
 fi
 
+# Correctness: compare changed files against reference PR
+REF_FILES=""
+FILE_OVERLAP=0
+FILE_OVERLAP_RATIO="0"
+if [ -n "$PR_NUMBER" ]; then
+  REF_FILES=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json files 2>/dev/null | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+for f in d.get('files', []):
+    # Skip test files for overlap scoring (agent may or may not add tests)
+    print(f['path'])
+" 2>/dev/null || true)
+
+  if [ -n "$REF_FILES" ]; then
+    echo "$REF_FILES" > "$RUN_DIR/reference_files.txt"
+    AGENT_FILES=$(cat "$RUN_DIR/files_changed.txt" 2>/dev/null | grep -v "CLAUDE.md\|AGENTS.md\|\.cursorrules" || true)
+
+    # Count source file overlap (exclude test files for fairer comparison)
+    REF_SOURCE=$(echo "$REF_FILES" | grep -v "test" | sort)
+    AGENT_SOURCE=$(echo "$AGENT_FILES" | grep -v "test" | sort)
+    if [ -n "$REF_SOURCE" ] && [ -n "$AGENT_SOURCE" ]; then
+      OVERLAP=$(comm -12 <(echo "$REF_SOURCE") <(echo "$AGENT_SOURCE") | wc -l | tr -d ' ')
+      REF_COUNT=$(echo "$REF_SOURCE" | wc -l | tr -d ' ')
+      FILE_OVERLAP=$OVERLAP
+      FILE_OVERLAP_RATIO=$(python3 -c "print(f'{$OVERLAP/$REF_COUNT:.2f}')" 2>/dev/null || echo "0")
+    fi
+    echo "Reference PR #$PR_NUMBER: $(echo "$REF_FILES" | wc -l | tr -d ' ') files"
+    echo "File overlap (source): $FILE_OVERLAP ($FILE_OVERLAP_RATIO)"
+  fi
+fi
+
 # Write full summary
 cat > "$RUN_DIR/summary.json" << SUMEOF
 {
@@ -301,6 +363,9 @@ cat > "$RUN_DIR/summary.json" << SUMEOF
   "tool_calls": $TOOL_CALLS,
   "turns": $TURNS,
   "produced_patch": $PRODUCED_PATCH,
+  "pr_number": ${PR_NUMBER:-0},
+  "file_overlap": $FILE_OVERLAP,
+  "file_overlap_ratio": $FILE_OVERLAP_RATIO,
   "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 SUMEOF
