@@ -78,7 +78,8 @@ export function generateCopilot(scan: ProjectScan, budget: number): string {
       "These files are imported by many others. Changes here have wide blast radius:",
       "",
     ];
-    for (const { file } of scan.rankedFiles.slice(0, 5)) {
+    const topCount = scan.rankedFiles.length > 500 ? 15 : scan.rankedFiles.length > 100 ? 10 : 5;
+    for (const { file } of scan.rankedFiles.slice(0, topCount)) {
       lines.push(`- \`${file}\``);
     }
     lines.push("");

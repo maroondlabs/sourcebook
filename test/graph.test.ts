@@ -179,6 +179,21 @@ describe("extractPythonImports", () => {
     expect(result).toContain("os");
     expect(result).toContain("sys");
   });
+
+  it("extracts conditional imports (indented inside if blocks)", () => {
+    const content = `from .shared import PYDANTIC_V2\n\nif PYDANTIC_V2:\n    from .v2 import BaseConfig\n    from .v2 import Validator\nelse:\n    from .v1 import BaseConfig`;
+    const result = extractPythonImports(content);
+    expect(result).toContain(".shared");
+    expect(result).toContain(".v2");
+    expect(result).toContain(".v1");
+  });
+
+  it("extracts TYPE_CHECKING imports", () => {
+    const content = `from __future__ import annotations\n\nif TYPE_CHECKING:\n    from .models import User\n    from .types import Config`;
+    const result = extractPythonImports(content);
+    expect(result).toContain(".models");
+    expect(result).toContain(".types");
+  });
 });
 
 describe("resolvePythonImport", () => {

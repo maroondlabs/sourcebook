@@ -155,8 +155,10 @@ def analyze(results_dir: str, since: Optional[str] = None,
         failures = cond_failures.get(cond, 0)
         n = len(recalls)
 
+        prec_str = f"{mean(precisions):>9.0%}" if precisions else "      N/A"
+        f1_str = f"{mean(f1s):>6.0%}" if f1s else "   N/A"
         print(f"  {cond:<14} {n:>4} {mean(recalls):>7.0%}"
-              f" {mean(precisions):>9.0%} {mean(f1s):>6.0%}"
+              f" {prec_str} {f1_str}"
               f" {perfect:>7}/{n} {zeros:>5}/{n} {failures:>8}/{n}")
 
     # ── 2. DIVERGENCE POINTS ──────────────────────────────────────────────

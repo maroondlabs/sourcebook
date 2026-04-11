@@ -197,8 +197,10 @@ export async function analyzeImportGraph(
     .sort((a, b) => b[1] - a[1]);
 
   if (hubs.length > 0) {
+    // Scale hub count with repo size — small repos need fewer, large repos need more orientation
+    const hubLimit = allSourceFiles.length > 500 ? 15 : allSourceFiles.length > 100 ? 10 : 5;
     const hubList = hubs
-      .slice(0, 5)
+      .slice(0, hubLimit)
       .map(([file, count]) => `${file} (imported by ${count} files)`);
 
     findings.push({
@@ -209,6 +211,43 @@ export async function analyzeImportGraph(
       confidence: "high",
       discoverable: false,
     });
+
+    // Detect facade modules: __init__.py hubs that re-export from sibling files.
+    // Files behind facades are invisible to fan-in but architecturally important.
+    const topHubFiles = new Set(hubs.slice(0, hubLimit).map(([f]) => f));
+    const facadeExports: { facade: string; impl: string }[] = [];
+    for (const edge of edges) {
+      if (
+        edge.from.endsWith("/__init__.py") &&
+        topHubFiles.has(edge.from) &&
+        !isTestFile(edge.to) &&
+        !topHubFiles.has(edge.to) &&
+        // Only sibling files (same package)
+        path.dirname(edge.from) === path.dirname(edge.to)
+      ) {
+        facadeExports.push({ facade: edge.from, impl: edge.to });
+      }
+    }
+    if (facadeExports.length > 0) {
+      // Group by facade
+      const byFacade = new Map<string, string[]>();
+      for (const { facade, impl } of facadeExports) {
+        if (!byFacade.has(facade)) byFacade.set(facade, []);
+        byFacade.get(facade)!.push(impl);
+      }
+      const parts: string[] = [];
+      for (const [facade, impls] of byFacade) {
+        parts.push(`${facade} re-exports from ${impls.join(", ")}`);
+      }
+      findings.push({
+        category: "Hidden dependencies",
+        description: `Facade modules hide implementation files: ${parts.join("; ")}. These implementation files have low direct fan-in but are architecturally important — bugs often live here, not in the facade.`,
+        rationale:
+          "Python __init__.py files often act as facades, re-exporting from private implementation modules. The implementation files have low fan-in (only imported by __init__.py) but are where the actual logic lives. When investigating bugs, check implementation files behind high-fan-in facades.",
+        confidence: "high",
+        discoverable: false,
+      });
+    }
   }
 
   // Detect potential circular dependencies (test files excluded to reduce noise)
@@ -365,13 +404,14 @@ export function extractPythonImports(content: string): string[] {
   const imports: string[] = [];
 
   // "from .module import X" or "from package.submodule import Y"
-  const fromImports = content.matchAll(/^from\s+(\.+[\w.]*|[\w][\w.]*)\s+import\b/gm);
+  // Allow leading whitespace to catch conditional imports (if TYPE_CHECKING:, if PYDANTIC_V2:, etc.)
+  const fromImports = content.matchAll(/^\s*from\s+(\.+[\w.]*|[\w][\w.]*)\s+import\b/gm);
   for (const match of fromImports) {
     imports.push(match[1]);
   }
 
   // "import module" or "import package.submodule"
-  const plainImports = content.matchAll(/^import\s+([\w][\w.]*)/gm);
+  const plainImports = content.matchAll(/^\s*import\s+([\w][\w.]*)/gm);
   for (const match of plainImports) {
     imports.push(match[1]);
   }

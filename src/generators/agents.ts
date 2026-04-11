@@ -83,7 +83,8 @@ export function generateAgents(scan: ProjectScan, budget: number, options?: Gene
       "## Core Modules (by structural importance)",
       "",
     ];
-    for (const { file, score } of scan.rankedFiles.slice(0, 5)) {
+    const topCount = scan.rankedFiles.length > 500 ? 15 : scan.rankedFiles.length > 100 ? 10 : 5;
+    for (const { file, score } of scan.rankedFiles.slice(0, topCount)) {
       lines.push(`- \`${file}\``);
     }
     lines.push("");

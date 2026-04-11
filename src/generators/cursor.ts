@@ -62,7 +62,8 @@ export function generateCursor(scan: ProjectScan, budget: number): string {
   // Core modules
   if (scan.rankedFiles && scan.rankedFiles.length > 0) {
     const lines = ["## Core Modules", ""];
-    for (const { file } of scan.rankedFiles.slice(0, 5)) {
+    const topCount = scan.rankedFiles.length > 500 ? 15 : scan.rankedFiles.length > 100 ? 10 : 5;
+    for (const { file } of scan.rankedFiles.slice(0, topCount)) {
       lines.push(`- \`${file}\``);
     }
     lines.push("");

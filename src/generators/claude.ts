@@ -107,11 +107,12 @@ export function generateClaude(scan: ProjectScan, budget: number, options?: Gene
     }
   }
 
-  // Core modules (from PageRank)
+  // Core modules (from PageRank) — scale with repo size
   if (scan.rankedFiles && scan.rankedFiles.length > 0) {
-    const top5 = scan.rankedFiles.slice(0, 5);
+    const topCount = scan.rankedFiles.length > 500 ? 15 : scan.rankedFiles.length > 100 ? 10 : 5;
+    const topN = scan.rankedFiles.slice(0, topCount);
     const lines = ["## Core Modules (by structural importance)", ""];
-    for (const { file } of top5) {
+    for (const { file } of topN) {
       lines.push(`- \`${file}\``);
     }
     lines.push("");
