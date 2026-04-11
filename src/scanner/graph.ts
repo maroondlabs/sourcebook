@@ -50,7 +50,21 @@ export async function analyzeImportGraph(
       !/(?:^|\/)examples?(?:[_-][^/]+)?\//i.test(f) &&
       !/(?:^|\/)benchmarks?\//i.test(f)
   );
-  const allSourceFiles = [...jsSourceFiles, ...pySourceFiles];
+  const goSourceFiles = files.filter(
+    (f) =>
+      f.endsWith(".go") &&
+      !f.endsWith("_test.go") &&
+      !/(?:^|\/)vendor\//i.test(f) &&
+      !/(?:^|\/)testdata\//i.test(f)
+  );
+  const goTestFiles = files.filter((f) => f.endsWith("_test.go"));
+  const rsSourceFiles = files.filter(
+    (f) =>
+      f.endsWith(".rs") &&
+      !/(?:^|\/)target\//i.test(f) &&
+      !/(?:^|\/)tests?\//i.test(f)
+  );
+  const allSourceFiles = [...jsSourceFiles, ...pySourceFiles, ...goSourceFiles, ...rsSourceFiles];
 
   if (allSourceFiles.length < 5) {
     return { rankedFiles: [], findings, edges: [] };
@@ -103,6 +117,56 @@ export async function analyzeImportGraph(
     }
   }
 
+  // Go import edges
+  if (goSourceFiles.length >= 5) {
+    // Read go.mod to get module path
+    const goModulePath = readGoModulePath(dir);
+    if (goModulePath) {
+      const goFileSet = new Set([...goSourceFiles, ...goTestFiles]);
+      for (const file of [...goSourceFiles, ...goTestFiles]) {
+        const filePath = safePath(dir, file);
+        if (!filePath) continue;
+        let content: string;
+        try {
+          content = fs.readFileSync(filePath, "utf-8");
+        } catch {
+          continue;
+        }
+
+        const imports = extractGoImports(content);
+        for (const imp of imports) {
+          const resolved = resolveGoImport(imp, goModulePath, goFileSet, dir);
+          if (resolved) {
+            edges.push({ from: file, to: resolved });
+          }
+        }
+      }
+    }
+  }
+
+  // Rust import edges
+  if (rsSourceFiles.length >= 5) {
+    const rsFileSet = new Set(rsSourceFiles);
+    for (const file of rsSourceFiles) {
+      const filePath = safePath(dir, file);
+      if (!filePath) continue;
+      let content: string;
+      try {
+        content = fs.readFileSync(filePath, "utf-8");
+      } catch {
+        continue;
+      }
+
+      const imports = extractRustImports(content);
+      for (const imp of imports) {
+        const resolved = resolveRustImport(imp, file, rsFileSet);
+        if (resolved) {
+          edges.push({ from: file, to: resolved });
+        }
+      }
+    }
+  }
+
   if (edges.length < 5) {
     return { rankedFiles: [], findings, edges };
   }
@@ -139,9 +203,9 @@ export async function analyzeImportGraph(
 
     findings.push({
       category: "Core modules",
-      description: `Hub files (most depended on): ${hubList.join("; ")}. Changes here have the widest blast radius.`,
+      description: `Hub files (most depended on): ${hubList.join("; ")}. Changes here have the widest blast radius — modifying types, exports, or caching behavior in these files affects all dependents.`,
       rationale:
-        "These are the most imported files in the project. Modifying them affects many consumers. Test thoroughly after changes.",
+        "These are the most imported files in the project. Before modifying: check what depends on the specific export you're changing, understand shared state (caches, singletons, module-level variables), and verify type changes don't break downstream consumers.",
       confidence: "high",
       discoverable: false,
     });
@@ -166,11 +230,22 @@ export async function analyzeImportGraph(
           .join(" → ")
       );
 
+    // Check if any cycle involves a hub file (high blast radius = higher risk)
+    const hubFiles = new Set(
+      hubs.slice(0, 5).map(([file]) => file)
+    );
+    const cycleInvolvesHub = cycles.some((c) =>
+      c.some((f) => hubFiles.has(f))
+    );
+    const hubWarning = cycleInvolvesHub
+      ? " These cycles involve hub files — changes here affect shared state and initialization order across many dependents."
+      : "";
+
     findings.push({
       category: "Circular dependencies",
-      description: `Circular import chains detected: ${cycleDescriptions.join("; ")}. Avoid adding to these cycles.`,
+      description: `Circular import chains detected: ${cycleDescriptions.join("; ")}. Avoid adding to these cycles.${hubWarning}`,
       rationale:
-        "Circular dependencies cause subtle bugs (undefined imports, initialization order issues). Agents may unknowingly create new cycles.",
+        "Circular dependencies cause subtle bugs (undefined imports, initialization order issues, shared mutable state). Agents must understand how data flows between these files before modifying caching, types, or exports.",
       confidence: "high",
       discoverable: false,
     });
@@ -541,4 +616,197 @@ function detectCycles(
   }
 
   return cycles;
+}
+
+// ─── Go import support ───
+
+/**
+ * Read the module path from go.mod (first line: "module github.com/foo/bar")
+ */
+function readGoModulePath(dir: string): string | null {
+  const goModPath = path.join(dir, "go.mod");
+  try {
+    const content = fs.readFileSync(goModPath, "utf-8");
+    const match = content.match(/^module\s+(\S+)/m);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract Go import paths from a .go file.
+ * Handles both single imports and grouped imports.
+ */
+export function extractGoImports(content: string): string[] {
+  const imports: string[] = [];
+
+  // Grouped imports: import ( "path1" \n "path2" )
+  const groupMatches = content.matchAll(/import\s*\(\s*([\s\S]*?)\s*\)/g);
+  for (const match of groupMatches) {
+    const block = match[1];
+    const lines = block.matchAll(/\s*(?:\w+\s+)?"([^"]+)"/g);
+    for (const line of lines) {
+      imports.push(line[1]);
+    }
+  }
+
+  // Single imports: import "path" or import name "path"
+  const singleMatches = content.matchAll(/import\s+(?:\w+\s+)?"([^"]+)"/g);
+  for (const match of singleMatches) {
+    imports.push(match[1]);
+  }
+
+  return imports;
+}
+
+/**
+ * Resolve a Go import path to a file in the project.
+ * Go imports use the module path as prefix — strip it to get the relative dir,
+ * then find .go files in that directory.
+ */
+export function resolveGoImport(
+  importPath: string,
+  modulePath: string,
+  goFileSet: Set<string>,
+  dir: string
+): string | null {
+  // Only resolve imports within this module
+  if (!importPath.startsWith(modulePath)) return null;
+
+  // Strip module path to get relative directory
+  const relDir = importPath.slice(modulePath.length).replace(/^\//, "");
+
+  if (!relDir) {
+    // Import of the root package — find any .go file at root level
+    for (const f of goFileSet) {
+      if (!f.includes("/") && f.endsWith(".go") && !f.endsWith("_test.go")) return f;
+    }
+    return null;
+  }
+
+  // Find the first non-test .go file in that directory
+  // (In Go, a package = all .go files in a directory, so we pick the "main" one)
+  let best: string | null = null;
+  for (const f of goFileSet) {
+    if (f.startsWith(relDir + "/") && f.endsWith(".go") && !f.endsWith("_test.go")) {
+      const remaining = f.slice(relDir.length + 1);
+      if (!remaining.includes("/")) {
+        // Prefer files named after the directory (idiomatic Go)
+        const dirName = path.basename(relDir);
+        if (f === `${relDir}/${dirName}.go`) return f;
+        if (!best) best = f;
+      }
+    }
+  }
+  return best;
+}
+
+// ─── Rust import support ───
+
+/**
+ * Extract Rust import paths from a .rs file.
+ * Handles: use crate::foo::bar, use super::foo, mod foo
+ */
+export function extractRustImports(content: string): string[] {
+  const imports: string[] = [];
+
+  // "use crate::module::item" or "use crate::module::{item1, item2}"
+  const useMatches = content.matchAll(/\buse\s+(crate|super)(::\w+)+/g);
+  for (const match of useMatches) {
+    imports.push(match[0].replace(/^use\s+/, ""));
+  }
+
+  // "mod foo;" (declares a submodule — imports foo.rs or foo/mod.rs)
+  const modMatches = content.matchAll(/\bmod\s+(\w+)\s*;/g);
+  for (const match of modMatches) {
+    imports.push(`mod::${match[1]}`);
+  }
+
+  return imports;
+}
+
+/**
+ * Resolve a Rust import to a file in the project.
+ * crate:: paths resolve from the crate root (lib.rs or main.rs).
+ * super:: paths resolve relative to the current file's parent.
+ * mod:: paths resolve to sibling file or subdirectory mod.rs.
+ */
+export function resolveRustImport(
+  importSpec: string,
+  fromFile: string,
+  rsFileSet: Set<string>
+): string | null {
+  const fromDir = path.dirname(fromFile);
+
+  // mod declarations: look for sibling file or subdirectory
+  if (importSpec.startsWith("mod::")) {
+    const modName = importSpec.slice(5);
+    // Check for sibling file: dir/modname.rs
+    const siblingFile = fromDir === "." ? `${modName}.rs` : `${fromDir}/${modName}.rs`;
+    if (rsFileSet.has(siblingFile)) return siblingFile;
+    // Check for subdirectory: dir/modname/mod.rs
+    const subMod = fromDir === "." ? `${modName}/mod.rs` : `${fromDir}/${modName}/mod.rs`;
+    if (rsFileSet.has(subMod)) return subMod;
+    return null;
+  }
+
+  // super:: paths — resolve relative to parent directory
+  if (importSpec.startsWith("super::")) {
+    const parts = importSpec.split("::");
+    let dir = fromDir;
+    let i = 0;
+    while (i < parts.length && parts[i] === "super") {
+      dir = path.dirname(dir);
+      i++;
+    }
+    if (i >= parts.length) return null;
+    const moduleName = parts[i];
+    // Check for dir/module.rs
+    const candidate = dir === "." ? `${moduleName}.rs` : `${dir}/${moduleName}.rs`;
+    if (rsFileSet.has(candidate)) return candidate;
+    // Check for dir/module/mod.rs
+    const subCandidate = dir === "." ? `${moduleName}/mod.rs` : `${dir}/${moduleName}/mod.rs`;
+    if (rsFileSet.has(subCandidate)) return subCandidate;
+    return null;
+  }
+
+  // crate:: paths — resolve from crate root
+  if (importSpec.startsWith("crate::")) {
+    const parts = importSpec.replace("crate::", "").split("::");
+    // Find the crate root (directory containing lib.rs or main.rs)
+    // For workspace crates, the fromFile's crate root is the nearest ancestor with lib.rs
+    let crateRoot = findCrateRoot(fromFile, rsFileSet);
+    if (!crateRoot) return null;
+
+    // Walk the module path
+    let currentDir = crateRoot;
+    for (let i = 0; i < Math.min(parts.length, 3); i++) {
+      const part = parts[i];
+      // Check for file at this level
+      const filePath = currentDir === "." ? `${part}.rs` : `${currentDir}/${part}.rs`;
+      if (rsFileSet.has(filePath)) return filePath;
+      // Check for mod.rs in subdirectory
+      const modPath = currentDir === "." ? `${part}/mod.rs` : `${currentDir}/${part}/mod.rs`;
+      if (rsFileSet.has(modPath)) return modPath;
+      // Continue deeper
+      currentDir = currentDir === "." ? part : `${currentDir}/${part}`;
+    }
+  }
+
+  return null;
+}
+
+function findCrateRoot(fromFile: string, rsFileSet: Set<string>): string | null {
+  let dir = path.dirname(fromFile);
+  // Walk up looking for lib.rs or main.rs
+  for (let i = 0; i < 10; i++) {
+    if (rsFileSet.has(dir === "." ? "lib.rs" : `${dir}/lib.rs`)) return dir;
+    if (rsFileSet.has(dir === "." ? "main.rs" : `${dir}/main.rs`)) return dir;
+    if (rsFileSet.has(dir === "." ? "src/lib.rs" : `${dir}/src/lib.rs`)) return dir === "." ? "src" : `${dir}/src`;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
 }

@@ -180,13 +180,23 @@ function detectAntiPatterns(dir: string): Finding[] {
     const meaningful = antiPatterns.filter(p => !REVERT_NOISE.some(n => n.test(p)));
 
     if (meaningful.length > 0) {
-      for (const pattern of meaningful.slice(0, 5)) {
+      // Cap at 2 individual findings to avoid crowding out structural signals
+      for (const pattern of meaningful.slice(0, 2)) {
         findings.push({
           category: "Anti-patterns",
           description: `Tried and reverted: "${pattern}". This approach was explicitly rejected.`,
           rationale:
             "This commit was made and then reverted. The approach failed for a reason. Do not re-attempt without understanding why it was rolled back.",
           confidence: "high",
+          discoverable: false,
+        });
+      }
+      // Mention remaining reverts as a count, not individual findings
+      if (meaningful.length > 2) {
+        findings.push({
+          category: "Anti-patterns",
+          description: `${meaningful.length - 2} additional reverted approaches in the last year. Check git log --grep="^Revert" before attempting similar changes.`,
+          confidence: "medium",
           discoverable: false,
         });
       }
@@ -415,9 +425,9 @@ function detectCoChangeCoupling(
 
     findings.push({
       category: "Hidden dependencies",
-      description: `Files that change together across directories (invisible coupling): ${pairDescriptions.join("; ")}`,
+      description: `Files that change together across directories (invisible coupling): ${pairDescriptions.join("; ")}. When modifying any of these files, check its co-change partner for required updates.`,
       rationale:
-        "These files have no import relationship but are always modified together. Changing one without the other likely introduces bugs.",
+        "These files have no import relationship but are always modified together — they share implicit contracts (shared types, config assumptions, protocol behavior). Changing one without the other likely introduces bugs.",
       confidence: "high",
       discoverable: false,
     });

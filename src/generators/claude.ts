@@ -7,6 +7,7 @@ import {
   enforceTokenBudget,
   buildQuickReference,
   getModePriorities,
+  filterDiscoverableCommands,
 } from "./shared.js";
 
 /**
@@ -18,7 +19,13 @@ import {
  *    → Critical info at BEGINNING and END of file
  * 3. Karpathy's program.md pattern: constraints, gotchas, and autonomy boundaries
  */
-export function generateClaude(scan: ProjectScan, budget: number): string {
+export interface GenerateOptions {
+  /** Include discoverable context (stack, standard commands, obvious dirs). Default: false */
+  verbose?: boolean;
+}
+
+export function generateClaude(scan: ProjectScan, budget: number, options?: GenerateOptions): string {
+  const verbose = options?.verbose ?? false;
   const { critical, important, supplementary } = categorizeFindings(scan.findings);
   const priorities = getModePriorities(scan.repoMode);
 
@@ -39,19 +46,23 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
   sections.push({ key: "header", content: header, priority: 100 });
 
   // Quick Reference — the "30-second handoff" (highest priority in app mode)
-  const quickRef = buildQuickReference(scan.findings);
+  // In non-verbose mode, filter out discoverable patterns (testing, validation, routing
+  // frameworks that the agent can identify from imports and config files)
+  const quickRef = buildQuickReference(scan.findings, { verbose });
   if (quickRef) {
     sections.push({ key: "quick_reference", content: quickRef, priority: priorities.quick_reference });
   }
 
   // Commands — most immediately actionable
-  if (hasCommands(scan.commands)) {
+  // In non-verbose mode, strip standard language commands (go test, pytest, make)
+  const commands = verbose ? scan.commands : filterDiscoverableCommands(scan.commands);
+  if (hasCommands(commands)) {
     const lines = ["## Commands", ""];
-    if (scan.commands.dev) lines.push(`- **Dev:** \`${scan.commands.dev}\``);
-    if (scan.commands.build) lines.push(`- **Build:** \`${scan.commands.build}\``);
-    if (scan.commands.test) lines.push(`- **Test:** \`${scan.commands.test}\``);
-    if (scan.commands.lint) lines.push(`- **Lint:** \`${scan.commands.lint}\``);
-    for (const [name, cmd] of Object.entries(scan.commands)) {
+    if (commands.dev) lines.push(`- **Dev:** \`${commands.dev}\``);
+    if (commands.build) lines.push(`- **Build:** \`${commands.build}\``);
+    if (commands.test) lines.push(`- **Test:** \`${commands.test}\``);
+    if (commands.lint) lines.push(`- **Lint:** \`${commands.lint}\``);
+    for (const [name, cmd] of Object.entries(commands)) {
       if (cmd && !["dev", "build", "test", "lint", "start"].includes(name)) {
         lines.push(`- **${name}:** \`${cmd}\``);
       }
@@ -75,14 +86,14 @@ export function generateClaude(scan: ProjectScan, budget: number): string {
   // (LLMs retain this worst -- keep it short)
   // ============================================
 
-  // Stack (brief)
-  if (scan.frameworks.length > 0) {
+  // Stack (brief) — discoverable from config files, only include in verbose mode
+  if (verbose && scan.frameworks.length > 0) {
     const content = ["## Stack", "", scan.frameworks.join(", "), ""].join("\n");
     sections.push({ key: "stack", content, priority: priorities.stack });
   }
 
-  // Key directories (only non-obvious ones)
-  if (Object.keys(scan.structure.directories).length > 0) {
+  // Key directories — agent discovers these from file listing, only include in verbose mode
+  if (verbose && Object.keys(scan.structure.directories).length > 0) {
     const nonObvious = Object.entries(scan.structure.directories).filter(
       ([dir]) => !["src", "public", "node_modules", "dist", "build"].includes(dir)
     );

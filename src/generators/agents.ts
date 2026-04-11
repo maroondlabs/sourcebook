@@ -3,14 +3,18 @@ import {
   hasCommands,
   categorizeFindings,
   enforceTokenBudget,
+  filterDiscoverableCommands,
 } from "./shared.js";
+
+import type { GenerateOptions } from "./claude.js";
 
 /**
  * Generate an AGENTS.md file from scan results.
  * Used by GitHub Copilot, OpenAI Codex, and other AGENTS.md-aware tools.
  * Format follows the AGENTS.md spec: markdown with directives for agent behavior.
  */
-export function generateAgents(scan: ProjectScan, budget: number): string {
+export function generateAgents(scan: ProjectScan, budget: number, options?: GenerateOptions): string {
+  const verbose = options?.verbose ?? false;
   const { critical, important, supplementary } = categorizeFindings(scan.findings);
 
   const sections: { key: string; content: string; priority: number }[] = [];
@@ -27,14 +31,15 @@ export function generateAgents(scan: ProjectScan, budget: number): string {
     priority: 100,
   });
 
-  // Commands
-  if (hasCommands(scan.commands)) {
+  // Commands — strip standard language defaults in non-verbose mode
+  const commands = verbose ? scan.commands : filterDiscoverableCommands(scan.commands);
+  if (hasCommands(commands)) {
     const lines = ["## Commands", ""];
-    if (scan.commands.dev) lines.push(`- **Dev:** \`${scan.commands.dev}\``);
-    if (scan.commands.build) lines.push(`- **Build:** \`${scan.commands.build}\``);
-    if (scan.commands.test) lines.push(`- **Test:** \`${scan.commands.test}\``);
-    if (scan.commands.lint) lines.push(`- **Lint:** \`${scan.commands.lint}\``);
-    for (const [name, cmd] of Object.entries(scan.commands)) {
+    if (commands.dev) lines.push(`- **Dev:** \`${commands.dev}\``);
+    if (commands.build) lines.push(`- **Build:** \`${commands.build}\``);
+    if (commands.test) lines.push(`- **Test:** \`${commands.test}\``);
+    if (commands.lint) lines.push(`- **Lint:** \`${commands.lint}\``);
+    for (const [name, cmd] of Object.entries(commands)) {
       if (cmd && !["dev", "build", "test", "lint", "start"].includes(name)) {
         lines.push(`- **${name}:** \`${cmd}\``);
       }
@@ -58,8 +63,8 @@ export function generateAgents(scan: ProjectScan, budget: number): string {
     sections.push({ key: "critical", content: lines.join("\n"), priority: 90 });
   }
 
-  // Stack
-  if (scan.frameworks.length > 0) {
+  // Stack — discoverable from config files, only include in verbose mode
+  if (verbose && scan.frameworks.length > 0) {
     sections.push({
       key: "stack",
       content: [

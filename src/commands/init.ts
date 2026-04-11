@@ -12,6 +12,7 @@ interface InitOptions {
   format: string;
   budget: string;
   dryRun?: boolean;
+  verbose?: boolean;
 }
 
 export async function init(options: InitOptions) {
@@ -74,7 +75,7 @@ export async function init(options: InitOptions) {
   for (const format of formats) {
     switch (format) {
       case "claude": {
-        const content = generateClaude(scan, budget);
+        const content = generateClaude(scan, budget, { verbose: options.verbose });
         await writeOutput(targetDir, "CLAUDE.md", content);
         console.log(chalk.green("✓") + " Wrote CLAUDE.md");
         break;
@@ -96,13 +97,13 @@ export async function init(options: InitOptions) {
         break;
       }
       case "agents": {
-        const agentsContent = generateAgents(scan, budget);
+        const agentsContent = generateAgents(scan, budget, { verbose: options.verbose });
         await writeOutput(targetDir, "AGENTS.md", agentsContent);
         console.log(chalk.green("✓") + " Wrote AGENTS.md");
         break;
       }
       case "all": {
-        const claudeAll = generateClaude(scan, budget);
+        const claudeAll = generateClaude(scan, budget, { verbose: options.verbose });
         await writeOutput(targetDir, "CLAUDE.md", claudeAll);
         console.log(chalk.green("✓") + " Wrote CLAUDE.md");
 
@@ -118,7 +119,7 @@ export async function init(options: InitOptions) {
         await writeOutput(targetDir, ".github/copilot-instructions.md", copilotAll);
         console.log(chalk.green("✓") + " Wrote .github/copilot-instructions.md");
 
-        const agentsAll = generateAgents(scan, budget);
+        const agentsAll = generateAgents(scan, budget, { verbose: options.verbose });
         await writeOutput(targetDir, "AGENTS.md", agentsAll);
         console.log(chalk.green("✓") + " Wrote AGENTS.md");
         break;

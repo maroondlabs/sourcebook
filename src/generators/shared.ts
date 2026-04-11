@@ -42,6 +42,38 @@ export function hasCommands(commands: Record<string, string | undefined>): boole
 }
 
 /**
+ * Standard commands that an agent can infer from seeing the project files.
+ * e.g., seeing go.mod → knows "go test ./...", seeing package.json with "test" script → knows "npm test".
+ * These are stripped in non-verbose mode.
+ */
+const STANDARD_COMMANDS = new Set([
+  "go run .",
+  "go build ./...",
+  "go test ./...",
+  "pytest",
+  "poetry run pytest",
+  "make",
+]);
+
+/**
+ * Filter commands to only non-standard ones (not discoverable by the agent).
+ * Custom scripts from package.json (e.g., "turbo build", "next dev") are kept
+ * because they require reading package.json scripts — but standard language
+ * defaults are stripped.
+ */
+export function filterDiscoverableCommands(
+  commands: Record<string, string | undefined>
+): Record<string, string | undefined> {
+  const filtered: Record<string, string | undefined> = {};
+  for (const [key, value] of Object.entries(commands)) {
+    if (value && !STANDARD_COMMANDS.has(value)) {
+      filtered[key] = value;
+    }
+  }
+  return filtered;
+}
+
+/**
  * Estimate token count for a string (rough: 1 token ≈ 4 chars).
  */
 export function estimateTokens(text: string): number {
@@ -85,7 +117,21 @@ export function categorizeFindings(findings: Finding[]): {
  * This is the "30-second senior engineer handoff" — the single most
  * actionable section in the output.
  */
-export function buildQuickReference(findings: Finding[]): string | null {
+/**
+ * Labels that are discoverable by agents reading imports and config files.
+ * In non-verbose mode, these are stripped from Quick Reference.
+ */
+const DISCOVERABLE_LABELS = new Set([
+  "testing",     // agent sees test config files (jest.config, vitest.config, conftest.py, _test.go)
+  "validation",  // agent sees Zod/Pydantic/Joi imports
+  "styling",     // agent sees tailwind.config, styled-components imports
+  "database",    // agent sees prisma/schema.prisma, models.py, etc.
+  "data fetching", // agent sees React Query/SWR imports
+  "components",  // agent sees component directories
+]);
+
+export function buildQuickReference(findings: Finding[], options?: { verbose?: boolean }): string | null {
+  const verbose = options?.verbose ?? false;
   // Only include high/medium confidence patterns in Quick Reference
   const patterns = findings.filter((f) => f.category === "Dominant patterns" && f.confidence !== "low");
   if (patterns.length < 2) return null;
@@ -125,6 +171,9 @@ export function buildQuickReference(findings: Finding[]): string | null {
     } else {
       continue; // Skip findings we can't label cleanly
     }
+
+    // In non-verbose mode, skip labels the agent can discover from imports/config
+    if (!verbose && DISCOVERABLE_LABELS.has(label)) continue;
 
     // Compress the description to a short actionable line
     const short = desc

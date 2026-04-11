@@ -250,6 +250,39 @@ check "adv-polars" "Should detect: __init__.py barrel" "__init__.py" "yes"
 check "adv-polars" "Should NOT detect: FastAPI" "FastAPI" "no"
 echo ""
 
+# ═══════════════════════════════════════
+# REDUNDANCY CHECKS (non-verbose mode)
+# These verify the output does NOT contain
+# discoverable information that agents can
+# find by reading the repo themselves.
+# (ETH Zurich: redundant context = -3% performance)
+# ═══════════════════════════════════════
+
+echo "─── REDUNDANCY CHECKS (default mode) ───"
+echo ""
+
+# Gin: Go project — should NOT have Stack or standard Go commands
+echo "gin (redundancy):"
+check "gin" "Should NOT have: Stack section" "^## Stack" "no"
+check "gin" "Should NOT have: Project Structure section" "^## Project Structure" "no"
+check "gin" "Should NOT have: standard go test command" "go test \./\.\.\." "no"
+check "gin" "Should NOT have: standard go build command" "go build \./\.\.\." "no"
+check "gin" "Should NOT have: standard go run command" "go run \." "no"
+check "gin" "Should NOT have: standard make command" "Build:.*\`make\`" "no"
+echo ""
+
+# Schemathesis: Python project — should NOT have Stack or pytest command
+echo "schemathesis (redundancy):"
+check "schemathesis" "Should NOT have: Stack section" "^## Stack" "no"
+check "schemathesis" "Should NOT have: Project Structure section" "^## Project Structure" "no"
+echo ""
+
+# Create-T3: TS monorepo — should NOT have Stack but SHOULD have custom commands
+echo "create-t3 (redundancy):"
+check "create-t3" "Should NOT have: Stack section" "^## Stack" "no"
+check "create-t3" "SHOULD have: custom turbo build command" "turbo build" "yes"
+echo ""
+
 # ─── Summary ───
 echo "========================================"
 echo "RESULTS: ${GREEN}$PASS passed${NC}, ${RED}$FAIL failed${NC}, ${YELLOW}$WARN skipped${NC}"
