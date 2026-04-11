@@ -35,11 +35,14 @@ echo "Run ID:    $RUN_ID"
 echo ""
 
 # Record frozen settings
+SB_VERSION=$(${SOURCEBOOK_BIN:-npx --yes sourcebook} --version 2>/dev/null || echo "unknown")
 cat > "$RUN_DIR/environment.json" << EOF
 {
   "model": "$CLAUDE_MODEL",
   "max_turns": $MAX_TURNS,
-  "harness_version": "0.2.0",
+  "harness_version": "0.2.1",
+  "sourcebook_version": "$SB_VERSION",
+  "sourcebook_bin": "${SOURCEBOOK_BIN:-npx --yes sourcebook}",
   "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 EOF

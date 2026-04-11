@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>19 Tasks. 10 Repos. 4 Languages. Here's When AI Context Actually Helps. — sourcebook</title>
+<meta name="description" content="We benchmarked sourcebook against handwritten context across 19 real GitHub issues in TypeScript, Python, Go, and Rust. Structural context was faster 68% of the time — and on some tasks, it was the difference between fixing the bug and giving up."/>
+<meta property="og:title" content="19 Tasks. 10 Repos. 4 Languages. Here's When AI Context Actually Helps."/>
+<meta property="og:description" content="We benchmarked auto-generated structural context against expert-written briefs on real GitHub bugs. 68% win rate, -16% avg speedup. The data shows when it helps and when it doesn't."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://sourcebook.run/blog/19-tasks-10-repos-4-languages"/>
+<meta property="article:published_time" content="2026-04-11"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="19 Tasks. 10 Repos. 4 Languages. Here's When AI Context Actually Helps."/>
+<link rel="canonical" href="https://sourcebook.run/blog/19-tasks-10-repos-4-languages.html"/>
+<link rel="icon" type="image/png" href="../logo.png"/>
+<meta property="og:image" content="https://sourcebook.run/og-image.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "electric-green": "#00FF41",
+                    "terminal-black": "#0D0D0D",
+                    "error": "#ba1a1a",
+                },
+                fontFamily: {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                },
+                borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px", "md": "0px", "sm": "0px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #000000; }
+    html.dark body { background-color: #000000; color: #FFFFFF; }
+    html.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+    html.dark ::-webkit-scrollbar-thumb { background: #00FF41; }
+    h1, h2, h3, .font-headline { font-family: 'Space Grotesk', sans-serif; }
+    .pulsing-dot { width: 8px; height: 8px; background-color: #00FF41; animation: pulse 1.5s infinite linear; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .benchmark-table { width: 100%; border-collapse: collapse; font-family: 'Space Grotesk', monospace; font-size: 13px; }
+    .benchmark-table th { background: #0D0D0D; color: #00FF41; padding: 12px 10px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table td { background: #141414; color: #E0E0E0; padding: 10px; border-bottom: 1px solid #1A1A1A; }
+    .benchmark-table tr:hover td { background: #1A1A1A; }
+    .benchmark-table .task-label { color: #00FF41; font-weight: 600; }
+    .benchmark-table .metric-val { font-family: 'Space Grotesk', monospace; }
+    .benchmark-table .best { color: #00FF41; font-weight: 700; }
+    .benchmark-table .fail { color: #ba1a1a; font-weight: 600; }
+    html:not(.dark) .benchmark-table th { background: #1a1a1a; }
+    html:not(.dark) .benchmark-table td { background: #141414; color: #E0E0E0; }
+    .proof-box { border-left: 3px solid #00FF41; background: #050505; padding: 24px; margin: 32px 0; }
+    html:not(.dark) .proof-box { background: #F3F3F3; border-left-color: #000; }
+</style>
+</head>
+<body class="antialiased bg-white dark:bg-black text-black dark:text-white">
+
+<!-- Nav -->
+<nav class="bg-white dark:bg-black flex justify-between items-center w-full px-6 py-4 max-w-none border-b-0 dark:border-b dark:border-[#1A1A1A] sticky top-0 z-50">
+<a href="/" class="flex items-center gap-3">
+<img src="../logo.png" alt="sourcebook" class="h-8 w-8 dark:hidden"/>
+<img src="../logo-dark.png" alt="sourcebook" class="h-8 w-8 hidden dark:block"/>
+<span class="font-['Space_Grotesk'] font-bold text-xl tracking-widest text-black dark:text-white">SOURCEBOOK</span>
+</a>
+<div class="hidden md:flex gap-8 items-center ml-12">
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/for/">EXPLORE</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-black dark:text-white hover:text-[#00FF41] transition-colors duration-100 border-b-2 border-black dark:border-white" href="/blog">BLOG</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/research">RESEARCH</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-tighter text-sm text-[#5F5E5E] dark:text-[#A0A0A0] hover:text-[#00FF41] transition-colors duration-100" href="/pro">PRICING</a>
+</div>
+<div class="flex items-center gap-2 md:gap-4 ml-auto">
+<button onclick="toggleTheme()" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="Toggle dark mode">dark_mode</button>
+<a href="https://github.com/maroondlabs/sourcebook" class="material-symbols-outlined text-black dark:text-white hover:text-[#00FF41] transition-colors" aria-label="View on GitHub">terminal</a>
+<a href="https://github.com/maroondlabs/sourcebook" class="bg-black text-white dark:bg-[#00FF41] dark:text-black px-4 py-2 font-['Space_Grotesk'] uppercase tracking-tighter text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100">GET_STARTED</a>
+</div>
+</nav>
+
+<main>
+
+<!-- Article Header -->
+<header class="w-full bg-[#F3F3F3] dark:bg-[#050505] dark:border-y dark:border-[#1A1A1A] py-20 px-6">
+<div class="max-w-screen-xl mx-auto">
+<span class="block font-headline text-xs font-bold tracking-[0.3em] text-[#5F5E5E] uppercase mb-6">BENCHMARK &middot; APRIL 2026</span>
+<h1 class="font-headline font-bold text-5xl md:text-[56px] leading-[1.05] tracking-tighter text-black dark:text-white mb-8 max-w-4xl">
+19 Tasks. 10 Repos. 4 Languages. Here's When AI Context Actually Helps.
+</h1>
+<div class="border-l-2 border-black dark:border-[#00FF41] pl-6 max-w-2xl">
+<p class="font-body text-xl text-[#1b1b1b] dark:text-[#A0A0A0] italic">ETH Zurich said auto-generated context hurts agent performance. We ran 19 real bug-fix tasks to find out. The answer depends entirely on what you auto-generate.</p>
+</div>
+</div>
+</header>
+<div class="w-full h-px bg-[#C6C6C6]/20 dark:bg-[#1A1A1A]"></div>
+
+<!-- Article Body -->
+<article class="max-w-[720px] mx-auto px-6 py-16">
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+In February 2025, researchers at ETH Zurich found that LLM-generated context files reduced coding agent performance by 2&ndash;3% and increased inference costs by 20%+. The finding was specific: auto-generated context that <em>repeats information agents can discover on their own</em> actively hurts.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+We took that finding seriously. We stripped everything discoverable from sourcebook's output &mdash; project structure, stack labels, standard language commands &mdash; and kept only what agents <strong>cannot find by reading files</strong>: hub files ranked by import graph, co-change coupling from git forensics, circular dependencies, convention signals.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Then we built a benchmark to test whether non-discoverable structural context actually helps. 19 real bug-fix tasks. 10 open-source repos. 4 languages. Three conditions: no context, handwritten expert briefs, and sourcebook.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Here's what the data shows.
+</p>
+
+<!-- Headline Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-12">
+<div class="bg-terminal-black p-6 text-center">
+<div class="font-headline text-3xl font-bold text-electric-green">68%</div>
+<div class="font-headline text-xs tracking-widest text-[#A0A0A0] mt-2 uppercase">Win rate</div>
+<div class="font-body text-[11px] text-[#5F5E5E] mt-1">vs handwritten</div>
+</div>
+<div class="bg-terminal-black p-6 text-center">
+<div class="font-headline text-3xl font-bold text-electric-green">-16%</div>
+<div class="font-headline text-xs tracking-widest text-[#A0A0A0] mt-2 uppercase">Avg speedup</div>
+<div class="font-body text-[11px] text-[#5F5E5E] mt-1">vs handwritten</div>
+</div>
+<div class="bg-terminal-black p-6 text-center">
+<div class="font-headline text-3xl font-bold text-white">19</div>
+<div class="font-headline text-xs tracking-widest text-[#A0A0A0] mt-2 uppercase">Tasks</div>
+<div class="font-body text-[11px] text-[#5F5E5E] mt-1">real GitHub issues</div>
+</div>
+<div class="bg-terminal-black p-6 text-center">
+<div class="font-headline text-3xl font-bold text-white">4</div>
+<div class="font-headline text-xs tracking-widest text-[#A0A0A0] mt-2 uppercase">Languages</div>
+<div class="font-body text-[11px] text-[#5F5E5E] mt-1">TS, PY, GO, RS</div>
+</div>
+</div>
+
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-16 uppercase tracking-tight dark:text-white">The experiment</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Each task is a real, closed GitHub issue with a merged PR fix. The harness checks out the codebase to the state <em>before</em> the fix, validates the bug is still present, injects a context file (or none), and turns the agent loose.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
+<strong>Model:</strong> Claude Sonnet 4 (pinned). <strong>Max turns:</strong> 50. <strong>Tools:</strong> Edit, Write, Read, Glob, Grep, Bash. No human intervention.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
+<strong>Conditions:</strong>
+</p>
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 ml-6 list-disc space-y-2">
+<li><strong>None</strong> &mdash; agent gets the issue description and the codebase. No CLAUDE.md.</li>
+<li><strong>Handwritten</strong> &mdash; a CLAUDE.md written by a developer who understands the project. The kind of context you'd write for a strong new hire.</li>
+<li><strong>sourcebook</strong> &mdash; auto-generated CLAUDE.md from <code>sourcebook init</code>. Only non-discoverable structural signals. No stack labels, no project structure, no standard commands.</li>
+</ul>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-6">
+<strong>Scoring:</strong> Wall-clock time (primary metric) and file overlap with the reference PR (correctness proxy). We compare which files the agent touched against which files the human PR touched.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Repos:</strong> cal.com, hono, pydantic, fastapi, gin, chi, bubbletea, clap, next.js, vercel/ai &mdash; spanning enterprise monorepos, Python libraries, Go web frameworks, and Rust CLI tools.
+</p>
+
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-16 uppercase tracking-tight dark:text-white">The results</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+All 19 tasks, sorted by sourcebook's speedup over handwritten context. Green rows are sourcebook wins.
+</p>
+
+<!-- Full Results Table -->
+<div class="overflow-x-auto my-8 -mx-6 px-6">
+<table class="benchmark-table">
+<thead>
+<tr>
+<th>Task</th>
+<th>Lang</th>
+<th>None</th>
+<th>Handwritten</th>
+<th>sourcebook</th>
+<th>SB vs HW</th>
+<th>Overlap</th>
+</tr>
+</thead>
+<tbody>
+<tr><td class="task-label">next.js #74843</td><td>TS</td><td class="metric-val">107s</td><td class="metric-val">161s</td><td class="metric-val best">30s</td><td class="best">-81%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">bubbletea #1322</td><td>GO</td><td class="metric-val">135s</td><td class="metric-val">252s</td><td class="metric-val best">57s</td><td class="best">-77%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">clap #6201</td><td>RS</td><td class="metric-val">192s</td><td class="metric-val">300s</td><td class="metric-val best">106s</td><td class="best">-65%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">fastapi #14508</td><td>PY</td><td class="metric-val">278s</td><td class="metric-val">191s</td><td class="metric-val best">70s</td><td class="best">-63%</td><td class="metric-val">0%*</td></tr>
+<tr><td class="task-label">pydantic #12715</td><td>PY</td><td class="metric-val">210s</td><td class="metric-val">294s</td><td class="metric-val best">197s</td><td class="best">-33%</td><td class="metric-val">50%</td></tr>
+<tr><td class="task-label">gin #4468</td><td>GO</td><td class="metric-val">102s</td><td class="metric-val">119s</td><td class="metric-val best">81s</td><td class="best">-32%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">vercel/ai #13839</td><td>TS</td><td class="metric-val">177s</td><td class="metric-val">185s</td><td class="metric-val best">144s</td><td class="best">-22%</td><td class="metric-val">50%</td></tr>
+<tr><td class="task-label">drizzle #4421</td><td>TS</td><td class="metric-val">179s</td><td class="metric-val">187s</td><td class="metric-val best">149s</td><td class="best">-20%</td><td class="metric-val">33%</td></tr>
+<tr><td class="task-label">cal.com #27907</td><td>TS</td><td class="metric-val">103s</td><td class="metric-val">146s</td><td class="metric-val best">126s</td><td class="best">-14%</td><td class="metric-val">&mdash;</td></tr>
+<tr><td class="task-label">clap #6275</td><td>RS</td><td class="metric-val fail">155s**</td><td class="metric-val">209s</td><td class="metric-val best">192s</td><td class="best">-8%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">gin #2959</td><td>GO</td><td class="metric-val">184s</td><td class="metric-val">196s</td><td class="metric-val best">182s</td><td class="best">-7%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">vercel/ai #13988</td><td>TS</td><td class="metric-val">274s</td><td class="metric-val">221s</td><td class="metric-val best">209s</td><td class="best">-5%</td><td class="metric-val">&mdash;</td></tr>
+<tr><td class="task-label">fastapi #14454</td><td>PY</td><td class="metric-val">237s</td><td class="metric-val fail">261s***</td><td class="metric-val best">254s</td><td class="best">-3%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">cal.com #27298</td><td>TS</td><td class="metric-val">148s</td><td class="metric-val">140s</td><td class="metric-val">141s</td><td class="metric-val">+1%</td><td class="metric-val">&mdash;</td></tr>
+<tr><td class="task-label">chi #954</td><td>GO</td><td class="metric-val">258s</td><td class="metric-val">133s</td><td class="metric-val">134s</td><td class="metric-val">+1%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">pydantic #13051</td><td>PY</td><td class="metric-val">222s</td><td class="metric-val">150s</td><td class="metric-val">168s</td><td class="metric-val">+12%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">fastapi #14483</td><td>PY</td><td class="metric-val">221s</td><td class="metric-val">202s</td><td class="metric-val">227s</td><td class="metric-val">+12%</td><td class="metric-val">0%*</td></tr>
+<tr><td class="task-label">vercel/ai #13354</td><td>TS</td><td class="metric-val">99s</td><td class="metric-val">167s</td><td class="metric-val">276s</td><td class="metric-val">+65%</td><td class="metric-val">100%</td></tr>
+<tr><td class="task-label">hono #4806</td><td>TS</td><td class="metric-val">197s</td><td class="metric-val">232s</td><td class="metric-val">393s</td><td class="metric-val">+69%</td><td class="metric-val">&mdash;</td></tr>
+</tbody>
+</table>
+</div>
+<p class="font-body text-xs text-[#5F5E5E] mb-4">
+*0% overlap = agent found a valid fix in a different file than the reference PR.
+**clap #6275 no-context: agent produced 0 lines (gave up). Time reflects turns spent before failure.
+***fastapi #14454 handwritten: agent edited the wrong file (0% file overlap with reference PR).
+</p>
+
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-16 uppercase tracking-tight dark:text-white">By language</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The effect isn't uniform. Structural context helps most where the module system is implicit and agents need a map.
+</p>
+
+<!-- Language Chart -->
+<div class="my-8" style="height: 300px;">
+<canvas id="langChart"></canvas>
+</div>
+
+<div class="overflow-x-auto my-8">
+<table class="benchmark-table">
+<thead>
+<tr><th>Language</th><th>Tasks</th><th>SB wins</th><th>Avg SB</th><th>Avg HW</th><th>SB vs HW</th></tr>
+</thead>
+<tbody>
+<tr><td class="task-label">Rust</td><td>2</td><td class="best">2/2 (100%)</td><td class="metric-val">149s</td><td class="metric-val">254s</td><td class="best">-41%</td></tr>
+<tr><td class="task-label">Go</td><td>4</td><td class="best">3/4 (75%)</td><td class="metric-val">114s</td><td class="metric-val">175s</td><td class="best">-35%</td></tr>
+<tr><td class="task-label">Python</td><td>5</td><td class="best">3/5 (60%)</td><td class="metric-val">183s</td><td class="metric-val">220s</td><td class="best">-17%</td></tr>
+<tr><td class="task-label">TypeScript</td><td>8</td><td>5/8 (63%)</td><td class="metric-val">184s</td><td class="metric-val">180s</td><td class="metric-val">+2%</td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Go and Rust repos benefit the most. These languages have implicit module systems where understanding which files import which is non-trivial. sourcebook's import graph analysis &mdash; hub files, PageRank, circular dependency detection &mdash; gives agents a structural map they can't build by skimming.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+TypeScript is mixed (+2% average). The wins are real &mdash; next.js at -81%, drizzle at -20% &mdash; but two outliers (hono +69%, vercel/ai #13354 +65%) drag the average. Both hit the 50-turn cap, suggesting high run-to-run variance on those tasks.
+</p>
+
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-16 uppercase tracking-tight dark:text-white">Four stories worth telling</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Averages are useful but stories are convincing. These four tasks show <em>when</em> structural context changes the outcome, not just the speed.
+</p>
+
+<!-- Proof Point 1: next.js -->
+<div class="proof-box">
+<h3 class="font-headline font-bold text-lg mb-3 text-electric-green dark:text-electric-green">next.js #74843 &mdash; 81% faster</h3>
+<p class="font-body text-[15px] leading-[1.7] text-[#1b1b1b] dark:text-[#E0E0E0] mb-3">
+Encoding bug in a 100K+ file monorepo. sourcebook completed it in <strong>30 seconds, 6 turns</strong>. Handwritten took 161 seconds. No context took 107 seconds.
+</p>
+<p class="font-body text-[15px] leading-[1.7] text-[#1b1b1b] dark:text-[#E0E0E0]">
+The structural context (hub files, monorepo flag, package boundaries) pointed the agent directly to the encoding fix. In a codebase this large, knowing <em>where to start</em> is the entire battle. 100% file overlap with the reference PR.
+</p>
+</div>
+
+<!-- Proof Point 2: clap -->
+<div class="proof-box">
+<h3 class="font-headline font-bold text-lg mb-3 text-electric-green dark:text-electric-green">clap #6275 &mdash; context was the difference between failure and success</h3>
+<p class="font-body text-[15px] leading-[1.7] text-[#1b1b1b] dark:text-[#E0E0E0] mb-3">
+Rust parser bug in clap's <code>--help</code> flag handling with <code>ignore_errors</code>. Without context, the agent produced <strong>0 lines</strong> &mdash; it gave up. With sourcebook context, it found and fixed the bug: 86 lines, 100% file overlap with the reference PR.
+</p>
+<p class="font-body text-[15px] leading-[1.7] text-[#1b1b1b] dark:text-[#E0E0E0]">
+Rust workspaces are structurally opaque to agents. sourcebook's Rust import graph (<code>builder/mod.rs</code>, <code>parser/mod.rs</code> as hub files) gave the agent the structural map to navigate clap's workspace.
+</p>
+</div>
+
+<!-- Proof Point 3: fastapi -->
+<div class="proof-box">
+<h3 class="font-headline font-bold text-lg mb-3 text-electric-green dark:text-electric-green">fastapi #14454 &mdash; handwritten context pointed at the wrong file</h3>
+<p class="font-body text-[15px] leading-[1.7] text-[#1b1b1b] dark:text-[#E0E0E0] mb-3">
+The handwritten brief, written by a developer who understands FastAPI, led the agent to the wrong file &mdash; <strong>0% file overlap</strong> with the reference PR. sourcebook led it to the correct file &mdash; <strong>100% overlap</strong>.
+</p>
+<p class="font-body text-[15px] leading-[1.7] text-[#1b1b1b] dark:text-[#E0E0E0]">
+Human knowledge of a framework isn't always enough. The handwritten notes described general FastAPI architecture. sourcebook's import graph analysis found the actual structural dependencies &mdash; which file depends on which &mdash; and that turned out to matter more than knowing the framework.
+</p>
+</div>
+
+<!-- Proof Point 4: bubbletea -->
+<div class="proof-box">
+<h3 class="font-headline font-bold text-lg mb-3 text-electric-green dark:text-electric-green">bubbletea #1322 &mdash; 77% faster, 4.4x speedup</h3>
+<p class="font-body text-[15px] leading-[1.7] text-[#1b1b1b] dark:text-[#E0E0E0] mb-3">
+Last-line rendering bug in Charm's terminal UI library. sourcebook: <strong>57 seconds, 11 turns</strong>. Handwritten: 252 seconds, 34 turns. 100% file overlap for both.
+</p>
+<p class="font-body text-[15px] leading-[1.7] text-[#1b1b1b] dark:text-[#E0E0E0]">
+Go import graph analysis showed the agent exactly where the rendering pipeline lives. Instead of 34 turns of exploration, the agent navigated directly to the right module. Both conditions found the fix &mdash; but sourcebook got there 4.4x faster.
+</p>
+</div>
+
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-16 uppercase tracking-tight dark:text-white">The discoverability thesis</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+ETH Zurich was right: auto-generated context that duplicates discoverable information hurts. Our data confirms the flip side: auto-generated context that surfaces <strong>non-discoverable</strong> information helps.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+What's non-discoverable? Things an agent cannot learn by reading individual files:
+</p>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 ml-6 list-disc space-y-2">
+<li><strong>Import graph topology</strong> &mdash; which files are hubs that break everything when touched. Requires analyzing the full dependency graph, not just reading one file's imports.</li>
+<li><strong>Co-change coupling</strong> &mdash; which files always change together despite living in different directories. Requires analyzing git history across hundreds of commits.</li>
+<li><strong>Convention signals</strong> &mdash; the dominant testing framework, the preferred error handling pattern, the naming convention that 90% of the codebase follows. Requires statistical analysis across all files.</li>
+</ul>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The key insight: <strong>the problem was never auto-generation. It was what you auto-generate.</strong> Redundant stack and command info hurts. Non-discoverable structural signals help.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+sourcebook v0.10 strips all discoverable content by default. Every line in the output is something the agent couldn't figure out by reading files. That's why it's 16% faster than handwritten context that mixes structural insight with general framework descriptions.
+</p>
+
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-16 uppercase tracking-tight dark:text-white">Where it doesn't help</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Honest benchmarking means showing where you lose.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>TypeScript averages +2%</strong> &mdash; essentially flat. The wins are real (next.js -81%, drizzle -20%) but the losses are real too (hono +69%, vercel/ai #13354 +65%). TypeScript codebases tend to be well-documented with strong IDE tooling. Agents already navigate them reasonably well without extra context. The value of structural analysis is lower when the structure is already legible.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>Simple, focused bugs</strong> where the issue description alone is sufficient don't benefit much. If the error message points directly to the fix, context is overhead.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+The pattern is clear: sourcebook's value scales with <strong>codebase complexity and structural opacity</strong>. Large monorepos, implicit module systems, unfamiliar languages &mdash; that's where agents need a map. Small, well-documented projects don't need one.
+</p>
+
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-16 uppercase tracking-tight dark:text-white">Limitations</h2>
+
+<ul class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8 ml-6 list-disc space-y-3">
+<li><strong>N=1 per condition per task.</strong> Each result is a single run. We're running 3x repeats on the top 5 tasks for variance estimates and confidence intervals &mdash; those results will be added here when complete.</li>
+<li><strong>Correctness is file overlap, not semantic comparison.</strong> Comparing which files the agent touched against the reference PR is a reasonable proxy, but it doesn't verify the logic of the fix. Semantic patch comparison is next.</li>
+<li><strong>Single model (Claude Sonnet 4).</strong> Results may differ on GPT-4o, Gemini, or other models. We pinned a single model to isolate the context variable.</li>
+<li><strong>Two persistent outliers.</strong> hono #4806 (+69%) and vercel/ai #13354 (+65%) are noisy &mdash; all conditions hit the turn cap on hono, suggesting high intrinsic variance on that task.</li>
+<li><strong>Handwritten baselines are strong but imperfect.</strong> We wrote the expert briefs ourselves. A different expert might write better or worse ones. The comparison is against a <em>reasonable</em> handwritten brief, not the theoretical best.</li>
+</ul>
+
+
+<h2 class="font-headline font-bold text-2xl mb-6 mt-16 uppercase tracking-tight dark:text-white">What we learned</h2>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Three things we believe after running these benchmarks:
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-4">
+<strong>1. Structural signals beat framework knowledge.</strong> Human-written context typically describes how a framework works. Structural context describes how <em>this specific codebase</em> works. On fastapi #14454, framework knowledge pointed at the wrong file. Structural analysis pointed at the right one.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-4">
+<strong>2. Import graphs are the highest-leverage signal.</strong> Go (-35%), Rust (-41%) &mdash; the languages where import topology is hardest to infer from file contents show the biggest improvements. Hub files, circular dependencies, and module maps give agents the navigation layer they're missing.
+</p>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+<strong>3. Less context is better context.</strong> sourcebook v0.10 generates ~800&ndash;1,500 tokens per repo. That's smaller than most handwritten briefs. Stripping discoverable information isn't just philosophically sound &mdash; it produces better outcomes because agents spend fewer turns parsing context and more turns solving the problem.
+</p>
+
+
+<!-- Methodology link -->
+<div class="border-t border-b border-[#C6C6C6]/20 dark:border-[#1A1A1A] py-8 my-12">
+<p class="font-body text-[15px] text-[#5F5E5E] dark:text-[#A0A0A0]">
+Full benchmark harness, task definitions, handwritten baselines, and raw results are open source: <a href="https://github.com/maroondlabs/sourcebook/tree/main/benchmark" class="underline hover:text-electric-green">github.com/maroondlabs/sourcebook/tree/main/benchmark</a>
+</p>
+</div>
+
+<p class="font-body text-[17px] leading-[1.8] text-[#1b1b1b] dark:text-[#E0E0E0] mb-8">
+Previous benchmark write-up (4 tasks, 3 repos, v0.3&ndash;v0.5): <a href="/blog/we-benchmarked-ai-context-files" class="underline hover:text-electric-green">We Explored Why AI Agents Fail on Real Codebases</a>
+</p>
+
+
+<!-- CTA -->
+<div class="bg-terminal-black p-8 mt-16">
+<h3 class="font-headline font-bold text-xl text-white mb-4 tracking-tight uppercase">Try it on your repo</h3>
+<div class="flex items-center gap-3 bg-[#1A1A1A] p-4 mb-4 font-['Space_Grotesk'] text-sm">
+<span class="text-[#5F5E5E]">$</span>
+<code class="text-electric-green">npx sourcebook init</code>
+</div>
+<p class="font-body text-sm text-[#A0A0A0]">
+No API keys. No LLM. Everything runs locally. Generates CLAUDE.md, AGENTS.md, and more.
+</p>
+</div>
+
+</article>
+
+</main>
+
+<!-- Footer -->
+<footer class="w-full bg-white dark:bg-black border-t border-[#C6C6C6]/20 dark:border-[#1A1A1A] flex flex-col md:flex-row justify-between items-center px-8 py-12 relative">
+<div class="flex items-center space-x-4 mb-8 md:mb-0">
+<a href="/" class="flex items-center gap-2">
+<img src="../logo.png" alt="sourcebook" class="h-6 w-6 dark:hidden"/>
+<img src="../logo-dark.png" alt="sourcebook" class="h-6 w-6 hidden dark:block"/>
+<span class="text-lg font-bold text-black dark:text-white font-headline">SOURCEBOOK</span>
+</a>
+<div class="flex items-center space-x-2">
+<div class="pulsing-dot"></div>
+<span class="font-headline text-[10px] tracking-widest text-[#5F5E5E]">SYSTEM_LIVE</span>
+</div>
+</div>
+<div class="flex space-x-12 mb-8 md:mb-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://github.com/maroondlabs/sourcebook">GITHUB</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://www.npmjs.com/package/sourcebook">NPM</a>
+<a class="font-headline text-xs tracking-widest text-black dark:text-[#A0A0A0] hover:text-electric-green uppercase" href="https://x.com/maroond_">TWITTER_X</a>
+</div>
+<div class="text-xs font-headline text-[#5F5E5E] tracking-widest">
+BSL-1.1 &copy; 2026
+</div>
+</footer>
+
+<!-- Chart.js -->
+<script>
+function renderCharts() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#A0A0A0' : '#5F5E5E';
+  const gridColor = isDark ? '#1A1A1A' : '#E0E0E0';
+
+  // Language comparison chart
+  const langCtx = document.getElementById('langChart').getContext('2d');
+  new Chart(langCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Rust', 'Go', 'Python', 'TypeScript'],
+      datasets: [
+        {
+          label: 'Handwritten (avg time)',
+          data: [254, 175, 220, 180],
+          backgroundColor: 'rgba(160, 160, 160, 0.4)',
+          borderColor: '#A0A0A0',
+          borderWidth: 1,
+          barPercentage: 0.7,
+          categoryPercentage: 0.6,
+        },
+        {
+          label: 'sourcebook (avg time)',
+          data: [149, 114, 183, 184],
+          backgroundColor: 'rgba(0, 255, 65, 0.4)',
+          borderColor: '#00FF41',
+          borderWidth: 1,
+          barPercentage: 0.7,
+          categoryPercentage: 0.6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: textColor, font: { family: 'Space Grotesk', size: 11 } },
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Average completion time by language (seconds, lower is better)',
+          color: textColor,
+          font: { family: 'Space Grotesk', size: 12, weight: '600' },
+          padding: { bottom: 16 }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: textColor, font: { family: 'Space Grotesk', size: 12 } },
+          grid: { color: gridColor },
+        },
+        y: {
+          title: { display: true, text: 'Time (seconds)', color: textColor, font: { family: 'Space Grotesk', size: 11 } },
+          ticks: { color: textColor, font: { family: 'Space Grotesk', size: 10 } },
+          grid: { color: gridColor },
+          min: 0,
+          max: 300,
+        }
+      }
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', renderCharts);
+</script>
+
+<!-- Theme toggle -->
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.remove('light', 'dark');
+  html.classList.add(isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? 'dark_mode' : 'light_mode';
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    const toggle = document.querySelector('[onclick="toggleTheme()"]');
+    if (toggle) toggle.textContent = 'light_mode';
+  }
+})();
+</script>
+
+<!--
+TWEET HIGHLIGHTS — extract as needed:
+
+1. HEADLINE:
+19 tasks. 10 repos. 4 languages.
+sourcebook context was faster than expert-written briefs 68% of the time.
+the secret: only include what agents can't discover by reading files.
+
+2. CLAP STORY:
+gave an AI agent a Rust parser bug to fix.
+no context: 0 lines. gave up.
+sourcebook: 86 lines. 100% correct files.
+some codebases need a map.
+
+3. FASTAPI STORY:
+human-written context for FastAPI led the agent to the wrong file (0% overlap).
+auto-generated structural analysis led it to the right file (100% overlap).
+knowing a framework ≠ knowing a specific codebase.
+
+4. ETH ZURICH REBUTTAL:
+"auto-generated context hurts agent performance" — ETH Zurich, 2025
+true — if you auto-generate obvious things.
+we stripped everything discoverable. kept only structural signals.
+result: 16% faster than handwritten. across 19 tasks.
+the problem was never auto-generation. it was what you auto-generate.
+
+5. BUBBLETEA:
+Go rendering bug. 57 seconds with sourcebook. 252 seconds with handwritten notes.
+import graph analysis showed the agent exactly where the rendering pipeline lives.
+4.4x faster. same correct fix.
+-->
+</body>
+</html>
