@@ -308,8 +308,8 @@ TOTAL_OUTPUT_TOKENS=$(python3 -c "import json; print(json.load(open('$RUN_DIR/ag
 TOOL_CALLS=$(python3 -c "import json; print(json.load(open('$RUN_DIR/agent_metrics.json'))['tool_calls'])" 2>/dev/null || echo "0")
 TURNS=$(python3 -c "import json; print(json.load(open('$RUN_DIR/agent_metrics.json'))['turns'])" 2>/dev/null || echo "0")
 
-# Step 7: Quality scoring
-echo "[7/7] Scoring quality..."
+# Step 7: Accuracy scoring
+echo "[7/7] Scoring accuracy..."
 
 # Score: did the agent produce any meaningful changes?
 PRODUCED_PATCH="false"
@@ -317,69 +317,155 @@ if [ "$PATCH_LINES" -gt 0 ]; then
   PRODUCED_PATCH="true"
 fi
 
-# Correctness: compare changed files against reference PR
-REF_FILES=""
-FILE_OVERLAP=0
-FILE_OVERLAP_RATIO="0"
+# Accuracy: compare changed files against reference PR
+# Metrics: recall (did agent touch the right files?), precision (did it avoid wrong files?)
 if [ -n "$PR_NUMBER" ]; then
-  REF_FILES=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json files 2>/dev/null | python3 -c "
-import sys, json
-d = json.load(sys.stdin)
-for f in d.get('files', []):
-    # Skip test files for overlap scoring (agent may or may not add tests)
-    print(f['path'])
-" 2>/dev/null || true)
-
-  if [ -n "$REF_FILES" ]; then
-    echo "$REF_FILES" > "$RUN_DIR/reference_files.txt"
-    AGENT_FILES=$(cat "$RUN_DIR/files_changed.txt" 2>/dev/null | grep -v "CLAUDE.md\|AGENTS.md\|\.cursorrules" || true)
-
-    # Count source file overlap (exclude test files for fairer comparison)
-    REF_SOURCE=$(echo "$REF_FILES" | grep -v "test" | sort)
-    AGENT_SOURCE=$(echo "$AGENT_FILES" | grep -v "test" | sort)
-    if [ -n "$REF_SOURCE" ] && [ -n "$AGENT_SOURCE" ]; then
-      OVERLAP=$(comm -12 <(echo "$REF_SOURCE") <(echo "$AGENT_SOURCE") | wc -l | tr -d ' ')
-      REF_COUNT=$(echo "$REF_SOURCE" | wc -l | tr -d ' ')
-      FILE_OVERLAP=$OVERLAP
-      FILE_OVERLAP_RATIO=$(python3 -c "print(f'{$OVERLAP/$REF_COUNT:.2f}')" 2>/dev/null || echo "0")
-    fi
-    echo "Reference PR #$PR_NUMBER: $(echo "$REF_FILES" | wc -l | tr -d ' ') files"
-    echo "File overlap (source): $FILE_OVERLAP ($FILE_OVERLAP_RATIO)"
-  fi
+  gh pr view "$PR_NUMBER" --repo "$REPO" --json files 2>/dev/null > "$RUN_DIR/pr_files.json" || true
 fi
 
-# Write full summary
-cat > "$RUN_DIR/summary.json" << SUMEOF
-{
-  "repo": "$REPO",
-  "issue": $ISSUE,
-  "issue_title": $(python3 -c "import json; print(json.dumps('$ISSUE_TITLE'))"),
-  "condition": "$CONDITION",
-  "run_id": "$RUN_ID",
-  "model": "$CLAUDE_MODEL",
-  "repo_sha": "$CURRENT_SHA",
-  "agent_time_ms": $AGENT_MS,
-  "patch_lines": $PATCH_LINES,
-  "files_changed": $FILES_CHANGED,
-  "input_tokens": $TOTAL_INPUT_TOKENS,
-  "output_tokens": $TOTAL_OUTPUT_TOKENS,
-  "tool_calls": $TOOL_CALLS,
-  "turns": $TURNS,
-  "produced_patch": $PRODUCED_PATCH,
-  "pr_number": ${PR_NUMBER:-0},
-  "file_overlap": $FILE_OVERLAP,
-  "file_overlap_ratio": $FILE_OVERLAP_RATIO,
-  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+RUN_DIR="$RUN_DIR" python3 << 'SCORE_EOF' > "$RUN_DIR/accuracy.json"
+import json, os
+
+run_dir = os.environ.get("RUN_DIR", "")
+pr_files_path = os.path.join(run_dir, "pr_files.json")
+agent_files_path = os.path.join(run_dir, "files_changed.txt")
+
+def is_test_file(f):
+    parts = f.lower().split("/")
+    name = parts[-1] if parts else ""
+    return ("test" in name or "_test." in name or ".test." in name or
+            "test/" in f.lower() or "tests/" in f.lower() or
+            "__tests__/" in f.lower() or "spec/" in f.lower())
+
+def is_context_file(f):
+    name = f.split("/")[-1] if f else ""
+    return name in ("CLAUDE.md", "AGENTS.md", ".cursorrules",
+                     "copilot-instructions.md", ".github/copilot-instructions.md")
+
+# Load reference PR files
+ref_all = []
+try:
+    with open(pr_files_path) as f:
+        data = json.load(f)
+        ref_all = [fi["path"] for fi in data.get("files", [])]
+except (FileNotFoundError, json.JSONDecodeError, KeyError):
+    pass
+
+# Load agent files
+agent_all = []
+try:
+    with open(agent_files_path) as f:
+        agent_all = [line.strip() for line in f if line.strip()]
+except FileNotFoundError:
+    pass
+
+# Filter to source files only (exclude tests and context files)
+ref_source = sorted(set(f for f in ref_all if not is_test_file(f)))
+agent_source = sorted(set(f for f in agent_all if not is_test_file(f) and not is_context_file(f)))
+
+# Save reference files
+ref_path = os.path.join(run_dir, "reference_files.txt")
+with open(ref_path, "w") as f:
+    f.write("\n".join(ref_all) + "\n" if ref_all else "")
+
+# Compute accuracy metrics
+ref_set = set(ref_source)
+agent_set = set(agent_source)
+
+overlap = ref_set & agent_set
+agent_extra = agent_set - ref_set
+
+recall = len(overlap) / len(ref_set) if ref_set else 0.0
+precision = len(overlap) / len(agent_set) if agent_set else 0.0
+f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+
+result = {
+    "ref_source_files": sorted(ref_set),
+    "agent_source_files": sorted(agent_set),
+    "overlap_files": sorted(overlap),
+    "agent_extra_files": sorted(agent_extra),
+    "ref_source_count": len(ref_set),
+    "agent_source_count": len(agent_set),
+    "overlap_count": len(overlap),
+    "recall": round(recall, 4),
+    "precision": round(precision, 4),
+    "f1": round(f1, 4),
+    "produced_patch": len(agent_all) > 0
 }
+
+print(json.dumps(result, indent=2))
+SCORE_EOF
+
+# Extract metrics for summary
+RECALL=$(python3 -c "import json; print(json.load(open('$RUN_DIR/accuracy.json'))['recall'])" 2>/dev/null || echo "0")
+PRECISION=$(python3 -c "import json; print(json.load(open('$RUN_DIR/accuracy.json'))['precision'])" 2>/dev/null || echo "0")
+F1=$(python3 -c "import json; print(json.load(open('$RUN_DIR/accuracy.json'))['f1'])" 2>/dev/null || echo "0")
+FILE_OVERLAP=$(python3 -c "import json; print(json.load(open('$RUN_DIR/accuracy.json'))['overlap_count'])" 2>/dev/null || echo "0")
+FILE_OVERLAP_RATIO="$RECALL"
+
+echo "Recall:    $RECALL (did agent touch the right files?)"
+echo "Precision: $PRECISION (did agent avoid wrong files?)"
+echo "F1:        $F1"
+
+# Write full summary (python handles all JSON escaping)
+ISSUE_JSON_PATH="$RUN_DIR/issue.json" \
+ACCURACY_JSON_PATH="$RUN_DIR/accuracy.json" \
+S_REPO="$REPO" S_ISSUE="$ISSUE" S_CONDITION="$CONDITION" \
+S_RUN_ID="$RUN_ID" S_MODEL="$CLAUDE_MODEL" S_SHA="$CURRENT_SHA" \
+S_TIME_MS="$AGENT_MS" S_PATCH="$PATCH_LINES" S_FILES="$FILES_CHANGED" \
+S_INPUT="$TOTAL_INPUT_TOKENS" S_OUTPUT="$TOTAL_OUTPUT_TOKENS" \
+S_TOOLS="$TOOL_CALLS" S_TURNS="$TURNS" S_PR="${PR_NUMBER:-0}" \
+python3 << 'SUMEOF' > "$RUN_DIR/summary.json"
+import json, os
+from datetime import datetime, timezone
+
+# Load issue title safely from JSON
+title = ""
+try:
+    with open(os.environ["ISSUE_JSON_PATH"]) as f:
+        title = json.load(f).get("title", "")
+except: pass
+
+# Load accuracy metrics
+acc = {}
+try:
+    with open(os.environ["ACCURACY_JSON_PATH"]) as f:
+        acc = json.load(f)
+except: pass
+
+e = os.environ
+summary = {
+    "repo": e["S_REPO"],
+    "issue": int(e["S_ISSUE"]),
+    "issue_title": title,
+    "condition": e["S_CONDITION"],
+    "run_id": e["S_RUN_ID"],
+    "model": e["S_MODEL"],
+    "repo_sha": e["S_SHA"],
+    "agent_time_ms": int(e["S_TIME_MS"]),
+    "patch_lines": int(e["S_PATCH"].strip()),
+    "files_changed": int(e["S_FILES"].strip()),
+    "input_tokens": int(e["S_INPUT"]),
+    "output_tokens": int(e["S_OUTPUT"]),
+    "tool_calls": int(e["S_TOOLS"]),
+    "turns": int(e["S_TURNS"]),
+    "produced_patch": acc.get("produced_patch", False),
+    "pr_number": int(e["S_PR"]),
+    "file_overlap": acc.get("overlap_count", 0),
+    "file_overlap_ratio": acc.get("recall", 0),
+    "recall": acc.get("recall", 0),
+    "precision": acc.get("precision", 0),
+    "f1": acc.get("f1", 0),
+    "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+}
+print(json.dumps(summary, indent=2))
 SUMEOF
 
 echo ""
 echo "=== Run complete ==="
 echo "Condition:     $CONDITION"
 echo "Time:          $(( AGENT_MS / 1000 ))s"
-echo "Input tokens:  $TOTAL_INPUT_TOKENS"
-echo "Output tokens: $TOTAL_OUTPUT_TOKENS"
-echo "Tool calls:    $TOOL_CALLS"
+echo "Accuracy:      recall=$RECALL  precision=$PRECISION  f1=$F1"
 echo "Turns:         $TURNS"
 echo "Files changed: $FILES_CHANGED"
 echo "Patch lines:   $PATCH_LINES"

@@ -1,164 +1,369 @@
 #!/usr/bin/env python3
-"""Analyze sourcebook benchmark results and produce a summary report."""
+"""sourcebook benchmark analyzer — accuracy-first.
+
+Primary metric: file accuracy (recall, precision, F1).
+Secondary metrics: variance, time, failure rate.
+
+Usage:
+    python3 analyze.py [results_dir] [--since YYYY-MM-DD] [--condition sourcebook,handwritten]
+"""
 
 import json
+import math
 import os
+import re
 import sys
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+from typing import Optional, List
 
-def load_results(results_dir):
-    """Load all summary.json files from results subdirectories."""
+
+# ── Data loading ──────────────────────────────────────────────────────────────
+
+def load_results(results_dir: str, since: Optional[str] = None) -> List[dict]:
+    """Load all summary.json files, fixing known issues."""
     results = []
-    for run_dir in sorted(Path(results_dir).iterdir()):
-        summary_path = run_dir / "summary.json"
-        if summary_path.exists():
-            with open(summary_path) as f:
-                try:
-                    data = json.load(f)
-                    # Load context stats if available
-                    ctx_path = run_dir / "context_stats.json"
-                    if ctx_path.exists():
-                        with open(ctx_path) as cf:
-                            data["context_stats"] = json.load(cf)
-                    results.append(data)
-                except json.JSONDecodeError:
-                    print(f"Warning: invalid JSON in {summary_path}")
+    for entry in Path(results_dir).iterdir():
+        if not entry.is_dir():
+            continue
+        summary = entry / "summary.json"
+        if not summary.exists():
+            continue
+        try:
+            text = summary.read_text()
+            # Fix known broken JSON: empty issue_title
+            text = re.sub(r'"issue_title":\s*,', '"issue_title": "",', text)
+            data = json.loads(text)
+            if "error" in data:
+                continue
+            if since and data.get("timestamp", "")[:10] < since:
+                continue
+            results.append(data)
+        except (json.JSONDecodeError, KeyError):
+            continue
     return results
 
-def analyze(results):
-    """Compute aggregate metrics per condition."""
-    by_condition = defaultdict(list)
-    by_task = defaultdict(dict)
 
+# ── Stats helpers ─────────────────────────────────────────────────────────────
+
+def mean(values: List[float]) -> float:
+    return sum(values) / len(values) if values else 0.0
+
+def stddev(values: List[float]) -> float:
+    if len(values) < 2:
+        return 0.0
+    m = mean(values)
+    return math.sqrt(sum((x - m) ** 2 for x in values) / (len(values) - 1))
+
+def ci95(values: List[float]) -> float:
+    n = len(values)
+    if n < 2:
+        return 0.0
+    t_vals = {2: 12.706, 3: 4.303, 4: 3.182, 5: 2.776, 6: 2.571}
+    t = t_vals.get(n, 1.96)
+    return t * stddev(values) / math.sqrt(n)
+
+
+# ── Main analysis ─────────────────────────────────────────────────────────────
+
+def analyze(results_dir: str, since: Optional[str] = None,
+            conditions: Optional[List[str]] = None):
+    results = load_results(results_dir, since=since)
+    if not results:
+        print(f"No results found in {results_dir}" +
+              (f" since {since}" if since else ""))
+        return
+
+    if conditions is None:
+        conditions = ["none", "handwritten", "sourcebook"]
+
+    # Group by (repo, issue, condition)
+    groups = defaultdict(list)
     for r in results:
-        condition = r["condition"]
-        task_key = f"{r['repo']}#{r['issue']}"
-        by_condition[condition].append(r)
-        by_task[task_key][condition] = r
+        key = (r["repo"], r["issue"], r["condition"])
+        groups[key].append(r)
 
-    print("=" * 70)
-    print("SOURCEBOOK BENCHMARK RESULTS")
-    print("=" * 70)
+    # Unique tasks
+    tasks = sorted(set((r["repo"], r["issue"]) for r in results))
+
+    # ── 1. ACCURACY REPORT ────────────────────────────────────────────────
+
+    print("=" * 76)
+    print("  ACCURACY REPORT — File Overlap with Reference PR")
+    print("=" * 76)
+    print()
+    print("  Primary metric: did the agent edit the right files?")
+    print("  Recall = right files touched / right files in reference PR")
+    print("  Precision = right files touched / all files agent touched")
     print()
 
-    # Per-condition aggregates
-    print("## Aggregate Metrics by Condition")
-    print()
-    print(f"{'Condition':<15} {'Tasks':>6} {'Avg Tokens':>12} {'Avg Time(s)':>12} {'Avg Patch':>10} {'Context Tokens':>15}")
-    print("-" * 70)
+    # Per-condition aggregate accuracy
+    cond_recalls = defaultdict(list)
+    cond_precisions = defaultdict(list)
+    cond_f1s = defaultdict(list)
+    cond_failures = defaultdict(int)  # produced_patch = false
+    cond_zeros = defaultdict(int)     # recall = 0
 
-    for condition in ["none", "repomix", "sourcebook"]:
-        runs = by_condition.get(condition, [])
-        if not runs:
+    for (repo, issue, cond), runs in groups.items():
+        if cond not in conditions:
             continue
-
-        n = len(runs)
-        avg_tokens = sum(r.get("input_tokens", 0) + r.get("output_tokens", 0) for r in runs) / n
-        avg_time = sum(r.get("agent_time_ms", 0) for r in runs) / n / 1000
-        avg_patch = sum(r.get("patch_lines", 0) for r in runs) / n
-
-        ctx_tokens = []
         for r in runs:
-            if "context_stats" in r:
-                ctx_tokens.append(r["context_stats"].get("tokens", 0))
+            recall = r.get("recall", r.get("file_overlap_ratio", None))
+            precision = r.get("precision", None)
+            f1 = r.get("f1", None)
 
-        avg_ctx = sum(ctx_tokens) / len(ctx_tokens) if ctx_tokens else 0
+            # Coerce types
+            def to_float(v):
+                if v is None:
+                    return None
+                if isinstance(v, str):
+                    return float(v) if v.strip() else None
+                return float(v)
 
-        print(f"{condition:<15} {n:>6} {avg_tokens:>12,.0f} {avg_time:>12.1f} {avg_patch:>10.0f} {avg_ctx:>15,.0f}")
+            recall = to_float(recall)
+            precision = to_float(precision)
+            f1 = to_float(f1)
 
-    print()
+            # Skip runs with no overlap data (task didn't have reference files)
+            if recall is None:
+                continue
 
-    # Per-task comparison
-    print("## Per-Task Comparison")
-    print()
-    print(f"{'Task':<35} {'none tokens':>12} {'repomix':>12} {'sourcebook':>12} {'SB savings':>12}")
-    print("-" * 83)
+            cond_recalls[cond].append(recall)
+            if precision is not None:
+                cond_precisions[cond].append(precision)
+            if f1 is not None:
+                cond_f1s[cond].append(f1)
 
-    total_none = 0
-    total_repomix = 0
-    total_sb = 0
-    paired_count = 0
+            if not r.get("produced_patch", True):
+                cond_failures[cond] += 1
+            if recall == 0:
+                cond_zeros[cond] += 1
 
-    for task_key in sorted(by_task.keys()):
-        conditions = by_task[task_key]
+    # Summary table
+    print(f"  {'Condition':<14} {'N':>4} {'Recall':>8} {'Precision':>10} {'F1':>6}"
+          f" {'Perfect':>8} {'Zero':>6} {'No Patch':>9}")
+    print("  " + "-" * 68)
 
-        none_tokens = conditions.get("none", {}).get("input_tokens", 0) + conditions.get("none", {}).get("output_tokens", 0)
-        repomix_tokens = conditions.get("repomix", {}).get("input_tokens", 0) + conditions.get("repomix", {}).get("output_tokens", 0)
-        sb_tokens = conditions.get("sourcebook", {}).get("input_tokens", 0) + conditions.get("sourcebook", {}).get("output_tokens", 0)
+    for cond in conditions:
+        recalls = cond_recalls.get(cond, [])
+        if not recalls:
+            continue
+        precisions = cond_precisions.get(cond, [])
+        f1s = cond_f1s.get(cond, [])
+        perfect = sum(1 for r in recalls if r >= 1.0)
+        zeros = cond_zeros.get(cond, 0)
+        failures = cond_failures.get(cond, 0)
+        n = len(recalls)
 
-        savings = ""
-        if none_tokens > 0 and sb_tokens > 0:
-            pct = ((none_tokens - sb_tokens) / none_tokens) * 100
-            savings = f"{pct:+.1f}%"
-            total_none += none_tokens
-            total_sb += sb_tokens
-            total_repomix += repomix_tokens
-            paired_count += 1
+        print(f"  {cond:<14} {n:>4} {mean(recalls):>7.0%}"
+              f" {mean(precisions):>9.0%} {mean(f1s):>6.0%}"
+              f" {perfect:>7}/{n} {zeros:>5}/{n} {failures:>8}/{n}")
 
-        # Truncate task key for display
-        display_key = task_key[:33] + ".." if len(task_key) > 35 else task_key
-
-        print(f"{display_key:<35} {none_tokens:>12,} {repomix_tokens:>12,} {sb_tokens:>12,} {savings:>12}")
-
-    if paired_count > 0:
-        print("-" * 83)
-        overall_savings = ((total_none - total_sb) / total_none) * 100 if total_none > 0 else 0
-        print(f"{'TOTAL':<35} {total_none:>12,} {total_repomix:>12,} {total_sb:>12,} {overall_savings:>+11.1f}%")
-
-    print()
-
-    # Context file size comparison
-    print("## Context File Size Comparison")
-    print()
-    repomix_ctx = [r["context_stats"]["tokens"] for r in by_condition.get("repomix", []) if "context_stats" in r]
-    sb_ctx = [r["context_stats"]["tokens"] for r in by_condition.get("sourcebook", []) if "context_stats" in r]
-
-    if repomix_ctx and sb_ctx:
-        avg_repomix = sum(repomix_ctx) / len(repomix_ctx)
-        avg_sb = sum(sb_ctx) / len(sb_ctx)
-        ratio = avg_repomix / avg_sb if avg_sb > 0 else 0
-        print(f"Average Repomix context:    {avg_repomix:>12,.0f} tokens")
-        print(f"Average sourcebook context: {avg_sb:>12,.0f} tokens")
-        print(f"Ratio:                      {ratio:>12,.0f}x smaller")
+    # ── 2. DIVERGENCE POINTS ──────────────────────────────────────────────
 
     print()
-    print("=" * 70)
+    print("  DIVERGENCE POINTS — where conditions disagree on file accuracy")
+    print("  " + "-" * 68)
 
-    # Write machine-readable summary
-    summary = {
-        "total_tasks": len(by_task),
-        "conditions": {},
-        "paired_comparisons": paired_count,
-    }
-    for condition in ["none", "repomix", "sourcebook"]:
-        runs = by_condition.get(condition, [])
-        if runs:
-            n = len(runs)
-            summary["conditions"][condition] = {
-                "n": n,
-                "avg_total_tokens": sum(r.get("input_tokens", 0) + r.get("output_tokens", 0) for r in runs) / n,
-                "avg_time_ms": sum(r.get("agent_time_ms", 0) for r in runs) / n,
-                "avg_patch_lines": sum(r.get("patch_lines", 0) for r in runs) / n,
-            }
+    divergences = []
+    for repo, issue in tasks:
+        task_recalls = {}
+        for cond in conditions:
+            runs = groups.get((repo, issue, cond), [])
+            if runs:
+                recalls = []
+                for r in runs:
+                    v = r.get("recall", r.get("file_overlap_ratio", None))
+                    if v is not None:
+                        recalls.append(float(v) if isinstance(v, (int, float, str)) and str(v).strip() else 0)
+                if recalls:
+                    task_recalls[cond] = mean(recalls)
 
-    summary_path = Path(results_dir) / "benchmark_summary.json"
-    with open(summary_path, "w") as f:
-        json.dump(summary, f, indent=2)
-    print(f"\nMachine-readable summary: {summary_path}")
+        if len(task_recalls) < 2:
+            continue
+        vals = list(task_recalls.values())
+        if max(vals) - min(vals) > 0.01:  # non-trivial divergence
+            repo_short = repo.split("/")[-1]
+            parts = []
+            for cond in conditions:
+                if cond in task_recalls:
+                    parts.append(f"{cond}={task_recalls[cond]:.0%}")
+            divergences.append((repo_short, issue, parts, task_recalls))
+            print(f"  {repo_short} #{issue}: {', '.join(parts)}")
 
+    if not divergences:
+        print("  (all conditions agree on file accuracy)")
+
+    # ── 3. VARIANCE REPORT ────────────────────────────────────────────────
+
+    print()
+    print("=" * 76)
+    print("  VARIANCE REPORT — Completion Time Consistency")
+    print("=" * 76)
+    print()
+
+    # Only show tasks with repeat runs
+    repeat_tasks = []
+    for repo, issue in tasks:
+        for cond in conditions:
+            runs = groups.get((repo, issue, cond), [])
+            if len(runs) >= 2:
+                repeat_tasks.append((repo, issue))
+                break
+
+    if not repeat_tasks:
+        print("  No repeat-run data found. Run benchmark/run-repeats.sh for variance data.")
+    else:
+        for repo, issue in sorted(set(repeat_tasks)):
+            repo_short = repo.split("/")[-1]
+            print(f"  {repo_short} #{issue}")
+            print(f"  {'Condition':<14} {'N':>3} {'Mean':>7} {'StdDev':>8} {'Range':>14}")
+
+            sb_sd = hw_sd = None
+            for cond in conditions:
+                runs = groups.get((repo, issue, cond), [])
+                if not runs:
+                    continue
+                times = [r["agent_time_ms"] / 1000 for r in runs]
+                m = mean(times)
+                sd = stddev(times)
+                range_str = f"{min(times):.0f}-{max(times):.0f}s" if len(times) > 1 else f"{times[0]:.0f}s"
+                sd_str = f"{sd:.0f}s" if sd > 0 else "-"
+
+                if cond == "sourcebook":
+                    sb_sd = sd
+                elif cond == "handwritten":
+                    hw_sd = sd
+
+                print(f"  {cond:<14} {len(times):>3} {m:>6.0f}s {sd_str:>8} {range_str:>14}")
+
+            if sb_sd is not None and hw_sd is not None and hw_sd > 0:
+                reduction = ((hw_sd - sb_sd) / hw_sd) * 100
+                print(f"  Variance reduction: {reduction:+.0f}% ({'tighter' if reduction > 0 else 'wider'})")
+            print()
+
+    # ── 4. FAILURE MODES ──────────────────────────────────────────────────
+
+    print("=" * 76)
+    print("  FAILURE MODES")
+    print("=" * 76)
+    print()
+
+    failure_stories = []
+    for (repo, issue, cond), runs in groups.items():
+        if cond not in conditions:
+            continue
+        for r in runs:
+            recall = r.get("recall", r.get("file_overlap_ratio", None))
+            if recall is None:
+                continue  # no reference data — can't score
+            if isinstance(recall, str):
+                recall = float(recall) if recall.strip() else 0
+            else:
+                recall = float(recall)
+            patch = r.get("patch_lines", 0)
+            if isinstance(patch, str):
+                patch = int(patch.strip()) if patch.strip() else 0
+
+            if patch == 0 or recall == 0:
+                repo_short = repo.split("/")[-1]
+                mode = "NO PATCH" if patch == 0 else "WRONG FILES"
+                failure_stories.append((repo_short, issue, cond, mode,
+                                       r.get("agent_time_ms", 0) / 1000,
+                                       r.get("turns", 0)))
+
+    if failure_stories:
+        print(f"  {'Task':<25} {'Condition':<14} {'Mode':<13} {'Time':>6} {'Turns':>6}")
+        print("  " + "-" * 68)
+        for repo_short, issue, cond, mode, time, turns in sorted(failure_stories):
+            print(f"  {repo_short} #{issue:<8} {cond:<14} {mode:<13} {time:>5.0f}s {turns:>5}")
+    else:
+        print("  No failures detected.")
+
+    # ── 5. SCORECARD ──────────────────────────────────────────────────────
+
+    print()
+    print("=" * 76)
+    print("  SCORECARD — sourcebook vs handwritten")
+    print("=" * 76)
+    print()
+
+    sb_recalls = cond_recalls.get("sourcebook", [])
+    hw_recalls = cond_recalls.get("handwritten", [])
+    sb_prec = cond_precisions.get("sourcebook", [])
+    hw_prec = cond_precisions.get("handwritten", [])
+
+    if sb_recalls and hw_recalls:
+        print(f"  Metric              sourcebook     handwritten")
+        print(f"  " + "-" * 48)
+        print(f"  Avg recall          {mean(sb_recalls):>8.0%}        {mean(hw_recalls):>8.0%}")
+        print(f"  Avg precision       {mean(sb_prec):>8.0%}        {mean(hw_prec):>8.0%}")
+        print(f"  Perfect accuracy    {sum(1 for r in sb_recalls if r >= 1.0):>5}/{len(sb_recalls)}"
+              f"         {sum(1 for r in hw_recalls if r >= 1.0):>5}/{len(hw_recalls)}")
+        print(f"  Zero accuracy       {sum(1 for r in sb_recalls if r == 0):>5}/{len(sb_recalls)}"
+              f"         {sum(1 for r in hw_recalls if r == 0):>5}/{len(hw_recalls)}")
+        print(f"  No patch produced   {cond_failures.get('sourcebook', 0):>5}/{len(sb_recalls)}"
+              f"         {cond_failures.get('handwritten', 0):>5}/{len(hw_recalls)}")
+
+        # Per-task accuracy wins
+        sb_wins = hw_wins = ties = 0
+        for repo, issue in tasks:
+            sb_runs = groups.get((repo, issue, "sourcebook"), [])
+            hw_runs = groups.get((repo, issue, "handwritten"), [])
+            if not sb_runs or not hw_runs:
+                continue
+
+            def get_recalls(runs):
+                vals = []
+                for r in runs:
+                    v = r.get("recall", r.get("file_overlap_ratio", None))
+                    if v is not None:
+                        vals.append(float(v) if isinstance(v, (int, float)) else
+                                    (float(v) if isinstance(v, str) and v.strip() else 0))
+                return vals
+
+            sb_vals = get_recalls(sb_runs)
+            hw_vals = get_recalls(hw_runs)
+            if not sb_vals or not hw_vals:
+                continue
+            sb_r = mean(sb_vals)
+            hw_r = mean(hw_vals)
+            if sb_r > hw_r + 0.01:
+                sb_wins += 1
+            elif hw_r > sb_r + 0.01:
+                hw_wins += 1
+            else:
+                ties += 1
+
+        total = sb_wins + hw_wins + ties
+        print()
+        print(f"  Accuracy wins:      {sb_wins}/{total}"
+              f"            {hw_wins}/{total}")
+        print(f"  Ties:               {ties}/{total}")
+
+    print()
+    print("=" * 76)
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python analyze.py <results_dir>")
-        sys.exit(1)
+    since = None
+    conds = None
+    positional = []
+    i = 1
+    while i < len(sys.argv):
+        if sys.argv[i] == "--since" and i + 1 < len(sys.argv):
+            since = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == "--condition" and i + 1 < len(sys.argv):
+            conds = sys.argv[i + 1].split(",")
+            i += 2
+        else:
+            positional.append(sys.argv[i])
+            i += 1
 
-    results_dir = sys.argv[1]
-    results = load_results(results_dir)
+    results_dir = positional[0] if positional else os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "results")
 
-    if not results:
-        print(f"No results found in {results_dir}")
-        print("Run the benchmark first: ./run-all.sh")
-        sys.exit(1)
-
-    analyze(results)
+    analyze(results_dir, since=since, conditions=conds)
