@@ -45,6 +45,7 @@
     "logo-400x400.png"
   ],
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "chalk": "^5.4.0",
     "commander": "^13.0.0",
