@@ -13,6 +13,7 @@ import { activate } from "./commands/activate.js";
 import { truth } from "./commands/truth.js";
 import { preflight, preflightForFile } from "./commands/preflight.js";
 import { hooks } from "./commands/hooks.js";
+import { check } from "./commands/check.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pkgVersion = (
@@ -159,6 +160,18 @@ program
   .description("Generate Claude Code hooks configuration for the sourcebook agent harness")
   .option("-d, --dir <path>", "Target directory", ".")
   .action((options) => hooks(options));
+
+program
+  .command("check")
+  .description("Check a git diff for potentially missing file updates")
+  .argument("[path]", "Target directory to analyze (same as --dir)")
+  .option("-d, --dir <path>", "Target directory to analyze", ".")
+  .option("--ai", "Run AI-powered analysis on top of rules-based checks")
+  .option("--json", "Output as JSON")
+  .action((pathArg, options) => {
+    if (pathArg) options.dir = pathArg;
+    return check(options);
+  });
 
 program
   .command("activate <key>")
