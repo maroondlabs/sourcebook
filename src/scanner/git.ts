@@ -69,6 +69,76 @@ export async function analyzeGitHistory(dir: string): Promise<GitAnalysis> {
   return { findings, activeAreas, revertedPatterns, coChangeClusters };
 }
 
+/**
+ * Get all co-change pairs including same-directory files.
+ * Used by preflight — the regular scanner filters same-dir pairs out
+ * because they're "obvious," but preflight needs them for companion detection.
+ * Returns [fileA, fileB, coChangeCount, jaccardStrength].
+ */
+export function getFullCoChangePairs(
+  dir: string
+): { fileA: string; fileB: string; count: number; strength: number }[] {
+  if (!isGitRepo(dir)) return [];
+
+  const log = git(
+    dir,
+    ["log", "--name-only", "--pretty=format:COMMIT", "--since=6 months ago", "-200"]
+  );
+
+  if (!log.trim()) return [];
+
+  const commits: string[][] = [];
+  let current: string[] = [];
+
+  for (const line of log.split("\n")) {
+    if (line.trim() === "COMMIT") {
+      if (current.length > 0) commits.push(current);
+      current = [];
+    } else if (line.trim() && !line.includes("node_modules")) {
+      current.push(line.trim());
+    }
+  }
+  if (current.length > 0) commits.push(current);
+
+  const sourceExts = new Set([".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs"]);
+  const pairCounts = new Map<string, number>();
+  const fileCounts = new Map<string, number>();
+
+  for (const commit of commits) {
+    const sourceFiles = commit.filter((f) =>
+      sourceExts.has(path.extname(f).toLowerCase())
+    );
+    if (sourceFiles.length > 20 || sourceFiles.length < 2) continue;
+
+    for (const file of sourceFiles) {
+      fileCounts.set(file, (fileCounts.get(file) || 0) + 1);
+    }
+
+    for (let i = 0; i < sourceFiles.length; i++) {
+      for (let j = i + 1; j < sourceFiles.length; j++) {
+        const pair = [sourceFiles[i], sourceFiles[j]].sort().join("|||");
+        pairCounts.set(pair, (pairCounts.get(pair) || 0) + 1);
+      }
+    }
+  }
+
+  const results: { fileA: string; fileB: string; count: number; strength: number }[] = [];
+  for (const [pairKey, count] of pairCounts) {
+    if (count < 2) continue; // Lower threshold than CLAUDE.md generator (2 vs 3)
+    const [fileA, fileB] = pairKey.split("|||");
+    const countA = fileCounts.get(fileA) || 0;
+    const countB = fileCounts.get(fileB) || 0;
+    const strength = count / (countA + countB - count);
+
+    if (strength > 0.2) { // Lower threshold for preflight
+      results.push({ fileA, fileB, count, strength });
+    }
+  }
+
+  results.sort((a, b) => b.strength - a.strength);
+  return results;
+}
+
 function isGitRepo(dir: string): boolean {
   try {
     execFileSync("git", ["rev-parse", "--is-inside-work-tree"], {

@@ -11,6 +11,8 @@ import { watch } from "./commands/watch.js";
 import { ask } from "./commands/ask.js";
 import { activate } from "./commands/activate.js";
 import { truth } from "./commands/truth.js";
+import { preflight, preflightForFile } from "./commands/preflight.js";
+import { hooks } from "./commands/hooks.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pkgVersion = (
@@ -125,6 +127,38 @@ program
     if (pathArg) options.dir = pathArg;
     return truth(options);
   });
+
+program
+  .command("preflight")
+  .description("Analyze a task or file edit against repo structure and suggest companion files")
+  .argument("[task]", "Task description or issue text (omit if using --file)")
+  .option("-d, --dir <path>", "Target directory to analyze", ".")
+  .option("-f, --file <path>", "File being edited (for hook-based companion detection)")
+  .option("--json", "Output as JSON")
+  .action((task, options) => {
+    if (options.file) {
+      preflightForFile(options.file, options).then((companions) => {
+        if (options.json) {
+          console.log(JSON.stringify(companions, null, 2));
+        } else {
+          for (const c of companions) {
+            console.log(`${c.file} (${(c.confidence * 100).toFixed(0)}%) — ${c.reason}`);
+          }
+        }
+      });
+    } else if (task) {
+      preflight(task, options);
+    } else {
+      console.error("Error: provide a task description or --file path");
+      process.exit(1);
+    }
+  });
+
+program
+  .command("hooks")
+  .description("Generate Claude Code hooks configuration for the sourcebook agent harness")
+  .option("-d, --dir <path>", "Target directory", ".")
+  .action((options) => hooks(options));
 
 program
   .command("activate <key>")

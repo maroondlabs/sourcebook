@@ -465,13 +465,20 @@ export function resolvePythonImport(
   const base = baseDir ? `${baseDir}/${modPath}` : modPath;
   const normalized = base.replace(/^\.\//, "");
 
-  const candidates = [
-    `${normalized}.py`,
-    `${normalized}/__init__.py`,
-  ];
+  // Try direct resolution first, then with common source prefixes (lib/, src/)
+  // Python projects like ansible keep source under lib/; others use src/
+  const prefixes = ["", "lib/", "src/"];
 
-  for (const candidate of candidates) {
-    if (pyFileSet.has(candidate)) return candidate;
+  for (const prefix of prefixes) {
+    const prefixed = prefix ? `${prefix}${normalized}` : normalized;
+    const candidates = [
+      `${prefixed}.py`,
+      `${prefixed}/__init__.py`,
+    ];
+
+    for (const candidate of candidates) {
+      if (pyFileSet.has(candidate)) return candidate;
+    }
   }
 
   return null;
