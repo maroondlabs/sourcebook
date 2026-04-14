@@ -2,6 +2,75 @@
 
 All notable changes to sourcebook are documented here.
 
+## [0.13.0] — 2026-04-14
+
+### New Commands
+- **`sourcebook check`** — analyze git diffs for incomplete changes. Checks co-change companions, missing test files, import graph siblings, and hub file blast radius. No LLM, under a second.
+- **`sourcebook check --ai`** — AI-powered semantic analysis via Claude Sonnet with completeness gate. Catches cross-module dependencies, field renames needing migrations, stale validation logic. Requires `ANTHROPIC_API_KEY` (BYOK). ~$0.012/run.
+- **`sourcebook init`** — one-command setup: generates CLAUDE.md/AGENTS.md + installs Claude Code hooks for automatic pre-commit checking.
+- **`sourcebook scan-history`** — retrospective scan showing co-change coupling patterns and active areas in recent commits.
+- **`sourcebook hooks`** — standalone Claude Code hook installer.
+
+### New Flags
+- `--quiet` — exit code only, no output (for CI/scripts). Exit 1 if findings, exit 0 if clean.
+- `--branch <name>` — compare HEAD against a specified branch instead of staged/unstaged changes.
+- `--threshold <n>` — override minimum co-change coupling strength to report (0-1).
+- `--json` — structured JSON output for programmatic consumption.
+
+### Scanner Improvements
+- Fixed false positive pattern detection from comments, docstrings, `.d.ts` files, and docs directories.
+- Fixed `repoMode` detection for monorepos with nested `package.json`.
+- Fixed export analysis counting `.d.ts` file exports.
+- Fixed hub detection including test files in centrality scores.
+
+### Layer B AI Analysis
+- Completeness gate: 100% accurate on tested cases (30/30 diffs).
+- 0% false positives on clean PRs.
+- 73% catch rate on missing test files, 71% on sibling modules.
+- Dependency citations required for each suggestion — no hallucinated paths.
+- File existence filtering validates all suggested paths against the actual repo.
+
+### Pricing Changes
+- All CLI features are now free. Removed Pro gate from `update` command.
+- `check --ai` uses your own Anthropic API key (BYOK) — no subscription required.
+- Teams tier (GitHub App, private repos, team analytics) replaces old $19/mo Pro tier.
+
+### Security
+- All dependency vulnerabilities resolved (0 vulnerabilities).
+- API key handling verified — never logged, never in output.
+- All git operations are read-only.
+
+## [0.12.0] — 2026-04-13
+
+### Added
+- Initial `sourcebook check` and `check --ai` implementation (Layer A rules-based + Layer B AI-powered completeness analysis).
+- `sourcebook preflight` — task-based and file-based companion file detection.
+- `sourcebook hooks` — Claude Code hooks configuration generator.
+- `getFullCoChangePairs()` — includes same-directory co-change pairs in coupling analysis.
+
+### Fixed
+- Python import resolver for `lib/` and `src/` layouts.
+- Go/Rust import graph support.
+
+## [0.11.1] — 2026-04-11
+
+### Fixed
+- Conditional Python imports (`try/except ImportError`) no longer crash the import resolver.
+- Dynamic hub count based on repo size instead of fixed threshold.
+- Facade detection for re-export files.
+
+## [0.11.0] — 2026-04-11
+
+### Added
+- Go and Rust import graph analysis.
+- Benchmark harness with repeat-run support for variance measurement.
+- `--verbose` flag to include discoverable context in output.
+
+## [0.10.0] — 2026-04-10
+
+### Added
+- `sourcebook truth` — Repo Truth Map generator. Produces a 2.5D HTML visualization showing hub files, co-change coupling, and fragile areas.
+
 ## [0.9.0] — 2026-04-08
 
 ### Added
