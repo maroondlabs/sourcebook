@@ -14,6 +14,7 @@ import { truth } from "./commands/truth.js";
 import { preflight, preflightForFile } from "./commands/preflight.js";
 import { hooks } from "./commands/hooks.js";
 import { check } from "./commands/check.js";
+import { scanHistory } from "./commands/scan-history.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pkgVersion = (
@@ -168,9 +169,38 @@ program
   .option("-d, --dir <path>", "Target directory to analyze", ".")
   .option("--ai", "Run AI-powered analysis on top of rules-based checks")
   .option("--json", "Output as JSON")
+  .option("--quiet", "Suppress all output; exit 1 if findings, exit 0 if clean")
+  .option("--branch <branch>", "Compare HEAD against this branch instead of staged/unstaged changes")
+  .option("--threshold <n>", "Minimum co-change coupling strength to report (0–1)", parseFloat)
   .action((pathArg, options) => {
     if (pathArg) options.dir = pathArg;
     return check(options);
+  });
+
+program
+  .command("scan-history")
+  .description("Scan git history for co-change coupling patterns and active areas")
+  .argument("[path]", "Target directory to analyze (same as --dir)")
+  .option("-d, --dir <path>", "Target directory to analyze", ".")
+  .option("--json", "Output as JSON")
+  .option("--top <n>", "Number of top pairs to show", parseInt)
+  .action((pathArg, options) => {
+    if (pathArg) options.dir = pathArg;
+    return scanHistory(options);
+  });
+
+program
+  .command("generate")
+  .description("Alias for 'init' — analyze a codebase and generate agent context files")
+  .argument("[path]", "Target directory to analyze (same as --dir)")
+  .option("-d, --dir <path>", "Target directory to analyze", ".")
+  .option("-f, --format <formats>", "Output formats (claude,cursor,copilot,agents,all)", "claude,agents")
+  .option("--budget <tokens>", "Max token budget for generated context", "4000")
+  .option("--dry-run", "Preview findings without writing files")
+  .option("--verbose", "Include discoverable context (stack, standard commands, obvious patterns)")
+  .action((pathArg, options) => {
+    if (pathArg) options.dir = pathArg;
+    return init(options);
   });
 
 program

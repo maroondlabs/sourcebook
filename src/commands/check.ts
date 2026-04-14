@@ -11,6 +11,9 @@ interface CheckOptions {
   dir: string;
   ai?: boolean;
   json?: boolean;
+  quiet?: boolean;
+  branch?: string;
+  threshold?: number;
 }
 
 interface LayerAWarning {
@@ -42,7 +45,11 @@ function git(dir: string, args: string[]): string {
   }
 }
 
-function getModifiedFiles(dir: string): string[] {
+function getModifiedFiles(dir: string, branch?: string): string[] {
+  if (branch) {
+    const diff = git(dir, ["diff", "--name-only", `${branch}...HEAD`]);
+    return diff.split("\n").filter(Boolean).filter((f) => SOURCE_EXTS.has(path.extname(f).toLowerCase()));
+  }
   // Collect staged + unstaged changes vs HEAD
   const staged = git(dir, ["diff", "--name-only", "--staged"]);
   const unstaged = git(dir, ["diff", "--name-only"]);
@@ -400,25 +407,26 @@ async function runLayerB(
 
 export async function check(options: CheckOptions): Promise<void> {
   const repoPath = path.resolve(options.dir);
+  const silent = options.quiet || false;
 
-  if (!options.json) {
+  if (!options.json && !silent) {
     console.log(chalk.bold("\nsourcebook check"));
     console.log(chalk.dim("Analyzing diff for completeness...\n"));
   }
 
-  const modifiedFiles = getModifiedFiles(repoPath);
+  const modifiedFiles = getModifiedFiles(repoPath, options.branch);
 
   if (modifiedFiles.length === 0) {
     if (options.json) {
       console.log(JSON.stringify({ modifiedFiles: [], warnings: [], ai: [] }, null, 2));
-    } else {
+    } else if (!silent) {
       console.log(chalk.yellow("No modified source files found in working tree."));
       console.log(chalk.dim("Make some changes first, then run sourcebook check."));
     }
     return;
   }
 
-  if (!options.json) {
+  if (!options.json && !silent) {
     console.log(
       chalk.green("✓") +
         ` Modified: ${modifiedFiles.map((f) => chalk.cyan(f)).join(", ")}`
@@ -426,10 +434,15 @@ export async function check(options: CheckOptions): Promise<void> {
     console.log(chalk.dim("Running Layer A (rules-based)..."));
   }
 
-  const [scan, coChangePairs] = await Promise.all([
+  const [scan, rawCoChangePairs] = await Promise.all([
     scanProject(repoPath),
     Promise.resolve(getFullCoChangePairs(repoPath)),
   ]);
+
+  const threshold = options.threshold ?? 0;
+  const coChangePairs = threshold > 0
+    ? rawCoChangePairs.filter((p) => p.strength >= threshold)
+    : rawCoChangePairs;
 
   const warnings = runLayerA(modifiedFiles, scan, coChangePairs);
 
@@ -437,7 +450,7 @@ export async function check(options: CheckOptions): Promise<void> {
   let tokenUsage: { input: number; output: number } | undefined;
 
   if (options.ai) {
-    if (!options.json) {
+    if (!options.json && !silent) {
       console.log(chalk.dim("Running Layer B (AI analysis)..."));
     }
     try {
@@ -448,7 +461,7 @@ export async function check(options: CheckOptions): Promise<void> {
       const msg = err instanceof Error ? err.message : String(err);
       if (options.json) {
         console.error(`AI analysis failed: ${msg}`);
-      } else {
+      } else if (!silent) {
         console.error(chalk.red(`\nAI analysis failed: ${msg}`));
         if (msg.includes("API key") || msg.includes("ANTHROPIC")) {
           console.error(
@@ -459,19 +472,26 @@ export async function check(options: CheckOptions): Promise<void> {
     }
   }
 
+  const hasFindings = warnings.length > 0 || (options.ai && aiSuggestions.length > 0);
+
+  // ── Quiet mode: exit code only ───────────────────────────────────────────
+  if (silent) {
+    process.exit(hasFindings ? 1 : 0);
+  }
+
   // ── JSON output ──────────────────────────────────────────────────────────
   if (options.json) {
     const output: Record<string, unknown> = { modifiedFiles, warnings };
     if (options.ai) output.ai = aiSuggestions;
     if (tokenUsage) output.tokenUsage = tokenUsage;
     console.log(JSON.stringify(output, null, 2));
-    return;
+    process.exit(hasFindings ? 1 : 0);
   }
 
   // ── Pretty output ────────────────────────────────────────────────────────
   console.log("");
 
-  if (warnings.length === 0 && (!options.ai || aiSuggestions.length === 0)) {
+  if (!hasFindings) {
     console.log(chalk.green("✓ No missing updates detected."));
     if (options.ai) console.log(chalk.dim("AI also found nothing to flag."));
     return;
