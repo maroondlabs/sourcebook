@@ -9,7 +9,7 @@ export async function activate(key: string) {
   if (!key || key.trim().length === 0) {
     console.log(chalk.red("\nNo license key provided."));
     console.log(chalk.dim("Usage: sourcebook activate <key>"));
-    console.log(chalk.dim("Get a key at https://sourcebook.run/pro\n"));
+    console.log(chalk.dim("Get a key at https://sourcebook.run/teams\n"));
     process.exit(1);
   }
 
@@ -34,8 +34,9 @@ export async function activate(key: string) {
     }
     console.log("");
     console.log(chalk.dim("  You now have access to:"));
-    console.log(chalk.dim("  · sourcebook update"));
-    console.log(chalk.dim("  · sourcebook watch"));
+    console.log(chalk.dim("  · Automated PR completeness checks (GitHub App)"));
+    console.log(chalk.dim("  · Private repo analysis"));
+    console.log(chalk.dim("  · Team-level co-change analytics"));
     console.log("");
   } else {
     // Validation failed — remove the saved key to prevent offline bypass

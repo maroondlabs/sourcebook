@@ -6,8 +6,6 @@ import { generateCursor, generateCursorLegacy } from "../generators/cursor.js";
 import { generateCopilot } from "../generators/copilot.js";
 import { writeOutput } from "../utils/output.js";
 import { readExisting, mergeContent, countManualSections } from "../utils/merge.js";
-import { requirePro } from "../auth/license.js";
-
 interface UpdateOptions {
   dir: string;
   format: string;
@@ -19,7 +17,6 @@ interface UpdateOptions {
  * Uses shared merge logic from utils/merge.ts.
  */
 export async function update(options: UpdateOptions) {
-  await requirePro("sourcebook update");
 
   const targetDir = path.resolve(options.dir);
   const formats = options.format.split(",").map((f) => f.trim());

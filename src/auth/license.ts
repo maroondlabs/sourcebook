@@ -158,18 +158,18 @@ export async function requirePro(feature: string): Promise<void> {
   console.log("");
   console.log(
     chalk.yellow("⚡") +
-      chalk.bold(` ${feature} requires sourcebook Pro`)
+      chalk.bold(` ${feature} requires sourcebook for Teams`)
   );
   console.log("");
   console.log(
-    chalk.dim("  sourcebook Pro includes:")
+    chalk.dim("  sourcebook for Teams includes:")
   );
-  console.log(chalk.dim("  · sourcebook update (preserve manual edits)"));
-  console.log(chalk.dim("  · Web demo (shareable analysis links)"));
-  console.log(chalk.dim("  · Priority language support"));
+  console.log(chalk.dim("  · Automated PR completeness checks (GitHub App)"));
+  console.log(chalk.dim("  · Private repo analysis"));
+  console.log(chalk.dim("  · Team-level co-change analytics"));
   console.log("");
   console.log(
-    `  ${chalk.bold("$19/mo")} → ${chalk.underline("https://sourcebook.run/pro")}`
+    `  ${chalk.underline("https://sourcebook.run/teams")}`
   );
   console.log("");
   console.log(

@@ -540,4 +540,10 @@ export async function check(options: CheckOptions): Promise<void> {
       );
     }
   }
+
+  // Soft teams CTA when findings exist
+  console.log("");
+  console.log(
+    chalk.dim("Catch these automatically on every PR → sourcebook.run/teams")
+  );
 }
