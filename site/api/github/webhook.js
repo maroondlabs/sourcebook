@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
   // Dynamic imports for ESM-only packages
   const { Octokit } = await import("octokit");
   const { createAppAuth } = await import("@octokit/auth-app");
-  const { analyzeChangedFiles } = require("./lib/analyze.js");
+  const { analyzePR } = require("./lib/analyze.js");
 
   // Authenticate as GitHub App installation
   const appId = process.env.GITHUB_APP_ID;
@@ -90,12 +90,12 @@ module.exports = async function handler(req, res) {
 
     const changedFiles = files.map((f) => f.filename);
 
-    if (changedFiles.length === 0) {
+    if (files.length === 0) {
       return res.status(200).json({ skipped: true, reason: "no changed files" });
     }
 
     // Skip very large PRs (>500 files) to avoid timeout
-    if (changedFiles.length > 500) {
+    if (files.length > 500) {
       const body = [
         "<!-- sourcebook-pr-check -->",
         "## sourcebook",
@@ -117,11 +117,11 @@ module.exports = async function handler(req, res) {
       installationId: installation.id,
     });
 
-    // Clone the repo
-    cloneDir = await cloneRepo(cloneUrl, token);
+    // Clone the PR head ref so the diff exists in git history
+    cloneDir = await cloneRepo(cloneUrl, token, pr.head.ref);
 
-    // Run sourcebook analysis
-    const analysis = await analyzeChangedFiles(cloneDir, changedFiles);
+    // Run sourcebook analysis (Layer A always; Layer B if ANTHROPIC_API_KEY set)
+    const analysis = await analyzePR(cloneDir, files);
 
     const duration = Date.now() - startTime;
 
@@ -129,16 +129,20 @@ module.exports = async function handler(req, res) {
     const commentBody = formatComment(analysis, duration);
     const result = await upsertComment(octokit, owner, repo, prNumber, commentBody);
 
+    const findingsCount =
+      (analysis.warnings?.length || 0) + (analysis.aiSuggestions?.length || 0);
+
     console.log(
-      `[sourcebook] Comment ${result.action} on PR #${prNumber} in ${(duration / 1000).toFixed(1)}s`
+      `[sourcebook] Comment ${result.action} on PR #${prNumber} in ${(duration / 1000).toFixed(1)}s · ${findingsCount} findings · AI=${analysis.aiRequested}`
     );
 
     return res.status(200).json({
       posted: true,
       commentAction: result.action,
       commentId: result.id,
-      filesAnalyzed: changedFiles.length,
-      findingsCount: analysis.fileAnalysis.length,
+      filesAnalyzed: files.length,
+      findingsCount,
+      aiRequested: analysis.aiRequested,
       duration,
     });
   } catch (err) {

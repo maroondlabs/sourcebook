@@ -2,6 +2,18 @@
 
 All notable changes to sourcebook are documented here.
 
+## [0.14.0] — 2026-04-14
+
+### Programmatic API
+- **`checkChanges()`** — public function exposing `sourcebook check` results without printing. Accepts `modifiedFiles` and `diffSource` overrides so the GitHub App webhook (and other consumers) can inject PR metadata directly instead of running `git diff`. Returns `{ modifiedFiles, warnings, aiSuggestions, tokenUsage, scan }`.
+- Exported types: `LayerAWarning`, `AISuggestion`, `CheckChangesOptions`, `CheckResult`.
+- CLI `check` command now thin-wraps `checkChanges()` — same behavior, cleaner separation.
+
+### GitHub App (sourcebook-review)
+- Webhook now uses `checkChanges()` for PR-native incomplete-change detection (Layer A + optional Layer B AI).
+- Switched repo clone from tarball to shallow `git clone --depth=200` to unlock co-change coupling analysis.
+- Comment format restructured: incomplete-change findings first, AI completeness check second, blast radius collapsed into details.
+
 ## [0.13.0] — 2026-04-14
 
 ### New Commands

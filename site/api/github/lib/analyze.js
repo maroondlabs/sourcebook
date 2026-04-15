@@ -1,12 +1,68 @@
 /**
- * Run sourcebook analysis on a cloned repo, then filter results
- * to only the files changed in the PR.
+ * Run sourcebook check + scan on a cloned repo.
+ *
+ * Uses the public `checkChanges()` API from sourcebook 0.14+.
+ * Layer A is always run (rules-based, sub-second, no API key needed).
+ * Layer B (AI completeness check) is gated on ANTHROPIC_API_KEY presence.
+ *
+ * Blast radius is computed separately so we can show it as a secondary
+ * section (file rank + dependent count) even when there are no findings.
  */
-async function analyzeChangedFiles(repoDir, changedFiles) {
-  const { scanProject } = await import("sourcebook/dist/scanner/index.js");
-  const scan = await scanProject(repoDir);
+async function analyzePR(repoDir, prFiles) {
+  const { checkChanges } = await import("sourcebook/dist/commands/check.js");
 
-  // Build lookup maps from scan data
+  const changedPaths = prFiles.map((f) => f.filename);
+
+  // Build a path → patch map so checkChanges can use real PR diffs
+  // for Layer B (AI) hunk extraction instead of running git diff.
+  const patchMap = new Map();
+  for (const f of prFiles) {
+    if (f.patch) patchMap.set(f.filename, f.patch);
+  }
+  const diffSource = (file) => patchMap.get(file) || "";
+
+  const wantsAI = !!process.env.ANTHROPIC_API_KEY;
+
+  let result;
+  try {
+    result = await checkChanges({
+      dir: repoDir,
+      modifiedFiles: changedPaths,
+      diffSource,
+      ai: wantsAI,
+    });
+  } catch (err) {
+    // If check itself blows up, still try a bare scan so we can show blast radius
+    console.error("[sourcebook] checkChanges failed:", err.message);
+    const { scanProject } = await import("sourcebook/dist/scanner/index.js");
+    const scan = await scanProject(repoDir);
+    return {
+      modifiedFiles: changedPaths,
+      warnings: [],
+      aiSuggestions: [],
+      tokenUsage: undefined,
+      blastRadius: computeBlastRadius(scan, changedPaths),
+      checkFailed: true,
+      aiRequested: wantsAI,
+    };
+  }
+
+  return {
+    modifiedFiles: result.modifiedFiles,
+    warnings: result.warnings,
+    aiSuggestions: result.aiSuggestions,
+    tokenUsage: result.tokenUsage,
+    blastRadius: result.scan ? computeBlastRadius(result.scan, changedPaths) : [],
+    checkFailed: false,
+    aiRequested: wantsAI,
+  };
+}
+
+/**
+ * Per-file rank + dependent count for changed files.
+ * Returns only files that are notable (ranked top-5 or >3 dependents).
+ */
+function computeBlastRadius(scan, changedFiles) {
   const rankedMap = new Map();
   if (scan.rankedFiles) {
     scan.rankedFiles.forEach((f, i) => {
@@ -14,121 +70,32 @@ async function analyzeChangedFiles(repoDir, changedFiles) {
     });
   }
 
-  // Count dependents for each file from import edges
   const dependentCount = new Map();
-  const dependentFiles = new Map();
   if (scan.edges) {
     for (const edge of scan.edges) {
-      const count = dependentCount.get(edge.to) || 0;
-      dependentCount.set(edge.to, count + 1);
-      const files = dependentFiles.get(edge.to) || [];
-      files.push(edge.from);
-      dependentFiles.set(edge.to, files);
+      dependentCount.set(edge.to, (dependentCount.get(edge.to) || 0) + 1);
     }
   }
 
-  // Extract co-change coupling from findings
-  const couplingFindings = scan.findings.filter(
-    (f) =>
-      f.category === "Hidden dependencies" && f.confidence === "high" && !f.discoverable
-  );
-
-  // Extract fragile file findings
-  const fragileFindings = scan.findings.filter(
-    (f) =>
-      f.category === "Fragile code" && f.confidence !== "low" && !f.discoverable
-  );
-
-  // Extract anti-pattern / revert findings
-  const antiPatternFindings = scan.findings.filter(
-    (f) =>
-      (f.category === "Anti-patterns" || f.category === "Git history") &&
-      f.confidence === "high" &&
-      !f.discoverable
-  );
-
-  // Convention findings
-  const conventionFindings = scan.findings.filter(
-    (f) =>
-      f.category.includes("convention") ||
-      f.category.includes("Convention") ||
-      f.category === "Import conventions" ||
-      f.category === "Error handling" ||
-      f.category === "Commit conventions"
-  );
-
-  // Analyze each changed file
-  const fileAnalysis = [];
+  const out = [];
   for (const file of changedFiles) {
     const ranking = rankedMap.get(file);
     const deps = dependentCount.get(file) || 0;
     const isHub = ranking && ranking.rank <= 5;
-
-    // Find co-change partners for this file
-    const coupledPartners = [];
-    for (const finding of couplingFindings) {
-      if (finding.evidence && finding.evidence.includes(file)) {
-        coupledPartners.push(finding);
-      }
-      if (
-        finding.evidenceFiles &&
-        finding.evidenceFiles.includes(file)
-      ) {
-        coupledPartners.push(finding);
-      }
-    }
-
-    // Check if file is fragile
-    const isFragile = fragileFindings.some(
-      (f) =>
-        (f.evidence && f.evidence.includes(file)) ||
-        (f.evidenceFiles && f.evidenceFiles.includes(file))
-    );
-
-    // Check for anti-patterns related to this file
-    const relatedAntiPatterns = antiPatternFindings.filter(
-      (f) =>
-        (f.evidence && f.evidence.includes(file)) ||
-        (f.evidenceFiles && f.evidenceFiles.includes(file))
-    );
-
-    // Only include files that have something worth reporting
-    if (isHub || deps > 3 || coupledPartners.length > 0 || isFragile || relatedAntiPatterns.length > 0) {
-      fileAnalysis.push({
+    if (isHub || deps > 3) {
+      out.push({
         file,
         rank: ranking ? ranking.rank : null,
         dependents: deps,
         isHub,
-        isFragile,
-        coupledPartners,
-        antiPatterns: relatedAntiPatterns,
       });
     }
   }
-
-  // Find co-change partners that are NOT in the changed files set
-  const changedSet = new Set(changedFiles);
-  const missedCouplings = [];
-  for (const finding of couplingFindings) {
-    if (!finding.evidenceFiles || finding.evidenceFiles.length < 2) continue;
-    const inPR = finding.evidenceFiles.filter((f) => changedSet.has(f));
-    const notInPR = finding.evidenceFiles.filter((f) => !changedSet.has(f));
-    if (inPR.length > 0 && notInPR.length > 0) {
-      missedCouplings.push({
-        inPR,
-        missing: notInPR,
-        description: finding.description,
-      });
-    }
-  }
-
-  return {
-    fileAnalysis,
-    missedCouplings,
-    conventions: conventionFindings.filter((f) => !f.discoverable),
-    totalFiles: scan.files.length,
-    repoMode: scan.repoMode,
-  };
+  out.sort((a, b) => {
+    if (a.isHub !== b.isHub) return a.isHub ? -1 : 1;
+    return b.dependents - a.dependents;
+  });
+  return out;
 }
 
-module.exports = { analyzeChangedFiles };
+module.exports = { analyzePR };

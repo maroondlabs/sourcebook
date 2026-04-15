@@ -16,17 +16,37 @@ interface CheckOptions {
   threshold?: number;
 }
 
-interface LayerAWarning {
+export interface LayerAWarning {
   file: string;
   confidence: "high" | "medium" | "low";
   reasoning: string;
   signal: "co-change" | "import" | "test";
 }
 
-interface AISuggestion {
+export interface AISuggestion {
   file: string;
   confidence: "high" | "medium" | "low";
   reasoning: string;
+}
+
+export interface CheckChangesOptions {
+  dir: string;
+  /** Override modified files list (skip git diff). Used by GitHub App webhook. */
+  modifiedFiles?: string[];
+  /** Override hunk extraction (e.g. inject PR patches from GitHub API). */
+  diffSource?: (file: string) => string;
+  ai?: boolean;
+  branch?: string;
+  threshold?: number;
+}
+
+export interface CheckResult {
+  modifiedFiles: string[];
+  warnings: LayerAWarning[];
+  aiSuggestions: AISuggestion[];
+  tokenUsage?: { input: number; output: number };
+  /** Full project scan — undefined only when no modified files (no scan run). */
+  scan?: ProjectScan;
 }
 
 const SOURCE_EXTS = new Set([
@@ -248,7 +268,8 @@ async function runLayerB(
   modifiedFiles: string[],
   repoPath: string,
   scan: ProjectScan,
-  coChangePairs: { fileA: string; fileB: string; count: number; strength: number }[]
+  coChangePairs: { fileA: string; fileB: string; count: number; strength: number }[],
+  diffSource?: (file: string) => string
 ): Promise<{ suggestions: AISuggestion[]; tokenUsage: { input: number; output: number } }> {
   const client = new Anthropic();
 
@@ -270,7 +291,7 @@ async function runLayerB(
   const changedSection: string[] = ["## Changed files"];
   for (const file of modifiedFiles.slice(0, 10)) {
     changedSection.push(`\n### ${file}`);
-    const hunks = getDiffHunkHeaders(repoPath, file);
+    const hunks = diffSource ? sanitizeForApi(diffSource(file)) : getDiffHunkHeaders(repoPath, file);
     if (hunks) changedSection.push(hunks);
   }
 
@@ -403,10 +424,47 @@ async function runLayerB(
   };
 }
 
+// ── Programmatic API ───────────────────────────────────────────────────────
+
+/**
+ * Run check analysis and return structured results without printing.
+ * Used by both the CLI `check` command and the GitHub App webhook.
+ */
+export async function checkChanges(opts: CheckChangesOptions): Promise<CheckResult> {
+  const repoPath = path.resolve(opts.dir);
+  const modifiedFiles = opts.modifiedFiles ?? getModifiedFiles(repoPath, opts.branch);
+
+  if (modifiedFiles.length === 0) {
+    return { modifiedFiles: [], warnings: [], aiSuggestions: [] };
+  }
+
+  const [scan, rawCoChangePairs] = await Promise.all([
+    scanProject(repoPath),
+    Promise.resolve(getFullCoChangePairs(repoPath)),
+  ]);
+
+  const threshold = opts.threshold ?? 0;
+  const coChangePairs = threshold > 0
+    ? rawCoChangePairs.filter((p) => p.strength >= threshold)
+    : rawCoChangePairs;
+
+  const warnings = runLayerA(modifiedFiles, scan, coChangePairs);
+
+  let aiSuggestions: AISuggestion[] = [];
+  let tokenUsage: { input: number; output: number } | undefined;
+
+  if (opts.ai) {
+    const result = await runLayerB(modifiedFiles, repoPath, scan, coChangePairs, opts.diffSource);
+    aiSuggestions = result.suggestions;
+    tokenUsage = result.tokenUsage;
+  }
+
+  return { modifiedFiles, warnings, aiSuggestions, tokenUsage, scan };
+}
+
 // ── Main command ───────────────────────────────────────────────────────────
 
 export async function check(options: CheckOptions): Promise<void> {
-  const repoPath = path.resolve(options.dir);
   const silent = options.quiet || false;
 
   if (!options.json && !silent) {
@@ -414,7 +472,31 @@ export async function check(options: CheckOptions): Promise<void> {
     console.log(chalk.dim("Analyzing diff for completeness...\n"));
   }
 
-  const modifiedFiles = getModifiedFiles(repoPath, options.branch);
+  let result: CheckResult;
+  try {
+    result = await checkChanges({
+      dir: options.dir,
+      ai: options.ai,
+      branch: options.branch,
+      threshold: options.threshold,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (options.json) {
+      console.error(`Check failed: ${msg}`);
+    } else if (!silent) {
+      console.error(chalk.red(`\nCheck failed: ${msg}`));
+      if (msg.includes("API key") || msg.includes("ANTHROPIC")) {
+        console.error(
+          chalk.dim("Set ANTHROPIC_API_KEY environment variable to use --ai")
+        );
+      }
+    }
+    if (silent) process.exit(1);
+    return;
+  }
+
+  const { modifiedFiles, warnings, aiSuggestions, tokenUsage } = result;
 
   if (modifiedFiles.length === 0) {
     if (options.json) {
@@ -431,45 +513,6 @@ export async function check(options: CheckOptions): Promise<void> {
       chalk.green("✓") +
         ` Modified: ${modifiedFiles.map((f) => chalk.cyan(f)).join(", ")}`
     );
-    console.log(chalk.dim("Running Layer A (rules-based)..."));
-  }
-
-  const [scan, rawCoChangePairs] = await Promise.all([
-    scanProject(repoPath),
-    Promise.resolve(getFullCoChangePairs(repoPath)),
-  ]);
-
-  const threshold = options.threshold ?? 0;
-  const coChangePairs = threshold > 0
-    ? rawCoChangePairs.filter((p) => p.strength >= threshold)
-    : rawCoChangePairs;
-
-  const warnings = runLayerA(modifiedFiles, scan, coChangePairs);
-
-  let aiSuggestions: AISuggestion[] = [];
-  let tokenUsage: { input: number; output: number } | undefined;
-
-  if (options.ai) {
-    if (!options.json && !silent) {
-      console.log(chalk.dim("Running Layer B (AI analysis)..."));
-    }
-    try {
-      const result = await runLayerB(modifiedFiles, repoPath, scan, coChangePairs);
-      aiSuggestions = result.suggestions;
-      tokenUsage = result.tokenUsage;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (options.json) {
-        console.error(`AI analysis failed: ${msg}`);
-      } else if (!silent) {
-        console.error(chalk.red(`\nAI analysis failed: ${msg}`));
-        if (msg.includes("API key") || msg.includes("ANTHROPIC")) {
-          console.error(
-            chalk.dim("Set ANTHROPIC_API_KEY environment variable to use --ai")
-          );
-        }
-      }
-    }
   }
 
   const hasFindings = warnings.length > 0 || (options.ai && aiSuggestions.length > 0);

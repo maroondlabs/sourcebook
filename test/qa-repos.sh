@@ -66,11 +66,20 @@ clone_repos() {
   )
   for entry in "${repos[@]}"; do
     IFS=':' read -r repo slug <<< "$entry"
-    if [ ! -d "/tmp/qa-$slug" ]; then
-      echo "  Cloning $repo..."
-      git clone "https://github.com/$repo.git" "/tmp/qa-$slug" 2>/dev/null
+    dir="/tmp/qa-$slug"
+    # Skip only if dir has real source files, not just empty .git + stale AGENTS.md
+    src_count=$(find "$dir" -maxdepth 3 -type f \
+      \( -name "*.go" -o -name "*.py" -o -name "*.ts" -o -name "*.tsx" \
+      -o -name "*.js" -o -name "*.jsx" -o -name "*.rs" \) 2>/dev/null | wc -l | tr -d ' ')
+    if [ -d "$dir" ] && [ "$src_count" -ge 5 ]; then
+      echo "  $slug already cloned ($src_count source files)"
     else
-      echo "  $slug already cloned"
+      if [ -d "$dir" ]; then
+        echo "  Removing stale $slug ($src_count source files)"
+        rm -rf "$dir"
+      fi
+      echo "  Cloning $repo..."
+      git clone "https://github.com/$repo.git" "$dir" 2>/dev/null
     fi
   done
   echo ""
